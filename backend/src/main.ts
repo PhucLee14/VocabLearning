@@ -12,7 +12,7 @@ async function bootstrap() {
 
   // FRONTEND_URL may hold several comma-separated origins
   const origins = config
-    .get<string>('FRONTEND_URL', 'http://localhost:3100')
+    .get<string>('FRONTEND_URL', 'http://localhost:3300')
     .split(',')
     .map((o) => o.trim());
   app.enableCors({ origin: origins, credentials: true });
@@ -22,6 +22,6 @@ async function bootstrap() {
   );
   app.enableShutdownHooks();
 
-  await app.listen(config.get<number>('PORT', 4100));
+  await app.listen(config.get<number>('PORT', 4300));
 }
 await bootstrap();

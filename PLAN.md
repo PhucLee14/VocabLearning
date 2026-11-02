@@ -301,10 +301,11 @@ bank,noun,2,/bæŋk/,B1,"the land along the side of a river",bờ sông,"We had 
 - A duplicate `(headword, pos, sense_no)` updates the existing entry.
 - UTF-8 files, up to ~5,000 rows per upload through the UI. Use the CLI script for more.
 
-### Suggested vocabulary sources (check the licence before use)
+### Vocabulary sources
 
-| Source | Provides | Notes |
-|--------|----------|-------|
+See [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md): sources, licences, attribution rules, and the `words:enrich` → review → `words:import` workflow.
+
+--------|----------|-------|
 | Oxford 3000 / 5000 | Word lists with CEFR levels | Copyrighted; read the terms carefully |
 | CEFR-J Wordlist | Word lists with CEFR levels | Check the terms of use |
 | English Vocabulary Profile (Cambridge) | CEFR level per word sense | Lookup only; no bulk copying |
@@ -354,7 +355,7 @@ A starting point; editable from the admin pages or via import. Seed data: [backe
 - [x] PostgreSQL (Neon) + Prisma 7, full schema, `init` migration
 - [x] Seed the topic framework: 24 top-level topics, 71 including subtopics
 - [x] First endpoints: `GET /api/health`, `GET /api/health/db`, `GET /api/topics`
-- [x] Bilingual vi/en UI (next-intl), layout, dark mode. The home page lists topics from the API.
+- [x] Bilingual vi/en UI (next-intl), layout, Light / Dark / System theme switch. "Reference manual" design (Be Vietnam Pro + JetBrains Mono, one teal accent). The home page lists topics from the API.
 - [x] Move Neon to Singapore (`aws-ap-southeast-1`)
 - [x] Next.js rewrite `/api/*` → backend, so the auth cookie is first-party
 - [x] Deployment config: `vercel.json` (`sin1`) for both apps, Node 24.x. Verified with a local `vercel build`.
@@ -362,8 +363,9 @@ A starting point; editable from the admin pages or via import. Seed data: [backe
 - [ ] Sign up / sign in (JWT + refresh token), email verification, admin role
 
 ### Phase 1: MVP (learn and review)
-- [ ] ~50 sample words for testing
-- [ ] CSV/JSON import: CLI script + `/admin/import` with a preview step
+- [ ] ~50 sample words for testing: list + enriched data ready (`backend/prisma/seed/words-sample*.{csv,json}`; hand-assigned CEFR levels), not imported yet
+- [x] CSV/JSON import CLI (`npm run words:import`, with `--dry-run`) + enrichment from free sources (`npm run words:enrich`), see [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md)
+- [ ] `/admin/import` UI with a preview step
 - [ ] Topic, level and word detail pages (pronunciation via Web Speech API)
 - [ ] **Learn new words** session (3.3)
 - [ ] **Flashcards + SRS** with ts-fsrs, Review & Practice modes, keyboard shortcuts
@@ -379,7 +381,7 @@ A starting point; editable from the admin pages or via import. Seed data: [backe
 - [ ] `/api/cron/reminders` endpoint + hourly Upstash QStash schedule
 - [ ] **Email reminders** (Resend; needs a custom domain)
 - [ ] Notebook (tags, search)
-- [ ] Auto-enrich IPA/audio/definitions from a dictionary API
+- [x] Auto-enrich IPA/audio/definitions/Vietnamese/examples from free sources (offline, at import time: `words:enrich`)
 
 ### Phase 3: Extensions
 - [ ] More exercise types: multiple choice, spelling, listen → type, fill in the blank from example sentences
@@ -407,7 +409,7 @@ Vocab/
 │   ├── CLAUDE.md                    ✔ project notes for Claude Code
 │   └── worklog/YYYY-MM-DD.md        ✔ daily work log
 │
-├── backend/                         NestJS 12 – REST API (port 4100)
+├── backend/                         NestJS 12 – REST API (port 4300)
 │   ├── prisma/
 │   │   ├── schema.prisma            ✔ all tables (section 5)
 │   │   ├── migrations/              ✔ SQL migrations
@@ -432,7 +434,7 @@ Vocab/
 │       ├── admin/import/            upload, preview, commit
 │       └── generated/prisma/        Prisma Client (generated, not committed)
 │
-└── frontend/                        Next.js 16 – UI (port 3100)
+└── frontend/                        Next.js 16 – UI (port 3300)
     ├── messages/vi.json, en.json    ✔ UI text in both languages
     ├── next.config.ts               ✔ next-intl plugin, /api rewrite to the backend
     ├── vercel.json                  ✔ Vercel config (region sin1)

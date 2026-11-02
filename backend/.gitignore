@@ -12,3 +12,6 @@ coverage
 
 # Vercel CLI
 .vercel
+
+# words:enrich HTTP cache
+/scripts/words/.cache

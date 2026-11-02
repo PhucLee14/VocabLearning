@@ -1,18 +1,18 @@
 # Vocab – English vocabulary learning app
 
 Learn English words by topic and CEFR level, with flashcards, spaced repetition (FSRS), streaks, study-time tracking and review reminders.
-Full plan: [PLAN.md](PLAN.md) · Deployment: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+Full plan: [PLAN.md](PLAN.md) · Deployment: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) · Word data: [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md)
 
 ## Structure
 
 ```text
-frontend/   Next.js 16 + Tailwind 4 + next-intl (vi/en)       → http://localhost:3100
-backend/    NestJS 12 + Prisma 7 + PostgreSQL (Neon, Singapore) → http://localhost:4100/api
+frontend/   Next.js 16 + Tailwind 4 + next-intl (vi/en)       → http://localhost:3300
+backend/    NestJS 12 + Prisma 7 + PostgreSQL (Neon, Singapore) → http://localhost:4300/api
 docs/       Documentation (deployment…)
 .claude/    Project notes & work log
 ```
 
-Ports 3100/4100 avoid 3000/4000, which other tools often occupy.
+Ports 3300/4300 avoid the ports used by other local projects (3000–3002, 4000, 5000, 5173, 8000, 8080).
 
 ## First run
 
@@ -25,13 +25,13 @@ cp .env.example .env          # fill in the Neon DATABASE_URL (pooled) + DIRECT_
 npm install                   # also runs prisma generate
 npm run db:deploy             # apply migrations
 npm run db:seed               # seed the topic framework
-npm run start:dev             # http://localhost:4100/api/health
+npm run start:dev             # http://localhost:4300/api/health
 
 # 2) Frontend (another terminal)
 cd frontend
 cp .env.example .env.local
 npm install
-npm run dev                   # http://localhost:3100 → redirects to /vi
+npm run dev                   # http://localhost:3300 → redirects to /vi
 ```
 
 ## Common commands
@@ -40,6 +40,8 @@ npm run dev                   # http://localhost:3100 → redirects to /vi
 |--------|---------|---------|
 | backend | `npm run db:migrate -- --name <name>` | Create a migration after editing `prisma/schema.prisma` |
 | backend | `npm run db:studio` | Browse data in Prisma Studio |
+| backend | `npm run words:enrich -- <list.csv>` | Fill definitions, IPA, audio, Vietnamese and examples from free sources ([docs/DATA_SOURCES.md](docs/DATA_SOURCES.md)) |
+| backend | `npm run words:import -- <file> [--dry-run]` | Import words (JSON/CSV, PLAN.md §7) into the DB |
 | backend | `npm test` / `npm run test:e2e` | Unit tests / e2e tests (e2e uses the DB in `.env`) |
 | backend | `npm run lint` | oxlint |
 | frontend | `npm run typecheck` | Generate route types + TypeScript check |

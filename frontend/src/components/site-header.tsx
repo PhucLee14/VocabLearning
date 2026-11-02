@@ -1,23 +1,30 @@
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { LocaleSwitcher } from './locale-switcher';
+import { ThemeSwitcher } from './theme-switcher';
 
 export function SiteHeader() {
   const t = useTranslations('Header');
 
   return (
-    <header className="sticky top-0 z-10 border-b border-border bg-background/85 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
+    <header className="sticky top-0 z-10 border-b border-line bg-canvas/85 backdrop-blur">
+      <div className="mx-auto flex h-14 max-w-[1160px] items-center justify-between gap-3 px-4">
+        <Link
+          href="/"
+          className="flex items-center gap-2 font-mono text-[15px] font-bold tracking-tight text-ink no-underline"
+        >
           <span
             aria-hidden
-            className="grid size-7 place-items-center rounded-lg bg-primary text-sm font-bold text-primary-foreground"
+            className="grid size-7 place-items-center rounded-md bg-accent text-sm text-on-accent"
           >
             V
           </span>
           {t('brand')}
         </Link>
-        <LocaleSwitcher />
+        <div className="flex items-center gap-2">
+          <LocaleSwitcher />
+          <ThemeSwitcher />
+        </div>
       </div>
     </header>
   );

@@ -50,6 +50,9 @@ Prerequisites:
    | `DIRECT_URL` | Neon **direct** URL |
    | `FRONTEND_URL` | Placeholder for now, e.g. `https://example.com`; fix it in step 2.3 |
 
+   - Do **not** add `PORT`: Vercel runs the app as a function and handles the port itself. `PORT=4300` only matters locally.
+   - Paste the values **without** the surrounding quotes from `.env`, or the quotes become part of the value and the DB connection fails. Alternatively, paste the whole `.env` into the first Key field (Vercel splits it into variables), then delete `PORT` and fix `FRONTEND_URL`.
+
 4. Click **Deploy**. Note the production domain, e.g. `https://vocab-backend.vercel.app`.
 5. Check `https://<backend-domain>/api/health` and `/api/health/db`. Both should return `{"status":"ok"...}`.
 

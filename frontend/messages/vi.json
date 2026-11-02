@@ -12,12 +12,42 @@
     "vi": "Tiếng Việt",
     "en": "English"
   },
+  "ThemeSwitcher": {
+    "label": "Giao diện",
+    "light": "Sáng",
+    "dark": "Tối",
+    "system": "Theo hệ thống"
+  },
   "Home": {
     "eyebrow": "Học từ vựng tiếng Anh mỗi ngày",
     "title": "Nhớ từ lâu hơn với lặp lại ngắt quãng",
     "subtitle": "Flashcard với định nghĩa bằng tiếng Anh, từ vựng chia theo chủ đề và cấp độ CEFR. Hệ thống tự nhắc bạn ôn đúng lúc sắp quên.",
     "cta": "Xem các chủ đề",
     "status": "Đang phát triển – tài khoản và flashcard sẽ có ở bản tiếp theo.",
+    "statsLabel": "Hiện có",
+    "stats": "{topics} chủ đề · {subtopics} chủ đề con · {words} từ",
+    "statsUnavailable": "Chưa tải được số liệu",
+    "tocLabel": "Mục lục",
+    "featuresShort": "Tính năng",
+    "topicsShort": "Chủ đề",
+    "featuresLede": "Các tính năng được làm dần theo lộ trình. Nhãn bên phải cho biết khi nào có.",
+    "topicsLede": "Khung chủ đề đã sẵn sàng, từ vựng sẽ được nhập dần. Số cạnh mỗi chủ đề con là số từ hiện có.",
+    "phase1": "Bản tiếp theo",
+    "phase2": "Giai đoạn 2",
+    "bands": {
+      "A": {
+        "name": "A · Cơ bản",
+        "body": "Hiểu và dùng các từ, cụm từ quen thuộc hằng ngày: giới thiệu bản thân, mua sắm, hỏi đường."
+      },
+      "B": {
+        "name": "B · Độc lập",
+        "body": "Nắm được ý chính về những chủ đề quen thuộc ở trường, nơi làm việc, khi du lịch, và nêu được ý kiến đơn giản."
+      },
+      "C": {
+        "name": "C · Thành thạo",
+        "body": "Hiểu văn bản dài và khó, diễn đạt trôi chảy, chính xác trong học tập và công việc."
+      }
+    },
     "featuresTitle": "Bạn sẽ có gì",
     "features": {
       "srs": {
@@ -55,7 +85,6 @@
       "C2": "Thành thạo"
     },
     "topicsTitle": "Chủ đề từ vựng",
-    "topicsSubtitle": "{count} chủ đề chính. Từ vựng sẽ được bổ sung dần.",
     "wordCount": "{count, plural, =0 {Chưa có từ} other {# từ}}",
     "subtopicCount": "{count, plural, =0 {Không có chủ đề con} other {# chủ đề con}}",
     "topicsError": "Không tải được danh sách chủ đề. Hãy kiểm tra backend đang chạy."

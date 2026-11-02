@@ -1,0 +1,1708 @@
+[
+  {
+    "headword": "mother",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈmʌðɚ/",
+    "cefr_level": "A1",
+    "definition_en": "A female parent, especially of a human; a female who parents a child (which she has given birth to, adopted, or fostered).",
+    "meaning_vi": "má, mẹ, mợ",
+    "examples": [
+      {
+        "sentence": "My mother went shopping.",
+        "translation_vi": "Mẹ tôi đi mua sắm rồi."
+      },
+      {
+        "sentence": "My mother is sleeping.",
+        "translation_vi": "Mẹ tôi đang ngủ."
+      }
+    ],
+    "topics": [
+      "family-members"
+    ],
+    "synonyms": [
+      "father",
+      "granddaddy",
+      "grandfather",
+      "metro-"
+    ],
+    "antonyms": [
+      "child",
+      "daughter",
+      "offspring",
+      "son",
+      "father"
+    ],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/mother-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #12747348 by CK, #9552979 by carlosalberto (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "friend",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/fɹɛnd/",
+    "cefr_level": "A1",
+    "definition_en": "A person, typically someone other than a family member, spouse or lover, whose company one enjoys and towards whom one feels affection.",
+    "meaning_vi": "người bạn, bạn",
+    "examples": [
+      {
+        "sentence": "Well done, my friend.",
+        "translation_vi": "Làm rất tốt, bạn của tôi."
+      },
+      {
+        "sentence": "He was my friend.",
+        "translation_vi": "Anh ấy là bạn của tôi."
+      }
+    ],
+    "topics": [
+      "relationships"
+    ],
+    "synonyms": [
+      "buddy",
+      "buster",
+      "mate",
+      "pal",
+      "sonny",
+      "admirer",
+      "booster",
+      "champion"
+    ],
+    "antonyms": [
+      "enemy",
+      "foe",
+      "stranger"
+    ],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/friend-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #2977939 by Hybrid, #1108025 by Scott (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "childhood",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈtʃaɪldhʊd/",
+    "cefr_level": "B1",
+    "definition_en": "The time during which one is a child, from between infancy and puberty.",
+    "meaning_vi": "tuổi thơ",
+    "examples": [
+      {
+        "sentence": "My childhood dream came true.",
+        "translation_vi": "Giấc mơ thời thơ ấu của tôi đã trở thành hiện thực."
+      },
+      {
+        "sentence": "Tom had a healthy childhood.",
+        "translation_vi": "Tom có một tuổi thơ lành mạnh."
+      }
+    ],
+    "topics": [
+      "life-stages"
+    ],
+    "synonyms": [],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/childhood-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #7492643 by maaster, #5739384 by CM (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "tall",
+    "pos": "adjective",
+    "sense_no": 1,
+    "ipa": "/tɔːl/",
+    "cefr_level": "A1",
+    "definition_en": "(of a person) Having a vertical extent greater than the average. For example, somebody with a height of over 6 feet would generally be considered to be tall.",
+    "meaning_vi": "cao",
+    "examples": [
+      {
+        "sentence": "She is not tall.",
+        "translation_vi": "Cô ấy không cao."
+      },
+      {
+        "sentence": "I am very tall.",
+        "translation_vi": "Tôi rất cao."
+      }
+    ],
+    "topics": [
+      "appearance"
+    ],
+    "synonyms": [],
+    "antonyms": [
+      "low",
+      "low-rise",
+      "short"
+    ],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/tall-uk.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #437589 by MikeDee, #255252 by adjusting (CC BY 2.0 FR) · audio: Wikimedia Commons (BY 3.0 US)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "honest",
+    "pos": "adjective",
+    "sense_no": 1,
+    "ipa": "/ˈɑnɪst/",
+    "cefr_level": "B1",
+    "definition_en": "(of a person or institution) Scrupulous with regard to telling the truth; not given to swindling, lying, or fraud; upright.",
+    "meaning_vi": "thành thật",
+    "examples": [
+      {
+        "sentence": "He is very honest.",
+        "translation_vi": "Anh ấy rất thành thật."
+      },
+      {
+        "sentence": "Don't lie. Be honest.",
+        "translation_vi": "Đừng nói dối. Hãy trung thực lên nào."
+      }
+    ],
+    "topics": [
+      "character-traits"
+    ],
+    "synonyms": [],
+    "antonyms": [
+      "dishonest"
+    ],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/honest-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #292122 by CK, #1292950 by CK (CC BY 2.0 FR) · audio: Wikimedia Commons (CC BY-SA)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "happy",
+    "pos": "adjective",
+    "sense_no": 1,
+    "ipa": "/ˈhæpi/",
+    "cefr_level": "A1",
+    "definition_en": "Having a feeling arising from a consciousness of well-being or of enjoyment; enjoying good of any kind, such as comfort, peace, or tranquillity; blissful, contented, joyous.",
+    "meaning_vi": "mừng, vui, hạnh phúc",
+    "examples": [
+      {
+        "sentence": "Music makes me feel happy."
+      }
+    ],
+    "topics": [
+      "positive-feelings"
+    ],
+    "synonyms": [
+      "cheerful",
+      "content",
+      "delighted",
+      "elated",
+      "exultant",
+      "glad",
+      "joyful",
+      "jubilant"
+    ],
+    "antonyms": [
+      "inappropriate",
+      "inapt",
+      "unfelicitous",
+      "disenchanted",
+      "dissatisfied",
+      "blue",
+      "depressed",
+      "down"
+    ],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/happy-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · example: Wiktionary (CC BY-SA) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense"
+    ]
+  },
+  {
+    "headword": "angry",
+    "pos": "adjective",
+    "sense_no": 1,
+    "ipa": "/ˈæŋ.ɡɹi/",
+    "cefr_level": "A1",
+    "definition_en": "Displaying or feeling anger.",
+    "meaning_vi": "giận, tức",
+    "examples": [
+      {
+        "sentence": "I am very angry!",
+        "translation_vi": "Tôi rất tức giận!"
+      },
+      {
+        "sentence": "Tom got really angry.",
+        "translation_vi": "Tom đã rất giận dữ."
+      }
+    ],
+    "topics": [
+      "negative-feelings"
+    ],
+    "synonyms": [
+      "annoyed",
+      "apoplectic",
+      "cheesed off",
+      "enraged",
+      "furious",
+      "irritated",
+      "mad",
+      "pissed off"
+    ],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/angry-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #13581988 by Native77, #2547598 by CK (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "curious",
+    "pos": "adjective",
+    "sense_no": 1,
+    "ipa": "/ˈkjɝ.i.əs/",
+    "cefr_level": "B1",
+    "definition_en": "Tending to ask questions, or to want to explore or investigate; inquisitive; (with a negative connotation) nosy, prying.",
+    "meaning_vi": "tò mò",
+    "examples": [
+      {
+        "sentence": "I am very curious.",
+        "translation_vi": "Tôi rất tò mò."
+      },
+      {
+        "sentence": "What are you curious about?",
+        "translation_vi": "Bạn đang tò mò về điều gì?"
+      }
+    ],
+    "topics": [
+      "attitudes"
+    ],
+    "synonyms": [
+      "enquiring, inquiring",
+      "exquisitive",
+      "investigative",
+      "peery"
+    ],
+    "antonyms": [
+      "incurious",
+      "noncurious",
+      "uncurious"
+    ],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/curious-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #1441222 by Balamax, #5737590 by CM (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "shoulder",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈʃoʊldɚ/",
+    "cefr_level": "A2",
+    "definition_en": "The part of an animal's body between the base of the neck and forearm socket.",
+    "meaning_vi": "vai",
+    "examples": [
+      {
+        "sentence": "I hurt my shoulder.",
+        "translation_vi": "Tôi đau vai."
+      },
+      {
+        "sentence": "I hurt my shoulder yesterday.",
+        "translation_vi": "Hôm qua tôi bị đau vai."
+      }
+    ],
+    "topics": [
+      "body-parts"
+    ],
+    "synonyms": [],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/shoulder-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #4846748 by CK, #5597141 by CK (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "headache",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈhɛdeɪk/",
+    "cefr_level": "A2",
+    "definition_en": "(medicine) A pain or ache in the head.",
+    "meaning_vi": "chứng nhức đầu",
+    "examples": [
+      {
+        "sentence": "He had a headache.",
+        "translation_vi": "Anh ta có bệnh đau đầu."
+      },
+      {
+        "sentence": "My headache is gone.",
+        "translation_vi": "Cơn đau đầu của tôi đã tan biến."
+      }
+    ],
+    "topics": [
+      "illness-injury"
+    ],
+    "synonyms": [
+      "bother",
+      "pain in the neck",
+      "cephalalgia"
+    ],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/headache-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #1133262 by CK, #758246 by vgigregg (CC BY 2.0 FR) · audio: Wikimedia Commons (CC BY-SA)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "healthy",
+    "pos": "adjective",
+    "sense_no": 1,
+    "ipa": "/ˈhɛl.θi/",
+    "cefr_level": "A1",
+    "definition_en": "Enjoying good health; free from disease or disorder.",
+    "meaning_vi": "khỏe mạnh",
+    "examples": [
+      {
+        "sentence": "She is very healthy.",
+        "translation_vi": "Cô ấy rất khoẻ mạnh."
+      },
+      {
+        "sentence": "Luckily, she got healthy again.",
+        "translation_vi": "Thật may, cô ấy đã khỏe trở lại."
+      }
+    ],
+    "topics": [
+      "fitness"
+    ],
+    "synonyms": [
+      "healthful"
+    ],
+    "antonyms": [
+      "unhealthy"
+    ],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/healthy-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #1126614 by CK, #14030503 by Ioan_Cristian (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "recipe",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈɹɛs.ə.pi/",
+    "cefr_level": "A2",
+    "definition_en": "A set of instructions for making or preparing food dishes.",
+    "meaning_vi": "công thức, công thức nấu ăn",
+    "examples": [
+      {
+        "sentence": "Note down this recipe.",
+        "translation_vi": "Ghi công thức này lại đi."
+      },
+      {
+        "sentence": "My grandmother taught me this pâté recipe.",
+        "translation_vi": "Bà tôi dạy tôi cách làm pa tê."
+      }
+    ],
+    "topics": [
+      "cooking"
+    ],
+    "synonyms": [],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/recipe-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #13613413 by frpzzd, #13913583 by Ioan_Cristian (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "menu",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈmɛnju/",
+    "cefr_level": "A1",
+    "definition_en": "A list containing the food and beverages served at a restaurant, café, or bar. Menus may be printed on paper sheets provided to customers, put on a large poster or display board inside the establishment, displayed outside the restaurant, or digital.",
+    "meaning_vi": "thực đơn",
+    "examples": [
+      {
+        "sentence": "They're at the restaurant looking at the menu.",
+        "translation_vi": "Họ đang xem thực đơn ở trong nhà hàng."
+      },
+      {
+        "sentence": "They're at the eatery looking at the menu.",
+        "translation_vi": "Họ đang xem thực đơn ở trong nhà hàng."
+      }
+    ],
+    "topics": [
+      "restaurant"
+    ],
+    "synonyms": [],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/menu-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #2206708 by FeuDRenais, #2206707 by FeuDRenais2 (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "delicious",
+    "pos": "adjective",
+    "sense_no": 1,
+    "ipa": "/diˈlɪʃəs/",
+    "cefr_level": "A1",
+    "definition_en": "Pleasing to the sense of taste; tasty.",
+    "meaning_vi": "ngon",
+    "examples": [
+      {
+        "sentence": "Your cake was delicious!",
+        "translation_vi": "Cái bánh ngọt của bạn ngon quá!"
+      },
+      {
+        "sentence": "This is very delicious.",
+        "translation_vi": "Cái này rất ngon."
+      }
+    ],
+    "topics": [
+      "taste-texture"
+    ],
+    "synonyms": [],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/delicious-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #13612906 by rul, #12047469 by CK (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "kitchen",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈkɪt͡ʃən/",
+    "cefr_level": "A1",
+    "definition_en": "A room or area for preparing food.",
+    "meaning_vi": "nhà bếp, bếp",
+    "examples": [
+      {
+        "sentence": "The kitchen is big enough.",
+        "translation_vi": "Phòng bếp này đủ rộng."
+      },
+      {
+        "sentence": "They sat in the kitchen.",
+        "translation_vi": "Họ ngồi trong bếp."
+      }
+    ],
+    "topics": [
+      "rooms-furniture"
+    ],
+    "synonyms": [],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/kitchen-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #13709893 by rul, #3836049 by Hybrid (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "laundry",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈlɔːn.dɹi/",
+    "cefr_level": "B1",
+    "definition_en": "A place or room where laundering is done - including, by extension, other forms of laundering than clothes washing.",
+    "meaning_vi": "giặt giạ, giặt giũ",
+    "examples": [
+      {
+        "sentence": "Tom is in the laundry room.",
+        "translation_vi": "Tom đang ở phòng giặt đấy."
+      },
+      {
+        "sentence": "Please help Tom hang up the laundry.",
+        "translation_vi": "Hãy giúp Tom phơi quần áo."
+      }
+    ],
+    "topics": [
+      "housework"
+    ],
+    "synonyms": [
+      "washing",
+      "laundrette",
+      "laundromat",
+      "lavatory",
+      "washateria"
+    ],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/laundry-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #8599770 by CK, #8596761 by CK (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "breakfast",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈbɹɛkfəst/",
+    "cefr_level": "A1",
+    "definition_en": "The first meal of the day, usually eaten in the morning.",
+    "meaning_vi": "bữa sáng",
+    "examples": [
+      {
+        "sentence": "I just finished breakfast.",
+        "translation_vi": "Tôi vừa ăn bữa sáng xong."
+      },
+      {
+        "sentence": "Have you had breakfast?",
+        "translation_vi": "Em ăn sáng chưa?"
+      }
+    ],
+    "topics": [
+      "daily-life"
+    ],
+    "synonyms": [],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/breakfast-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #2922456 by odango_daisuki, #2432207 by loghaD (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "customer",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈkʌstəmə/",
+    "cefr_level": "A2",
+    "definition_en": "A patron, a client; a person or company who purchases or receives a product or service from a business or merchant, or intends to do so.",
+    "meaning_vi": "khách hàng",
+    "examples": [
+      {
+        "sentence": "I'm expecting a customer today.",
+        "translation_vi": "Hôm nay chúng ta có khách."
+      }
+    ],
+    "topics": [
+      "shops"
+    ],
+    "synonyms": [],
+    "antonyms": [],
+    "audio_url": null,
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #242988 by CK (CC BY 2.0 FR)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "discount",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/dɪsˈkaʊnt/",
+    "cefr_level": "B1",
+    "definition_en": "A reduction in price.",
+    "meaning_vi": "bớt giá, sự bớt, sự giảm",
+    "examples": [
+      {
+        "sentence": "Could you give me a discount?",
+        "translation_vi": "bạn có thể giảm giá không ?"
+      }
+    ],
+    "topics": [
+      "prices-payment"
+    ],
+    "synonyms": [
+      "rebate",
+      "reduction"
+    ],
+    "antonyms": [
+      "surcharge"
+    ],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/discount-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #276951 by CK (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "borrow",
+    "pos": "verb",
+    "sense_no": 1,
+    "ipa": "/ˈbɑɹoʊ/",
+    "cefr_level": "A2",
+    "definition_en": "To receive (something) from somebody temporarily, expecting to return it.",
+    "meaning_vi": "mượn, vay",
+    "examples": [
+      {
+        "sentence": "Can I borrow your charger?",
+        "translation_vi": "Cho tôi mượn cục sạc được không?"
+      },
+      {
+        "sentence": "May I borrow your umbrella?",
+        "translation_vi": "Bạn có thể cho tôi mượn cái ô không?"
+      }
+    ],
+    "topics": [
+      "banking"
+    ],
+    "synonyms": [
+      "adopt",
+      "use"
+    ],
+    "antonyms": [
+      "carry",
+      "give back",
+      "lend",
+      "return"
+    ],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/borrow-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #13523988 by CK, #11574499 by sundown (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "jacket",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈd͡ʒækət/",
+    "cefr_level": "A1",
+    "definition_en": "A piece of clothing worn on the upper body outside a shirt or blouse, often waist length to thigh length.",
+    "meaning_vi": "áo vét tông, áo khoác",
+    "examples": [
+      {
+        "sentence": "How much is the jacket?",
+        "translation_vi": "Chiếc áo khoác bao nhiêu tiền?"
+      },
+      {
+        "sentence": "Tom wore a white jacket.",
+        "translation_vi": "Tom mặc một chiếc áo khoác trắng."
+      }
+    ],
+    "topics": [
+      "clothes-fashion"
+    ],
+    "synonyms": [
+      "coat",
+      "sleeve"
+    ],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/jacket-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #11277794 by chaule3, #5024683 by CK (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "passport",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈpæspɔɹt/",
+    "cefr_level": "A1",
+    "definition_en": "An official document normally used for international journeys, which proves the identity and nationality of the person for whom it was issued.",
+    "meaning_vi": "hộ chiếu, giấy thông hành",
+    "examples": [
+      {
+        "sentence": "My passport was stolen.",
+        "translation_vi": "Hộ chiếu của tôi bị trộm mất."
+      },
+      {
+        "sentence": "Someone stole my passport.",
+        "translation_vi": "Hộ chiếu của tôi bị trộm mất."
+      }
+    ],
+    "topics": [
+      "airport-flights"
+    ],
+    "synonyms": [],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/passport-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #1994379 by Spamster, #35269 by CK (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "reservation",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˌɹɛzəˈveɪʃən/",
+    "cefr_level": "B1",
+    "definition_en": "An arrangement by which accommodation or transport arrangements are secured in advance.",
+    "meaning_vi": "đặt, đặt trước",
+    "examples": [
+      {
+        "sentence": "I'd like a hotel reservation.",
+        "translation_vi": "Tôi muốn đặt phòng khách sạn."
+      },
+      {
+        "sentence": "I would like to make a reservation for tonight.",
+        "translation_vi": "Tôi muốn đặt chỗ trước cho tối nay."
+      }
+    ],
+    "topics": [
+      "accommodation"
+    ],
+    "synonyms": [
+      "res",
+      "reserve",
+      "rez",
+      "booking",
+      "median",
+      "median strip"
+    ],
+    "antonyms": [],
+    "audio_url": null,
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #33360 by cromwellt, #11450693 by chaule3 (CC BY 2.0 FR)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "map",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/mæp/",
+    "cefr_level": "A1",
+    "definition_en": "A visual representation of an area, whether real or imaginary, showing the relative positions of places and other features.",
+    "meaning_vi": "bản đồ, địa đồ",
+    "examples": [
+      {
+        "sentence": "The map is on the wall.",
+        "translation_vi": "Bản đồ ở trên tường."
+      },
+      {
+        "sentence": "I'd like a city map.",
+        "translation_vi": "Tôi muốn có một bản đồ thành phố."
+      }
+    ],
+    "topics": [
+      "directions"
+    ],
+    "synonyms": [
+      "function",
+      "mapping",
+      "level",
+      "stage",
+      "chart",
+      "plan"
+    ],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/map-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #879581 by CK, #246186 by CK (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "library",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈlaɪbɹəɹi/",
+    "cefr_level": "A1",
+    "definition_en": "An institution which holds books and/or other forms of media for use by the public or qualified people often lending them out, as well as providing various other services for its users.",
+    "meaning_vi": "thư viện",
+    "examples": [
+      {
+        "sentence": "The library was empty.",
+        "translation_vi": "Thư viện trống không."
+      },
+      {
+        "sentence": "These are library books.",
+        "translation_vi": "Những cái này là sách của thư viện."
+      }
+    ],
+    "topics": [
+      "buildings"
+    ],
+    "synonyms": [
+      "bookhouse"
+    ],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/library-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #6088442 by OsoHombre, #1818736 by Amastan (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "village",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈvɪlɪd͡ʒ/",
+    "cefr_level": "A2",
+    "definition_en": "A rural habitation of size between a hamlet and a town.",
+    "meaning_vi": "làng, làng quê, thôn",
+    "examples": [
+      {
+        "sentence": "I miss my village.",
+        "translation_vi": "Tôi nhớ làng tôi."
+      },
+      {
+        "sentence": "Floods destroyed the village.",
+        "translation_vi": "Cơn lũ đã phá huỷ ngôi làng."
+      }
+    ],
+    "topics": [
+      "countryside"
+    ],
+    "synonyms": [
+      "thorp"
+    ],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/village-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #13859988 by Aghanim, #12774881 by Igider (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "engineer",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˌɛnd͡ʒɪˈnɪɹ/",
+    "cefr_level": "A2",
+    "definition_en": "(by extension) A person professionally engaged in the technical design and construction of large-scale private and public works such as bridges, buildings, harbours, railways, roads, etc.; a civil engineer.",
+    "meaning_vi": "kĩ sư or kỹ sư",
+    "examples": [
+      {
+        "sentence": "Hải is an engineer.",
+        "translation_vi": "Hải là kỹ sư."
+      },
+      {
+        "sentence": "I am an engineer.",
+        "translation_vi": "Tôi là một kỹ sư."
+      }
+    ],
+    "topics": [
+      "occupations"
+    ],
+    "synonyms": [],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/engineer-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #13724448 by an_hien, #2730653 by afyodor (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "deadline",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈdɛdˌlaɪn/",
+    "cefr_level": "B2",
+    "definition_en": "A time limit in the form of a date on or before which something must be completed.",
+    "meaning_vi": "hạn chót, hạn, thời hạn",
+    "examples": [
+      {
+        "sentence": "We need to meet the deadline.",
+        "translation_vi": "Chúng ta cần phải kịp hạn chót."
+      },
+      {
+        "sentence": "The deadline is tomorrow afternoon at 2:30.",
+        "translation_vi": "Hạn chót là chiều mai lúc 2:30."
+      }
+    ],
+    "topics": [
+      "office"
+    ],
+    "synonyms": [],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/deadline-uk.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #13944835 by TATAR1, #7734785 by CK (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 4.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "salary",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈsælɚi/",
+    "cefr_level": "B1",
+    "definition_en": "A fixed amount of money paid to a worker, usually calculated on a monthly or annual basis, not hourly, as wages. Implies a degree of professionalism and/or autonomy.",
+    "meaning_vi": "lương",
+    "examples": [
+      {
+        "sentence": "What salary do you offer?",
+        "translation_vi": "Bạn đưa ra mức lương bao nhiêu?"
+      },
+      {
+        "sentence": "They demanded a salary increase.",
+        "translation_vi": "Họ đòi tăng lương."
+      }
+    ],
+    "topics": [
+      "job-hunting"
+    ],
+    "synonyms": [],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/salary-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #6736500 by Eccles17, #4220046 by joamator (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "homework",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈhəʊmˌwɜːk/",
+    "cefr_level": "A1",
+    "definition_en": "Exercises assigned by a teacher to a student which review concepts studied in class.",
+    "meaning_vi": "bài tập, bài tập về nhà",
+    "examples": [
+      {
+        "sentence": "Jackson finished his homework.",
+        "translation_vi": "Jackson đã hoàn thành bài tập về nhà."
+      },
+      {
+        "sentence": "Lorenzo continued his homework.",
+        "translation_vi": "Lorenzo tiếp tục làm bài tập về nhà."
+      }
+    ],
+    "topics": [
+      "school"
+    ],
+    "synonyms": [],
+    "antonyms": [],
+    "audio_url": null,
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #12082772 by Amastan, #11709335 by Amastan (CC BY 2.0 FR)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "lecture",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈlɛk.t͡ʃɚ/",
+    "cefr_level": "B1",
+    "definition_en": "A spoken lesson or exposition, usually delivered to a group.",
+    "meaning_vi": "bài giảng",
+    "examples": [
+      {
+        "sentence": "His lecture had a large audience.",
+        "translation_vi": "Buổi thuyết giảng của anh ta có rất đông khán giả."
+      },
+      {
+        "sentence": "I concentrated my attention on the lecture.",
+        "translation_vi": "Tôi đã hết sức tập trung vào bài giảng đó."
+      }
+    ],
+    "topics": [
+      "university"
+    ],
+    "synonyms": [],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/lecture-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #286313 by CK, #254348 by CK (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "exam",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ɛɡˈzæm/",
+    "cefr_level": "A1",
+    "definition_en": "(education) A formal test involving answering written or oral questions under a time constraint and usually without access to textbooks; typically, a large, written test administered to high school and college students covering course material studied in a semester.",
+    "meaning_vi": "kỳ thi",
+    "examples": [
+      {
+        "sentence": "I failed an exam.",
+        "translation_vi": "Tôi đã trượt bài kiểm tra."
+      },
+      {
+        "sentence": "The exam was easy.",
+        "translation_vi": "Bài thi này dễ."
+      }
+    ],
+    "topics": [
+      "exams"
+    ],
+    "synonyms": [],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/exam-uk.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: MyMemory · examples: Tatoeba #13617203 by araneo, #7947450 by CK (CC BY 2.0 FR) · audio: Wikimedia Commons (BY 3.0 US)",
+    "_review": [
+      "\"exam\" is a clipping of \"examination\"; used its definition",
+      "meaning_vi from MyMemory (machine/TM); verify it",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "keyboard",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈkibɔɹd/",
+    "cefr_level": "A2",
+    "definition_en": "(computing, etc.) A set of keys laid out in a grid-like pattern, used for typing on a typewriter, computer etc.",
+    "meaning_vi": "bàn phím",
+    "examples": [],
+    "topics": [
+      "computers"
+    ],
+    "synonyms": [
+      "electronic keyboard"
+    ],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/keyboard-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "no example sentence found"
+    ]
+  },
+  {
+    "headword": "password",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈpæswɜːd/",
+    "cefr_level": "A2",
+    "definition_en": "(computing, cryptography) A string of characters used to log in to a computer or network, to access a level in a video game, and so on; archetypally a word but nowadays often an alphanumeric string or a phrase.",
+    "meaning_vi": "mật khẩu",
+    "examples": [
+      {
+        "sentence": "The password is \"password.\"",
+        "translation_vi": "Mật khẩu là \"mật khẩu\"."
+      },
+      {
+        "sentence": "I forgot my password!",
+        "translation_vi": "Tôi đã quên mật khẩu của mình!"
+      }
+    ],
+    "topics": [
+      "internet"
+    ],
+    "synonyms": [
+      "pass",
+      "pw",
+      "pwd",
+      "pword",
+      "watchword",
+      "passcode"
+    ],
+    "antonyms": [],
+    "audio_url": null,
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #13671888 by rul, #4657436 by Lazovic (CC BY 2.0 FR)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "battery",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈbætəɹi/",
+    "cefr_level": "B1",
+    "definition_en": "(electricity, electronics, countable) A device used to power electric devices, consisting of one or more electrically connected electrochemical cells or (archaically) electrostatic cells.",
+    "meaning_vi": "pin, bình điện",
+    "examples": [
+      {
+        "sentence": "The watch battery was dead.",
+        "translation_vi": "Đồng hồ hết pin rồi."
+      },
+      {
+        "sentence": "The watch's battery ran out.",
+        "translation_vi": "Đồng hồ hết pin rồi."
+      }
+    ],
+    "topics": [
+      "devices"
+    ],
+    "synonyms": [],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/battery-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #3344548 by ngbaanh, #3344549 by ngbaanh (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "elephant",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈɛləfənt/",
+    "cefr_level": "A1",
+    "definition_en": "A large mammal of the family Elephantidae in the order Proboscidea, having a trunk, and native to Africa and Asia.",
+    "meaning_vi": "voi",
+    "examples": [
+      {
+        "sentence": "An elephant is an enormous animal.",
+        "translation_vi": "Voi là một loài động vật to khổng lồ."
+      },
+      {
+        "sentence": "Tom sketched a picture of an elephant for Mary.",
+        "translation_vi": "Tom đã vẽ cho Mary một bức tranh con voi."
+      }
+    ],
+    "topics": [
+      "animals"
+    ],
+    "synonyms": [
+      "Elephas",
+      "Loxodonta",
+      "africana",
+      "maximus"
+    ],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/elephant-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #268255 by CK, #1103056 by CK (CC BY 2.0 FR) · audio: Wikimedia Commons (CC BY-SA)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "leaf",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/liːf/",
+    "cefr_level": "A2",
+    "definition_en": "The usually green and flat organ that represents the most prominent feature of most vegetative plants.",
+    "meaning_vi": "lá",
+    "examples": [
+      {
+        "sentence": "He used the banana leaf as a cover from the heat of the sun.",
+        "translation_vi": "Anh ấy đã dùng lá chuối để che đi cái nóng của mặt trời."
+      }
+    ],
+    "topics": [
+      "plants"
+    ],
+    "synonyms": [
+      "folium"
+    ],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/leaf-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #14026119 by Roaming (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "pollution",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/pəˈl(j)uːʃn̩/",
+    "cefr_level": "B1",
+    "definition_en": "Physical contamination, now especially the contamination of the environment by harmful substances, or by disruptive levels of noise, light etc.",
+    "meaning_vi": "sự ô nhiễm",
+    "examples": [
+      {
+        "sentence": "Environmental pollution triggered climatic changes all over Earth.",
+        "translation_vi": "Ô nhiễm môi trường đã gây ra thay đổi khí hậu khắp Trái đất."
+      },
+      {
+        "sentence": "The teacher puts up an argument about pollution for the students.",
+        "translation_vi": "Cô giáo đưa ra một cuộc tranh luận về sự ô nhiễm cho các học sinh."
+      }
+    ],
+    "topics": [
+      "pollution"
+    ],
+    "synonyms": [
+      "self-pollution",
+      "soilage"
+    ],
+    "antonyms": [
+      "conservation",
+      "purity"
+    ],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/pollution-uk.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #1594185 by nonong, #11271600 by chaule3 (CC BY 2.0 FR) · audio: Wikimedia Commons (BY 3.0 US)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "forecast",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈfɔɹkæst/",
+    "cefr_level": "B1",
+    "definition_en": "A prediction of the weather.",
+    "meaning_vi": "dự báo, dự đoán",
+    "examples": [
+      {
+        "sentence": "This rain wasn't forecast.",
+        "translation_vi": "Cơn mưa này nằm ngoài dự báo."
+      },
+      {
+        "sentence": "According to the weather forecast, it'll snow tomorrow.",
+        "translation_vi": "Theo dự báo thời tiết, mai sẽ có tuyết."
+      }
+    ],
+    "topics": [
+      "weather"
+    ],
+    "synonyms": [],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/forecast-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #12075218 by sundown, #5401525 by CK (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "hobby",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈhɒ.bi/",
+    "cefr_level": "A1",
+    "definition_en": "An activity that one enjoys doing in one's spare time.",
+    "meaning_vi": "sở thích riêng, sở thích",
+    "examples": [
+      {
+        "sentence": "What is your hobby?",
+        "translation_vi": "Sở thích của bạn là gì?"
+      },
+      {
+        "sentence": "You need a hobby.",
+        "translation_vi": "Bạn cần một sở thích."
+      }
+    ],
+    "topics": [
+      "sports-hobbies"
+    ],
+    "synonyms": [
+      "avocation",
+      "pastime"
+    ],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/hobby-uk.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #6616325 by Eccles17, #6547700 by CK (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 4.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "concert",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈkɒnsət/",
+    "cefr_level": "A2",
+    "definition_en": "A musical performance, usually public, in which several performers or instruments take part.",
+    "meaning_vi": "buổi hoà nhạc, (buổi, cuộc) biểu diễn, hoà tấu",
+    "examples": [
+      {
+        "sentence": "How was the concert?",
+        "translation_vi": "Buổi hòa nhạc thế nào?"
+      },
+      {
+        "sentence": "The concert lasted about three hours.",
+        "translation_vi": "Buổi hoà nhạc kéo dài 3 tiếng đồng hồ."
+      }
+    ],
+    "topics": [
+      "music"
+    ],
+    "synonyms": [
+      "gig"
+    ],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/concert-uk.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #895660 by pauldhunt, #699083 by andresevargas (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 4.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "documentary",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˌdɒk.jəˈmɛn.tɹi/",
+    "cefr_level": "B1",
+    "definition_en": "A film, TV program, publication etc. which presents a social, political, scientific or historical subject in a factual or informative manner.",
+    "meaning_vi": "phim tài liệu",
+    "examples": [
+      {
+        "sentence": "The documentary is about wild animals.",
+        "translation_vi": "Bộ phim tài liệu nói về động vật hoang dã."
+      }
+    ],
+    "topics": [
+      "film-tv"
+    ],
+    "synonyms": [],
+    "antonyms": [
+      "fiction"
+    ],
+    "audio_url": null,
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #11452851 by chaule3 (CC BY 2.0 FR)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "novel",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈnɑvəl/",
+    "cefr_level": "A2",
+    "definition_en": "A work of prose fiction, longer than a novella.",
+    "meaning_vi": "tiểu thuyết",
+    "examples": [
+      {
+        "sentence": "This novel is boring.",
+        "translation_vi": "Cuốn tiểu thuyết này là một cuốn tiểu thuyết nhàm chán."
+      },
+      {
+        "sentence": "This novel bores me.",
+        "translation_vi": "Cuốn tiểu thuyết này là một cuốn tiểu thuyết nhàm chán."
+      }
+    ],
+    "topics": [
+      "books"
+    ],
+    "synonyms": [],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/novel-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #630620 by CK, #58476 by CK (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "journalist",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈdʒɜːnəlɪst/",
+    "cefr_level": "B1",
+    "definition_en": "One whose occupation is journalism, originally only writing in the printed press.",
+    "meaning_vi": "nhà báo, ký giả",
+    "examples": [
+      {
+        "sentence": "I am a journalist.",
+        "translation_vi": "Tôi là nhà báo."
+      },
+      {
+        "sentence": "I'm not a journalist.",
+        "translation_vi": "Tôi không phải là nhà báo."
+      }
+    ],
+    "topics": [
+      "news"
+    ],
+    "synonyms": [],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/journalist-uk.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #436297 by lukaszpp, #6867751 by CK (CC BY 2.0 FR) · audio: Wikimedia Commons (BY 3.0 US)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "follower",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈfɒləʊə(ɹ)/",
+    "cefr_level": "B2",
+    "definition_en": "(social media) An account holder who subscribes to see content from another account on a social media platform.",
+    "meaning_vi": "theo dõi",
+    "examples": [],
+    "topics": [
+      "social-media"
+    ],
+    "synonyms": [],
+    "antonyms": [
+      "leader",
+      "precursor"
+    ],
+    "audio_url": null,
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: MyMemory",
+    "_review": [
+      "meaning_vi from MyMemory (machine/TM); verify it",
+      "no example sentence found"
+    ]
+  },
+  {
+    "headword": "evidence",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "[ˈɛvəɾəns]",
+    "cefr_level": "B1",
+    "definition_en": "Facts or observations presented in support of an assertion.",
+    "meaning_vi": "sự chứng nhận, bằng chứng",
+    "examples": [
+      {
+        "sentence": "Evolution has no evidence.",
+        "translation_vi": "Tiến hoá không có bằng chứng."
+      },
+      {
+        "sentence": "They are still looking for evidence.",
+        "translation_vi": "Họ vẫn đang tìm kiếm bằng chứng."
+      }
+    ],
+    "topics": [
+      "law-crime"
+    ],
+    "synonyms": [],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/evidence-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #13505736 by maaster, #13895179 by kylewii (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "election",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/əˈlɛkʃ(ə)n/",
+    "cefr_level": "B1",
+    "definition_en": "A process of choosing a leader, members of parliament, councillors, or other representatives by popular vote.",
+    "meaning_vi": "sự bầu cử, tuyển cử",
+    "examples": [
+      {
+        "sentence": "Lincoln won the election.",
+        "translation_vi": "Lincoln đạt được trong bầu cử."
+      },
+      {
+        "sentence": "The election was unconstitutionally cancelled.",
+        "translation_vi": "Cuộc bầu cử đã bị huỷ một cách vi hiến."
+      }
+    ],
+    "topics": [
+      "government"
+    ],
+    "synonyms": [
+      "chosenness"
+    ],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/election-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #805429 by Source_VOA, #13917813 by Ioan_Cristian (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "brand",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/bɹand/",
+    "cefr_level": "B1",
+    "definition_en": "The symbolic identity, represented by a name and/or a logo, which indicates a certain product or service to the public.",
+    "meaning_vi": "nhãn hiệu",
+    "examples": [
+      {
+        "sentence": "The overuse of discounts has cheapened the brand's value over time.",
+        "translation_vi": "Việc lạm dụng giảm giá đã làm giảm giá trị nhãn hàng theo thời gian."
+      },
+      {
+        "sentence": "The child next door was showing off his brand new bicycle to his friends.",
+        "translation_vi": "Đứa trẻ con hàng xóm đang khoe với bạn bè chiếc xe đạp mới của nó."
+      }
+    ],
+    "topics": [
+      "marketing"
+    ],
+    "synonyms": [
+      "brand name",
+      "logo",
+      "marque",
+      "proprietary name",
+      "trademark",
+      "tradename",
+      "good name",
+      "name"
+    ],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/brand-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #13872712 by rul, #325947 by CK (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "budget",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈbʌdʒ.ɪt/",
+    "cefr_level": "B1",
+    "definition_en": "The amount of money or resources earmarked for a particular institution, activity or timeframe.",
+    "meaning_vi": "ngân sách",
+    "examples": [
+      {
+        "sentence": "We're facing a budget crisis.",
+        "translation_vi": "Chúng ta đang đối mặt với khủng hoảng ngân sách."
+      },
+      {
+        "sentence": "A budget deficit will occur because of a revenue shortfall.",
+        "translation_vi": "Thâm hụt ngân sách sẽ xảy ra do sự sụ giảm doanh thu."
+      }
+    ],
+    "topics": [
+      "finance"
+    ],
+    "synonyms": [],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/budget-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #4665389 by CK, #272432 by CM (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "experiment",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ɪk.ˈspɛɹ.ə.mənt/",
+    "cefr_level": "B1",
+    "definition_en": "A test under controlled conditions made to either demonstrate a known truth, examine the validity of a hypothesis, or determine the efficacy or likelihood of something previously untried.",
+    "meaning_vi": "thí nghiệm",
+    "examples": [
+      {
+        "sentence": "The experiment proved to be successful.",
+        "translation_vi": "Thí nghiệm được đánh giá là thành công."
+      },
+      {
+        "sentence": "This country successfully conducted a nuclear experiment.",
+        "translation_vi": "Đất nước này đã tiến hành thử nghiệm hạt nhân thành công."
+      }
+    ],
+    "topics": [
+      "science"
+    ],
+    "synonyms": [],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/experiment-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #46898 by MrShoval, #13709683 by CanonNi (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "century",
+    "pos": "noun",
+    "sense_no": 1,
+    "ipa": "/ˈsɛn.t͡ʃə.ɹiː/",
+    "cefr_level": "A2",
+    "definition_en": "A period of one hundred consecutive years; often specifically a numbered period with conventional start and end dates, e.g., the twentieth century, which stretches from (strictly) 1901 through 2000, or (informally) 1900 through 1999. The first century AD was from 1 to 100.",
+    "meaning_vi": "thế kỉ",
+    "examples": [
+      {
+        "sentence": "She died in the 18th century.",
+        "translation_vi": "Cô ấy đã chết vào thế kỉ 18."
+      },
+      {
+        "sentence": "He died in the 18th century.",
+        "translation_vi": "Anh ấy đã chết vào thế kỉ 18."
+      }
+    ],
+    "topics": [
+      "time-numbers"
+    ],
+    "synonyms": [
+      "centuria",
+      "yearhundred"
+    ],
+    "antonyms": [],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/century-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #13903743 by menaud, #13903738 by menaud (CC BY 2.0 FR) · audio: Wikimedia Commons (BY-SA 3.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "significant",
+    "pos": "adjective",
+    "sense_no": 1,
+    "ipa": "/sɪɡˈnɪf.ɪ.kənt/",
+    "cefr_level": "B2",
+    "definition_en": "Having a noticeable or major effect.",
+    "meaning_vi": "quan trọng",
+    "examples": [
+      {
+        "sentence": "There are significant differences between those two countries.",
+        "translation_vi": "Có những khác biệt rõ rệt giữa hai quốc gia."
+      }
+    ],
+    "topics": [
+      "academic-word-list"
+    ],
+    "synonyms": [],
+    "antonyms": [],
+    "audio_url": null,
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · examples: Tatoeba #1657248 by marcelostockle (CC BY 2.0 FR)",
+    "_review": [
+      "Free Dictionary API failed (GET https://api.dictionaryapi.dev/api/v2/entries/en/significant → 404)",
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "Tatoeba examples may use another sense of the word"
+    ]
+  },
+  {
+    "headword": "resilient",
+    "pos": "adjective",
+    "sense_no": 1,
+    "ipa": "/ɹɪˈzɪl.jənt/",
+    "cefr_level": "C1",
+    "definition_en": "Returning quickly to normal after damaging events or conditions. (of systems, organisms or people)",
+    "meaning_vi": "đàn hồi",
+    "examples": [],
+    "topics": [
+      "ielts"
+    ],
+    "synonyms": [
+      "bendable",
+      "flexible",
+      "strong"
+    ],
+    "antonyms": [
+      "brittle",
+      "fragile"
+    ],
+    "audio_url": "https://api.dictionaryapi.dev/media/pronunciations/en/resilient-us.mp3",
+    "source": "definition: Wiktionary/WordNet via Datamuse (CC BY-SA) · vi: Wiktionary via kaikki.org (CC BY-SA) · audio: Wikimedia Commons (BY-SA 4.0)",
+    "_review": [
+      "meaning_vi from Wiktionary translations; check it matches this sense",
+      "no example sentence found"
+    ]
+  }
+]

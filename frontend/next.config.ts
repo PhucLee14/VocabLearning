@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
 // Backend base URL including /api. Read at build time: changing it requires a redeploy.
-const apiUrl = process.env.API_URL ?? "http://localhost:4100/api";
+const apiUrl = process.env.API_URL ?? "http://localhost:4300/api";
 
 const nextConfig: NextConfig = {
   // The browser only ever calls same-origin /api/*; Next.js proxies it to the backend.

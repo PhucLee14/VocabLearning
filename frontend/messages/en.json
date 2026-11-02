@@ -1,0 +1,66 @@
+{
+  "Metadata": {
+    "title": "Vocab – Learn English vocabulary",
+    "description": "Learn English vocabulary by topic and CEFR level, with flashcards, plain-English definitions and well-timed review reminders."
+  },
+  "Header": {
+    "brand": "Vocab",
+    "home": "Home"
+  },
+  "LocaleSwitcher": {
+    "label": "Change language",
+    "vi": "Tiếng Việt",
+    "en": "English"
+  },
+  "Home": {
+    "eyebrow": "Learn English words every day",
+    "title": "Remember words for longer with spaced repetition",
+    "subtitle": "Flashcards with plain-English definitions, organised by topic and CEFR level. You get a reminder right before you would forget a word.",
+    "cta": "Browse topics",
+    "status": "In development – accounts and flashcards arrive in the next version.",
+    "featuresTitle": "What you get",
+    "features": {
+      "srs": {
+        "title": "Flashcards & spaced repetition",
+        "body": "Rate each card Again / Hard / Good / Easy. The FSRS algorithm schedules the next review for every word."
+      },
+      "english": {
+        "title": "Explained in English",
+        "body": "Clear English definitions, IPA, example sentences, plus the Vietnamese meaning for reference."
+      },
+      "topics": {
+        "title": "By topic & level",
+        "body": "20+ everyday topics, and every word is tagged with a level from A1 to C2."
+      },
+      "progress": {
+        "title": "Progress, streaks & study time",
+        "body": "Track how well you know each word, your daily streak and minutes studied each day."
+      },
+      "reminders": {
+        "title": "Review reminders",
+        "body": "Get an email or a phone notification when words are due for review."
+      },
+      "notes": {
+        "title": "Notes",
+        "body": "Write memory tricks and your own sentences for each word, or keep a personal notebook."
+      }
+    },
+    "levelsTitle": "CEFR levels",
+    "levels": {
+      "A1": "Beginner",
+      "A2": "Elementary",
+      "B1": "Intermediate",
+      "B2": "Upper-intermediate",
+      "C1": "Advanced",
+      "C2": "Proficient"
+    },
+    "topicsTitle": "Vocabulary topics",
+    "topicsSubtitle": "{count} main topics. Words will be added over time.",
+    "wordCount": "{count, plural, =0 {No words yet} one {# word} other {# words}}",
+    "subtopicCount": "{count, plural, =0 {No subtopics} one {# subtopic} other {# subtopics}}",
+    "topicsError": "Couldn't load topics. Please check that the backend is running."
+  },
+  "Footer": {
+    "note": "Vocab – an English vocabulary learning project."
+  }
+}

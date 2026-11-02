@@ -1,0 +1,163 @@
+[
+  {
+    "slug": "people-family", "icon": "👨‍👩‍👧", "nameEn": "People & Family", "nameVi": "Con người & Gia đình",
+    "children": [
+      { "slug": "family-members", "nameEn": "Family members", "nameVi": "Thành viên gia đình" },
+      { "slug": "relationships", "nameEn": "Relationships", "nameVi": "Các mối quan hệ" },
+      { "slug": "life-stages", "nameEn": "Life stages", "nameVi": "Các giai đoạn cuộc đời" }
+    ]
+  },
+  {
+    "slug": "appearance-personality", "icon": "🧑", "nameEn": "Appearance & Personality", "nameVi": "Ngoại hình & Tính cách",
+    "children": [
+      { "slug": "appearance", "nameEn": "Appearance", "nameVi": "Ngoại hình" },
+      { "slug": "character-traits", "nameEn": "Character traits", "nameVi": "Tính cách" }
+    ]
+  },
+  {
+    "slug": "feelings", "icon": "😊", "nameEn": "Feelings & Emotions", "nameVi": "Cảm xúc",
+    "children": [
+      { "slug": "positive-feelings", "nameEn": "Positive feelings", "nameVi": "Cảm xúc tích cực" },
+      { "slug": "negative-feelings", "nameEn": "Negative feelings", "nameVi": "Cảm xúc tiêu cực" },
+      { "slug": "attitudes", "nameEn": "Attitudes", "nameVi": "Thái độ" }
+    ]
+  },
+  {
+    "slug": "health-body", "icon": "🩺", "nameEn": "Health & Body", "nameVi": "Sức khỏe & Cơ thể",
+    "children": [
+      { "slug": "body-parts", "nameEn": "Body parts", "nameVi": "Bộ phận cơ thể" },
+      { "slug": "illness-injury", "nameEn": "Illness & Injury", "nameVi": "Bệnh tật & Chấn thương" },
+      { "slug": "fitness", "nameEn": "Fitness", "nameVi": "Rèn luyện sức khỏe" }
+    ]
+  },
+  {
+    "slug": "food-drink", "icon": "🍜", "nameEn": "Food & Drink", "nameVi": "Đồ ăn & Đồ uống",
+    "children": [
+      { "slug": "cooking", "nameEn": "Cooking", "nameVi": "Nấu ăn" },
+      { "slug": "restaurant", "nameEn": "At the restaurant", "nameVi": "Ở nhà hàng" },
+      { "slug": "taste-texture", "nameEn": "Taste & Texture", "nameVi": "Hương vị & Kết cấu" }
+    ]
+  },
+  {
+    "slug": "home", "icon": "🏠", "nameEn": "Home & Housing", "nameVi": "Nhà cửa",
+    "children": [
+      { "slug": "rooms-furniture", "nameEn": "Rooms & Furniture", "nameVi": "Phòng & Nội thất" },
+      { "slug": "housework", "nameEn": "Housework", "nameVi": "Việc nhà" }
+    ]
+  },
+  {
+    "slug": "daily-life", "icon": "⏰", "nameEn": "Daily Life & Routines", "nameVi": "Sinh hoạt hằng ngày",
+    "children": []
+  },
+  {
+    "slug": "money-shopping", "icon": "🛒", "nameEn": "Shopping & Money", "nameVi": "Mua sắm & Tiền bạc",
+    "children": [
+      { "slug": "shops", "nameEn": "Shops & Shopping", "nameVi": "Cửa hàng & Mua sắm" },
+      { "slug": "prices-payment", "nameEn": "Prices & Payment", "nameVi": "Giá cả & Thanh toán" },
+      { "slug": "banking", "nameEn": "Banking", "nameVi": "Ngân hàng" }
+    ]
+  },
+  {
+    "slug": "clothes-fashion", "icon": "👗", "nameEn": "Clothes & Fashion", "nameVi": "Quần áo & Thời trang",
+    "children": []
+  },
+  {
+    "slug": "travel-transport", "icon": "✈️", "nameEn": "Travel & Transport", "nameVi": "Du lịch & Giao thông",
+    "children": [
+      { "slug": "airport-flights", "nameEn": "Airport & Flights", "nameVi": "Sân bay & Chuyến bay" },
+      { "slug": "accommodation", "nameEn": "Hotels & Accommodation", "nameVi": "Khách sạn & Chỗ ở" },
+      { "slug": "directions", "nameEn": "Directions", "nameVi": "Chỉ đường" }
+    ]
+  },
+  {
+    "slug": "places-city", "icon": "🏙️", "nameEn": "Places & City", "nameVi": "Địa điểm & Thành phố",
+    "children": [
+      { "slug": "buildings", "nameEn": "Buildings", "nameVi": "Công trình & Tòa nhà" },
+      { "slug": "countryside", "nameEn": "Countryside", "nameVi": "Nông thôn" }
+    ]
+  },
+  {
+    "slug": "work-jobs", "icon": "💼", "nameEn": "Work & Jobs", "nameVi": "Công việc & Nghề nghiệp",
+    "children": [
+      { "slug": "occupations", "nameEn": "Occupations", "nameVi": "Nghề nghiệp" },
+      { "slug": "office", "nameEn": "In the office", "nameVi": "Ở văn phòng" },
+      { "slug": "job-hunting", "nameEn": "Job hunting", "nameVi": "Tìm việc" }
+    ]
+  },
+  {
+    "slug": "education", "icon": "🎓", "nameEn": "Education", "nameVi": "Giáo dục",
+    "children": [
+      { "slug": "school", "nameEn": "School", "nameVi": "Trường học" },
+      { "slug": "university", "nameEn": "University", "nameVi": "Đại học" },
+      { "slug": "exams", "nameEn": "Exams", "nameVi": "Thi cử" }
+    ]
+  },
+  {
+    "slug": "technology", "icon": "💻", "nameEn": "Technology", "nameVi": "Công nghệ",
+    "children": [
+      { "slug": "computers", "nameEn": "Computers", "nameVi": "Máy tính" },
+      { "slug": "internet", "nameEn": "The Internet", "nameVi": "Internet" },
+      { "slug": "devices", "nameEn": "Devices", "nameVi": "Thiết bị" }
+    ]
+  },
+  {
+    "slug": "nature-environment", "icon": "🌿", "nameEn": "Nature & Environment", "nameVi": "Thiên nhiên & Môi trường",
+    "children": [
+      { "slug": "animals", "nameEn": "Animals", "nameVi": "Động vật" },
+      { "slug": "plants", "nameEn": "Plants", "nameVi": "Thực vật" },
+      { "slug": "pollution", "nameEn": "Pollution", "nameVi": "Ô nhiễm" }
+    ]
+  },
+  {
+    "slug": "weather", "icon": "⛅", "nameEn": "Weather & Climate", "nameVi": "Thời tiết & Khí hậu",
+    "children": []
+  },
+  {
+    "slug": "sports-hobbies", "icon": "⚽", "nameEn": "Sports & Hobbies", "nameVi": "Thể thao & Sở thích",
+    "children": []
+  },
+  {
+    "slug": "arts-entertainment", "icon": "🎬", "nameEn": "Arts & Entertainment", "nameVi": "Nghệ thuật & Giải trí",
+    "children": [
+      { "slug": "music", "nameEn": "Music", "nameVi": "Âm nhạc" },
+      { "slug": "film-tv", "nameEn": "Film & TV", "nameVi": "Phim & Truyền hình" },
+      { "slug": "books", "nameEn": "Books & Literature", "nameVi": "Sách & Văn học" }
+    ]
+  },
+  {
+    "slug": "media-communication", "icon": "📰", "nameEn": "Media & Communication", "nameVi": "Truyền thông & Giao tiếp",
+    "children": [
+      { "slug": "news", "nameEn": "News", "nameVi": "Tin tức" },
+      { "slug": "social-media", "nameEn": "Social media", "nameVi": "Mạng xã hội" }
+    ]
+  },
+  {
+    "slug": "society", "icon": "🏛️", "nameEn": "Society & Politics", "nameVi": "Xã hội & Chính trị",
+    "children": [
+      { "slug": "law-crime", "nameEn": "Law & Crime", "nameVi": "Luật pháp & Tội phạm" },
+      { "slug": "government", "nameEn": "Government", "nameVi": "Chính phủ" }
+    ]
+  },
+  {
+    "slug": "business-economy", "icon": "📈", "nameEn": "Business & Economy", "nameVi": "Kinh doanh & Kinh tế",
+    "children": [
+      { "slug": "marketing", "nameEn": "Marketing", "nameVi": "Tiếp thị" },
+      { "slug": "finance", "nameEn": "Finance", "nameVi": "Tài chính" }
+    ]
+  },
+  {
+    "slug": "science", "icon": "🔬", "nameEn": "Science", "nameVi": "Khoa học",
+    "children": []
+  },
+  {
+    "slug": "time-numbers", "icon": "🔢", "nameEn": "Time & Numbers", "nameVi": "Thời gian & Số đếm",
+    "children": []
+  },
+  {
+    "slug": "academic", "icon": "📚", "nameEn": "Academic English", "nameVi": "Từ vựng học thuật",
+    "children": [
+      { "slug": "academic-word-list", "nameEn": "Academic Word List", "nameVi": "Danh sách từ học thuật (AWL)" },
+      { "slug": "ielts", "nameEn": "IELTS", "nameVi": "IELTS" }
+    ]
+  }
+]

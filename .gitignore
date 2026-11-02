@@ -1,0 +1,25 @@
+# OS / editor
+.DS_Store
+*.log
+
+# Node
+node_modules/
+
+# Environment variables – NEVER commit (DB passwords, API keys)
+.env
+.env.*
+!.env.example
+
+# Build
+dist/
+.next/
+coverage/
+
+# Generated Prisma Client
+backend/src/generated/
+
+# Machine-local Claude Code settings
+.claude/settings.local.json
+
+# Vercel CLI (local link/build output)
+.vercel/

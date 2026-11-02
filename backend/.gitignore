@@ -1,0 +1,14 @@
+node_modules
+dist
+coverage
+
+# Environment variables – never commit
+.env
+.env.*
+!.env.example
+
+# Generated Prisma Client (npm run db:generate)
+/src/generated/prisma
+
+# Vercel CLI
+.vercel

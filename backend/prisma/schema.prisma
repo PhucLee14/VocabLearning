@@ -1,0 +1,403 @@
+// Prisma schema – Vocab app
+// Docs: https://pris.ly/d/prisma-schema
+// Conventions: PascalCase models, snake_case tables (@@map), camelCase columns.
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────────────────────── Enums ─────────────────────────────
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Locale {
+  vi
+  en
+}
+
+enum CefrLevel {
+  A1
+  A2
+  B1
+  B2
+  C1
+  C2
+}
+
+/// Mirrors the ts-fsrs State enum: New=0, Learning=1, Review=2, Relearning=3
+enum CardState {
+  NEW
+  LEARNING
+  REVIEW
+  RELEARNING
+}
+
+enum StudyMode {
+  LEARN
+  REVIEW
+  PRACTICE
+  QUIZ
+}
+
+enum ReminderChannel {
+  EMAIL
+  PUSH
+}
+
+enum AuthTokenType {
+  EMAIL_VERIFY
+  PASSWORD_RESET
+}
+
+enum ImportStatus {
+  PREVIEW
+  COMPLETED
+  FAILED
+}
+
+// ──────────────────────── Users & authentication ────────────────────────
+
+model User {
+  id              String    @id @default(uuid(7)) @db.Uuid
+  email           String    @unique
+  passwordHash    String?
+  name            String
+  avatarUrl       String?
+  role            Role      @default(USER)
+  locale          Locale    @default(vi)
+  timezone        String    @default("Asia/Ho_Chi_Minh")
+  emailVerifiedAt DateTime?
+  googleId        String?   @unique
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  settings          UserSettings?
+  streak            UserStreak?
+  refreshTokens     RefreshToken[]
+  authTokens        AuthToken[]
+  cards             UserCard[]
+  reviewLogs        ReviewLog[]
+  notes             Note[]
+  studySessions     StudySession[]
+  dailyStats        DailyStat[]
+  pushSubscriptions PushSubscription[]
+  reminderLogs      ReminderLog[]
+  importJobs        ImportJob[]
+
+  @@map("users")
+}
+
+/// Rotating refresh tokens; only the hash is stored.
+model RefreshToken {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  userId    String    @db.Uuid
+  tokenHash String    @unique
+  userAgent String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+/// Single-use tokens for email verification and password reset. Only the hash is stored.
+model AuthToken {
+  id        String        @id @default(uuid(7)) @db.Uuid
+  userId    String        @db.Uuid
+  type      AuthTokenType
+  tokenHash String        @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime      @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+  @@map("auth_tokens")
+}
+
+model UserSettings {
+  userId           String            @id @db.Uuid
+  dailyNewWords    Int               @default(10)
+  dailyGoalMinutes Int               @default(15)
+  dailyGoalCards   Int               @default(10)
+  desiredRetention Float             @default(0.9)
+  showVietnamese   Boolean           @default(true)
+  reminderEnabled  Boolean           @default(true)
+  /// "HH:mm" in the user's timezone
+  reminderTime     String            @default("20:00")
+  reminderChannels ReminderChannel[] @default([EMAIL])
+  updatedAt        DateTime          @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+// ───────────────────────────── Vocabulary ─────────────────────────────
+
+model Topic {
+  id            String   @id @default(uuid(7)) @db.Uuid
+  slug          String   @unique
+  nameEn        String
+  nameVi        String
+  descriptionEn String?
+  descriptionVi String?
+  icon          String?
+  sortOrder     Int      @default(0)
+  parentId      String?  @db.Uuid
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  parent   Topic?      @relation("TopicTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children Topic[]     @relation("TopicTree")
+  words    WordTopic[]
+
+  @@index([parentId])
+  @@map("topics")
+}
+
+/// Each sense of a word is a separate entry, keyed by (headword, pos, senseNo).
+model Word {
+  id            String    @id @default(uuid(7)) @db.Uuid
+  /// e.g. "bank-noun-2"
+  slug          String    @unique
+  headword      String
+  pos           String
+  senseNo       Int       @default(1)
+  ipa           String?
+  cefrLevel     CefrLevel
+  definitionEn  String
+  meaningVi     String?
+  synonyms      String[]  @default([])
+  antonyms      String[]  @default([])
+  collocations  String[]  @default([])
+  audioUrl      String?
+  imageUrl      String?
+  frequencyRank Int?
+  source        String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  examples   Example[]
+  topics     WordTopic[]
+  cards      UserCard[]
+  reviewLogs ReviewLog[]
+  notes      Note[]
+
+  @@unique([headword, pos, senseNo])
+  @@index([cefrLevel])
+  @@index([headword])
+  @@map("words")
+}
+
+model Example {
+  id            String  @id @default(uuid(7)) @db.Uuid
+  wordId        String  @db.Uuid
+  sentence      String
+  translationVi String?
+  sortOrder     Int     @default(0)
+
+  word Word @relation(fields: [wordId], references: [id], onDelete: Cascade)
+
+  @@index([wordId])
+  @@map("examples")
+}
+
+model WordTopic {
+  wordId  String @db.Uuid
+  topicId String @db.Uuid
+
+  word  Word  @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@id([wordId, topicId])
+  @@index([topicId])
+  @@map("word_topics")
+}
+
+// ──────────────────────── Learning & SRS (FSRS) ────────────────────────
+
+/// A user's learning state for one word. Created only when the user starts learning it.
+model UserCard {
+  userId        String    @db.Uuid
+  wordId        String    @db.Uuid
+  state         CardState @default(NEW)
+  due           DateTime  @default(now())
+  stability     Float     @default(0)
+  difficulty    Float     @default(0)
+  scheduledDays Int       @default(0)
+  learningSteps Int       @default(0)
+  reps          Int       @default(0)
+  lapses        Int       @default(0)
+  lastReviewAt  DateTime?
+  /// 0 New · 1 Learning · 2 Recognised · 3 Familiar · 4 Proficient · 5 Long-term memory
+  masteryLevel  Int       @default(0)
+  isKnown       Boolean   @default(false)
+  isStarred     Boolean   @default(false)
+  isSuspended   Boolean   @default(false)
+  isLeech       Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  word Word @relation(fields: [wordId], references: [id], onDelete: Cascade)
+
+  @@id([userId, wordId])
+  @@index([userId, due])
+  @@index([userId, masteryLevel])
+  @@map("user_cards")
+}
+
+model ReviewLog {
+  id               String    @id @default(uuid(7)) @db.Uuid
+  userId           String    @db.Uuid
+  wordId           String    @db.Uuid
+  /// 1 Again · 2 Hard · 3 Good · 4 Easy
+  rating           Int
+  mode             StudyMode
+  stateBefore      CardState
+  prevIntervalDays Int       @default(0)
+  nextIntervalDays Int       @default(0)
+  durationMs       Int?
+  reviewedAt       DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  word Word @relation(fields: [wordId], references: [id], onDelete: Cascade)
+
+  @@index([userId, reviewedAt])
+  @@index([userId, wordId])
+  @@map("review_logs")
+}
+
+/// A note attached to a word (wordId), or a general notebook entry (wordId = null).
+model Note {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  userId    String   @db.Uuid
+  wordId    String?  @db.Uuid
+  title     String?
+  content   String
+  tags      String[] @default([])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  word Word? @relation(fields: [wordId], references: [id], onDelete: SetNull)
+
+  @@index([userId, wordId])
+  @@map("notes")
+}
+
+// ──────────────────── Study time, streaks & stats ────────────────────
+
+model StudySession {
+  id              String    @id @default(uuid(7)) @db.Uuid
+  userId          String    @db.Uuid
+  mode            StudyMode
+  startedAt       DateTime  @default(now())
+  endedAt         DateTime?
+  lastHeartbeatAt DateTime?
+  activeSeconds   Int       @default(0)
+  newCount        Int       @default(0)
+  reviewCount     Int       @default(0)
+  correctCount    Int       @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startedAt])
+  @@map("study_sessions")
+}
+
+/// One row per user per day (day in the user's timezone). Feeds streaks & the heatmap.
+model DailyStat {
+  userId        String   @db.Uuid
+  date          DateTime @db.Date
+  activeSeconds Int      @default(0)
+  newWords      Int      @default(0)
+  reviews       Int      @default(0)
+  correct       Int      @default(0)
+  goalMet       Boolean  @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, date])
+  @@map("daily_stats")
+}
+
+model UserStreak {
+  userId         String    @id @db.Uuid
+  current        Int       @default(0)
+  longest        Int       @default(0)
+  lastActiveDate DateTime? @db.Date
+  freezesLeft    Int       @default(0)
+  updatedAt      DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_streaks")
+}
+
+// ───────────────────────────── Reminders ─────────────────────────────
+
+model PushSubscription {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  userId    String   @db.Uuid
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}
+
+model ReminderLog {
+  id        String          @id @default(uuid(7)) @db.Uuid
+  userId    String          @db.Uuid
+  channel   ReminderChannel
+  dueCount  Int
+  /// Day in the user's timezone – guarantees at most one reminder per day per channel
+  localDate DateTime        @db.Date
+  sentAt    DateTime        @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, channel, localDate])
+  @@map("reminder_logs")
+}
+
+// ───────────────────────────── Import ─────────────────────────────
+
+model ImportJob {
+  id          String       @id @default(uuid(7)) @db.Uuid
+  fileName    String
+  status      ImportStatus @default(PREVIEW)
+  totalRows   Int          @default(0)
+  inserted    Int          @default(0)
+  updated     Int          @default(0)
+  failed      Int          @default(0)
+  errors      Json?
+  createdById String?      @db.Uuid
+  createdAt   DateTime     @default(now())
+  completedAt DateTime?
+
+  createdBy User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@map("import_jobs")
+}

@@ -363,7 +363,7 @@ A starting point; editable from the admin pages or via import. Seed data: [backe
 - [ ] Sign up / sign in (JWT + refresh token), email verification, admin role
 
 ### Phase 1: MVP (learn and review)
-- [ ] ~50 sample words for testing: list + enriched data ready (`backend/prisma/seed/words-sample*.{csv,json}`; hand-assigned CEFR levels), not imported yet
+- [x] ~50 sample words for testing: 53 words imported on 2026-11-02 (`backend/prisma/seed/words-sample*.{csv,json}`; hand-assigned CEFR levels, verify against CEFR-J later)
 - [x] CSV/JSON import CLI (`npm run words:import`, with `--dry-run`) + enrichment from free sources (`npm run words:enrich`), see [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md)
 - [ ] `/admin/import` UI with a preview step
 - [ ] Topic, level and word detail pages (pronunciation via Web Speech API)

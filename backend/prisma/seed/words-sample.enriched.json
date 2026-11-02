@@ -6,7 +6,7 @@
     "ipa": "/ˈmʌðɚ/",
     "cefr_level": "A1",
     "definition_en": "A female parent, especially of a human; a female who parents a child (which she has given birth to, adopted, or fostered).",
-    "meaning_vi": "má, mẹ, mợ",
+    "meaning_vi": "mẹ",
     "examples": [
       {
         "sentence": "My mother went shopping.",
@@ -186,7 +186,7 @@
     "ipa": "/ˈhæpi/",
     "cefr_level": "A1",
     "definition_en": "Having a feeling arising from a consciousness of well-being or of enjoyment; enjoying good of any kind, such as comfort, peace, or tranquillity; blissful, contented, joyous.",
-    "meaning_vi": "mừng, vui, hạnh phúc",
+    "meaning_vi": "vui, hạnh phúc",
     "examples": [
       {
         "sentence": "Music makes me feel happy."
@@ -439,10 +439,6 @@
       {
         "sentence": "They're at the restaurant looking at the menu.",
         "translation_vi": "Họ đang xem thực đơn ở trong nhà hàng."
-      },
-      {
-        "sentence": "They're at the eatery looking at the menu.",
-        "translation_vi": "Họ đang xem thực đơn ở trong nhà hàng."
       }
     ],
     "topics": [
@@ -524,7 +520,7 @@
     "ipa": "/ˈlɔːn.dɹi/",
     "cefr_level": "B1",
     "definition_en": "A place or room where laundering is done - including, by extension, other forms of laundering than clothes washing.",
-    "meaning_vi": "giặt giạ, giặt giũ",
+    "meaning_vi": "phòng giặt là, tiệm giặt là",
     "examples": [
       {
         "sentence": "Tom is in the laundry room.",
@@ -616,7 +612,7 @@
     "ipa": "/dɪsˈkaʊnt/",
     "cefr_level": "B1",
     "definition_en": "A reduction in price.",
-    "meaning_vi": "bớt giá, sự bớt, sự giảm",
+    "meaning_vi": "sự giảm giá",
     "examples": [
       {
         "sentence": "Could you give me a discount?",
@@ -748,7 +744,7 @@
     "ipa": "/ˌɹɛzəˈveɪʃən/",
     "cefr_level": "B1",
     "definition_en": "An arrangement by which accommodation or transport arrangements are secured in advance.",
-    "meaning_vi": "đặt, đặt trước",
+    "meaning_vi": "sự đặt chỗ, sự đặt trước",
     "examples": [
       {
         "sentence": "I'd like a hotel reservation.",
@@ -886,7 +882,7 @@
     "ipa": "/ˌɛnd͡ʒɪˈnɪɹ/",
     "cefr_level": "A2",
     "definition_en": "(by extension) A person professionally engaged in the technical design and construction of large-scale private and public works such as bridges, buildings, harbours, railways, roads, etc.; a civil engineer.",
-    "meaning_vi": "kĩ sư or kỹ sư",
+    "meaning_vi": "kỹ sư",
     "examples": [
       {
         "sentence": "Hải is an engineer.",
@@ -1011,10 +1007,6 @@
       {
         "sentence": "His lecture had a large audience.",
         "translation_vi": "Buổi thuyết giảng của anh ta có rất đông khán giả."
-      },
-      {
-        "sentence": "I concentrated my attention on the lecture.",
-        "translation_vi": "Tôi đã hết sức tập trung vào bài giảng đó."
       }
     ],
     "topics": [
@@ -1319,7 +1311,7 @@
     "ipa": "/ˈkɒnsət/",
     "cefr_level": "A2",
     "definition_en": "A musical performance, usually public, in which several performers or instruments take part.",
-    "meaning_vi": "buổi hoà nhạc, (buổi, cuộc) biểu diễn, hoà tấu",
+    "meaning_vi": "buổi hòa nhạc",
     "examples": [
       {
         "sentence": "How was the concert?",
@@ -1439,7 +1431,7 @@
     "ipa": "/ˈfɒləʊə(ɹ)/",
     "cefr_level": "B2",
     "definition_en": "(social media) An account holder who subscribes to see content from another account on a social media platform.",
-    "meaning_vi": "theo dõi",
+    "meaning_vi": "người theo dõi",
     "examples": [],
     "topics": [
       "social-media"
@@ -1463,12 +1455,8 @@
     "ipa": "[ˈɛvəɾəns]",
     "cefr_level": "B1",
     "definition_en": "Facts or observations presented in support of an assertion.",
-    "meaning_vi": "sự chứng nhận, bằng chứng",
+    "meaning_vi": "bằng chứng",
     "examples": [
-      {
-        "sentence": "Evolution has no evidence.",
-        "translation_vi": "Tiến hoá không có bằng chứng."
-      },
       {
         "sentence": "They are still looking for evidence.",
         "translation_vi": "Họ vẫn đang tìm kiếm bằng chứng."
@@ -1493,15 +1481,11 @@
     "ipa": "/əˈlɛkʃ(ə)n/",
     "cefr_level": "B1",
     "definition_en": "A process of choosing a leader, members of parliament, councillors, or other representatives by popular vote.",
-    "meaning_vi": "sự bầu cử, tuyển cử",
+    "meaning_vi": "cuộc bầu cử",
     "examples": [
       {
         "sentence": "Lincoln won the election.",
         "translation_vi": "Lincoln đạt được trong bầu cử."
-      },
-      {
-        "sentence": "The election was unconstitutionally cancelled.",
-        "translation_vi": "Cuộc bầu cử đã bị huỷ một cách vi hiến."
       }
     ],
     "topics": [
@@ -1530,10 +1514,6 @@
       {
         "sentence": "The overuse of discounts has cheapened the brand's value over time.",
         "translation_vi": "Việc lạm dụng giảm giá đã làm giảm giá trị nhãn hàng theo thời gian."
-      },
-      {
-        "sentence": "The child next door was showing off his brand new bicycle to his friends.",
-        "translation_vi": "Đứa trẻ con hàng xóm đang khoe với bạn bè chiếc xe đạp mới của nó."
       }
     ],
     "topics": [
@@ -1599,10 +1579,6 @@
       {
         "sentence": "The experiment proved to be successful.",
         "translation_vi": "Thí nghiệm được đánh giá là thành công."
-      },
-      {
-        "sentence": "This country successfully conducted a nuclear experiment.",
-        "translation_vi": "Đất nước này đã tiến hành thử nghiệm hạt nhân thành công."
       }
     ],
     "topics": [
@@ -1624,15 +1600,11 @@
     "ipa": "/ˈsɛn.t͡ʃə.ɹiː/",
     "cefr_level": "A2",
     "definition_en": "A period of one hundred consecutive years; often specifically a numbered period with conventional start and end dates, e.g., the twentieth century, which stretches from (strictly) 1901 through 2000, or (informally) 1900 through 1999. The first century AD was from 1 to 100.",
-    "meaning_vi": "thế kỉ",
+    "meaning_vi": "thế kỷ",
     "examples": [
       {
         "sentence": "She died in the 18th century.",
         "translation_vi": "Cô ấy đã chết vào thế kỉ 18."
-      },
-      {
-        "sentence": "He died in the 18th century.",
-        "translation_vi": "Anh ấy đã chết vào thế kỉ 18."
       }
     ],
     "topics": [
@@ -1684,7 +1656,7 @@
     "ipa": "/ɹɪˈzɪl.jənt/",
     "cefr_level": "C1",
     "definition_en": "Returning quickly to normal after damaging events or conditions. (of systems, organisms or people)",
-    "meaning_vi": "đàn hồi",
+    "meaning_vi": "kiên cường, mau phục hồi",
     "examples": [],
     "topics": [
       "ielts"

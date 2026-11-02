@@ -23,3 +23,6 @@ backend/src/generated/
 
 # Vercel CLI (local link/build output)
 .vercel/
+
+# TypeScript incremental build cache
+*.tsbuildinfo

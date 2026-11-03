@@ -1,6 +1,7 @@
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module.js';
 
 async function bootstrap() {
@@ -15,6 +16,8 @@ async function bootstrap() {
     .get<string>('FRONTEND_URL', 'http://localhost:3300')
     .split(',')
     .map((o) => o.trim());
+  // Reads the session cookie (src/auth/session-cookie.ts).
+  app.use(cookieParser());
   app.enableCors({ origin: origins, credentials: true });
 
   app.useGlobalPipes(

@@ -54,6 +54,12 @@ enum ReminderChannel {
   PUSH
 }
 
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
 enum AuthTokenType {
   EMAIL_VERIFY
   PASSWORD_RESET
@@ -68,22 +74,28 @@ enum ImportStatus {
 // ──────────────────────── Users & authentication ────────────────────────
 
 model User {
-  id              String    @id @default(uuid(7)) @db.Uuid
-  email           String    @unique
+  id              String     @id @default(uuid(7)) @db.Uuid
+  email           String     @unique
   passwordHash    String?
   name            String
   avatarUrl       String?
-  role            Role      @default(USER)
-  locale          Locale    @default(vi)
-  timezone        String    @default("Asia/Ho_Chi_Minh")
+  /// null = prefer not to say
+  gender          Gender?
+  birthDate       DateTime?  @db.Date
+  bio             String?
+  /// The CEFR level the learner is aiming for
+  targetLevel     CefrLevel?
+  role            Role       @default(USER)
+  locale          Locale     @default(vi)
+  timezone        String     @default("Asia/Ho_Chi_Minh")
   emailVerifiedAt DateTime?
-  googleId        String?   @unique
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  googleId        String?    @unique
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
   settings          UserSettings?
   streak            UserStreak?
-  refreshTokens     RefreshToken[]
+  sessions          Session[]
   authTokens        AuthToken[]
   cards             UserCard[]
   reviewLogs        ReviewLog[]
@@ -97,20 +109,21 @@ model User {
   @@map("users")
 }
 
-/// Rotating refresh tokens; only the hash is stored.
-model RefreshToken {
-  id        String    @id @default(uuid(7)) @db.Uuid
-  userId    String    @db.Uuid
-  tokenHash String    @unique
-  userAgent String?
-  expiresAt DateTime
-  revokedAt DateTime?
-  createdAt DateTime  @default(now())
+/// A signed-in browser. The cookie holds a random token; only its SHA-256 hash is stored.
+model Session {
+  id         String    @id @default(uuid(7)) @db.Uuid
+  userId     String    @db.Uuid
+  tokenHash  String    @unique
+  userAgent  String?
+  expiresAt  DateTime
+  lastUsedAt DateTime  @default(now())
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@map("refresh_tokens")
+  @@map("sessions")
 }
 
 /// Single-use tokens for email verification and password reset. Only the hash is stored.

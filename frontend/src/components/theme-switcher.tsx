@@ -1,5 +1,6 @@
 'use client';
 
+import { Monitor, Moon, Sun } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useLayoutEffect, useSyncExternalStore } from 'react';
 import { THEME_STORAGE_KEY, THEMES, type Theme } from '@/lib/theme';
@@ -83,37 +84,6 @@ export function ThemeSwitcher() {
 }
 
 function ThemeIcon({ theme }: { theme: Theme }) {
-  const common = {
-    width: 16,
-    height: 16,
-    viewBox: '0 0 24 24',
-    fill: 'none',
-    stroke: 'currentColor',
-    strokeWidth: 2,
-    strokeLinecap: 'round' as const,
-    strokeLinejoin: 'round' as const,
-    'aria-hidden': true,
-  };
-
-  if (theme === 'light') {
-    return (
-      <svg {...common}>
-        <circle cx="12" cy="12" r="4" />
-        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-      </svg>
-    );
-  }
-  if (theme === 'dark') {
-    return (
-      <svg {...common}>
-        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-      </svg>
-    );
-  }
-  return (
-    <svg {...common}>
-      <rect x="2" y="3" width="20" height="14" rx="2" />
-      <path d="M8 21h8M12 17v4" />
-    </svg>
-  );
+  const Icon = theme === 'light' ? Sun : theme === 'dark' ? Moon : Monitor;
+  return <Icon size={16} strokeWidth={2} aria-hidden />;
 }

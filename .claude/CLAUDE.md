@@ -38,12 +38,18 @@ Multi-user English vocabulary learning web app. Plan: `PLAN.md`. Deployment: `do
   - `middleware.ts` is now `proxy.ts`.
   - Read the locale with `next/root-params`.
   - With Cache Components, uncached data (API fetches, cookies) must sit inside `<Suspense>` or use `'use cache'`.
-- **UI design** ("reference manual" look, adapted from the user's "Ôn tập Backend Junior–Middle" artifact):
-  - Tokens live in `frontend/src/app/globals.css` and map to Tailwind colors: `canvas`, `surface`, `ink`, `muted`, `line`, `accent`, `accent-soft`, `on-accent`, `code`. Use these (e.g. `bg-surface`, `text-muted`, `border-line`), not raw hex or Tailwind palette colors.
-  - Fonts: Be Vietnam Pro (body, `font-sans`) and JetBrains Mono (titles, labels, badges, numbers, `font-mono`).
-  - Shared classes in `@layer components`: `.eyebrow`, `.badge` + `.badge-solid|soft|dashed`, `.seg` (segmented control, pressed = `aria-pressed="true"`), `.btn-outline`.
+- **UI design** (friendly learning-app look, 2026-11-03; replaced the earlier "reference manual" look):
+  - Tokens live in `frontend/src/app/globals.css` and map to Tailwind colors: `canvas` (page), `surface` (pale green panels), `raised`, `sunken`, `ink`, `muted`, `line`, `line-strong`, `accent` (+ `accent-lip`, `accent-soft`, `accent-ink`, `on-accent`), `streak` (+ `-soft`), `danger` (+ `-soft`), `warning-soft`/`warning-ink`, and the mastery ramp `m0`–`m5`. Use these, not raw hex or Tailwind palette colors.
+  - One font: Nunito (`font-sans`, Vietnamese subset). No monospace in the UI; numbers use `.num` (tabular figures).
+  - Shared classes in `@layer components`: `.btn` + `.btn-primary|secondary|danger|ghost` (+ `.btn-lg|sm`; pill with a solid lip, no shadow), `.panel` (tonal panel), `.card` (white card, 1px line), `.pill` (+ `-accent|-streak|-danger`), `.chip` (pressed = `aria-pressed="true"` or `aria-current="page"`), `.seg` (segmented control), `.input`, `.field-label`, `.num`. Flashcard flip: `.flip`, `.flip-inner[data-flipped]`, `.flip-face`, `.flip-back`.
+  - House rules: flat surfaces (a tone step or a 1px line, never a resting shadow), no gradients, no emoji, colour on data (mastery ramp, today's bar, streak) and on the one primary action.
   - Element defaults must stay inside `@layer base`: unlayered CSS beats every Tailwind utility.
   - Theme: Light / Dark / System. Stored in `localStorage` (`theme`), applied as `data-theme` on `<html>` by an inline script in `<head>` (`src/lib/theme.ts`, `src/components/inline-script.tsx`), so pages stay static and there is no flash. No `data-theme` = follow the OS. Don't move it to a cookie (that would make every page dynamic).
+  - Layout: `src/app/[locale]/(site)/` = public pages with the site header; `src/app/[locale]/(app)/` = the app shell (sidebar ≥1024px, top bar + bottom bar below). Wrap page content in `<Page>` from `components/shell/app-shell.tsx`.
+- **Auth** (`backend/src/auth/`): database-backed sessions, not JWT. Cookie `vocab_session` (httpOnly, SameSite=Lax, `secure` when `NODE_ENV=production`), 30 days, sliding. Guards: `SessionGuard` (401) and `OptionalSessionGuard`; `@CurrentUser()`. Wrong password on a signed-in action is **403**, not 401 (the client treats 401 as "signed out").
+  - Frontend: Server Components read the user with `src/lib/server-api.ts` (`userGet` forwards the cookie and redirects to `/login` on 401; `optionalUserGet`; `getViewer`); Client Components call `src/lib/client-api.ts` (`api()`), then `router.refresh()`. Reading the session is dynamic: keep it inside `<Suspense>`.
+  - Client hooks that read the URL (`usePathname`, `useSearchParams`) must sit inside `<Suspense>` too, or `next build` fails on dynamic routes (see `components/locale-switcher.tsx`).
+  - ICU lists canonical time zone names (`Asia/Saigon`), not the stored alias (`Asia/Ho_Chi_Minh`): a time zone `<select>` must include the stored value.
 - **i18n**: routes live under `src/app/[locale]/...`, config in `src/i18n/`. New UI text goes into **both** `messages/vi.json` and `messages/en.json`. Keys are type-checked via `src/global.d.ts`.
 - **Prisma 7**:
   - CLI config is `backend/prisma7.config.ts` (Prisma 7 looks for this filename).

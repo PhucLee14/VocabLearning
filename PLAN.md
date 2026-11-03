@@ -172,7 +172,7 @@ How it works:
 | Backend | **NestJS 12 + TypeScript (ESM)** | `backend/`, REST API under `/api` |
 | ORM | **Prisma 7** + `pg` driver adapter | Schema in `backend/prisma/schema.prisma` |
 | Database | **PostgreSQL 18 on Neon**, region **Singapore** (`aws-ap-southeast-1`) | The app uses the pooled URL; migrate/seed use the direct URL |
-| Auth | Built in NestJS: email + password (argon2), short-lived JWT access token, rotating refresh token in an httpOnly cookie. Google OAuth later. | Email verification and password reset sent via Resend |
+| Auth | Built in NestJS: email + password (argon2id via `@node-rs/argon2`) and a **database-backed session**: a random token in the httpOnly `vocab_session` cookie (SameSite=Lax, 30 days, sliding), only its SHA-256 hash stored in `sessions`. Google OAuth later. | Changed from JWT + refresh token on 2026-11-03: Server Components cannot set cookies, so an expired access token could not be refreshed while rendering; a session lookup is one indexed query and can be revoked at once. Email verification and password reset via Resend later. |
 | Browser → API | ✔ Next.js rewrite `/api/*` → backend (`frontend/next.config.ts`) | Frontend and API share one domain, so the auth cookie is first-party. Safari/Chrome block third-party cookies. |
 | Hosting | **Vercel Hobby** for both apps, region `sin1` (`vercel.json`), Node 24 | Free. Non-commercial use only. See section 12. |
 | SRS | **ts-fsrs** (runs in the backend) | |
@@ -189,9 +189,9 @@ How it works:
 > The authoritative schema, migrated to Neon, is [backend/prisma/schema.prisma](backend/prisma/schema.prisma). This is a summary.
 
 ```text
-User              id, email, passwordHash, name, role (USER|ADMIN), locale (vi|en),
-                  timezone, emailVerifiedAt, googleId
-RefreshToken      id, userId, tokenHash, userAgent, expiresAt, revokedAt
+User              id, email, passwordHash, name, gender?, birthDate?, bio?, targetLevel?,
+                  role (USER|ADMIN), locale (vi|en), timezone, emailVerifiedAt, googleId
+Session           id, userId, tokenHash, userAgent, expiresAt, lastUsedAt, revokedAt
 AuthToken         id, userId, type (EMAIL_VERIFY|PASSWORD_RESET), tokenHash, expiresAt, usedAt
 UserSettings      userId, dailyNewWords=10, dailyGoalMinutes=15, dailyGoalCards=10,
                   desiredRetention=0.9, showVietnamese=true,
@@ -235,20 +235,22 @@ ImportJob         id, fileName, status, totalRows, inserted, updated, failed,
 
 Every page has a locale prefix, e.g. `/vi/dashboard`, `/en/dashboard`. The table omits it for brevity.
 
+Built on 2026-11-03 (✔) and still planned. Signed-in pages are guarded by `frontend/src/proxy.ts` (cookie present → else `/login?next=`); topics and word pages are public.
+
 | Route | Page | Main content |
 |-------|------|--------------|
-| `/` | Landing | Introduction, get-started button |
-| `/login`, `/register` | Sign in / Sign up | Email + password (Google later), email verification |
-| `/dashboard` | **Today** | Streak 🔥, due count, new words, time today vs. goal, *Review* & *Learn new words* buttons, 7-day forecast |
-| `/learn` | Learn new words | Pick topic/level → learning session (3.3) |
-| `/review` | Review | Flashcards for due words (3.4) |
-| `/practice` | Practice | Flashcards that don't affect the schedule |
-| `/topics`, `/topics/[slug]` | Topics | Topic list + progress; word list filtered by level and mastery |
-| `/levels/[level]` | Levels | Same as above, per A1–C2 |
-| `/words/[slug]` | Word detail | Definition, IPA, audio, examples, notes, mastery, recall probability, review history |
+| ✔ `/` | Landing | What it is, a live flashcard with real words, how it works, CEFR levels, topics. Signed-in visitors go to `/dashboard`. |
+| ✔ `/login`, `/register` | Sign in / Sign up | Email + password, `?next=` (same-site paths only). Google and email verification later. |
+| ✔ `/dashboard` | **Home** | Greeting with today's one fact, *Review N words* / *Learn new words*, today's goal ring, streak with the last 7 days, due count, learned count, 7-day forecast, mastery, recent words, topic progress, levels |
+| ✔ `/learn` | Learn new words | Pick topic / level / count → intro cards → quiz → summary (3.3) |
+| ✔ `/flashcards` | Flashcards | Review (due words, schedule updates) and Practice (`?mode=practice`, any topic/level, schedule untouched) (3.4) |
+| ✔ `/words?status=new\|learned\|due\|all` | Word lists | "Not learned" and "Learned" in the nav; search, level, topic, sort, paging; quick *Learn* / *Known* |
+| ✔ `/words/[slug]` | Word detail | Definition, IPA, audio, examples, Vietnamese meaning, related words, other senses, topics, source; my progress (mastery, recall probability, next review, reviews, lapses), note, review history |
+| ✔ `/topics`, `/topics/[slug]` | Topics | Topic grid with progress; topic page with subtopic chips, word list, *Learn this topic* / *Practise* |
+| ✔ `/progress` | Progress | Section 3.11 |
+| ✔ `/profile` | Profile | Name, gender, date of birth, target level, bio, timezone; study record |
+| ✔ `/settings` | Settings | Daily goal, new words/session, retention, show Vietnamese, reminders (saved, not sent yet), theme, language, password, sign out, delete account |
 | `/notes` | Notebook | All notes, search, tags |
-| `/progress` | Progress | Section 3.11 |
-| `/settings` | Settings | Daily goal, new words/day, reminder time & channels, timezone, show Vietnamese meaning, retention |
 | `/admin/words`, `/admin/topics`, `/admin/import` | Admin | Manage words, topics, file import |
 
 **A typical study day**
@@ -360,23 +362,26 @@ A starting point; editable from the admin pages or via import. Seed data: [backe
 - [x] Next.js rewrite `/api/*` → backend, so the auth cookie is first-party
 - [x] Deployment config: `vercel.json` (`sin1`) for both apps, Node 24.x. Verified with a local `vercel build`.
 - [ ] Deploy to Vercel. Needs a GitHub repo + Vercel account; steps in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) §2.
-- [ ] Sign up / sign in (JWT + refresh token), email verification, admin role
+- [x] Sign up / sign in / sign out (DB session cookie, see section 4), change password, delete account
+- [ ] Email verification and password reset (needs Resend + a custom domain)
+- [ ] Admin role checks (for `/admin/*`)
 
 ### Phase 1: MVP (learn and review)
 - [x] ~50 sample words for testing: 53 words imported on 2026-11-02 (`backend/prisma/seed/words-sample*.{csv,json}`; hand-assigned CEFR levels, verify against CEFR-J later)
 - [x] CSV/JSON import CLI (`npm run words:import`, with `--dry-run`) + enrichment from free sources (`npm run words:enrich`), see [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md)
 - [ ] `/admin/import` UI with a preview step
-- [ ] Topic, level and word detail pages (pronunciation via Web Speech API)
-- [ ] **Learn new words** session (3.3)
-- [ ] **Flashcards + SRS** with ts-fsrs, Review & Practice modes, keyboard shortcuts
-- [ ] **Mastery** computation, shown on words, topics and levels
-- [ ] **Word notes**
-- [ ] Dashboard: due count, new words, in-app reminder badge
+- [x] Topic and word detail pages (recorded audio, Web Speech API fallback). Levels are filters on the word list, topics and learn/practice pages rather than their own route.
+- [x] **Learn new words** session (3.3): intro cards, "I already know this", end-of-session quiz
+- [x] **Flashcards + SRS** with ts-fsrs 5.4, Review & Practice modes, reverse mode, keyboard shortcuts (Space, 1–4)
+- [x] **Mastery** computation, shown on words, topics and levels
+- [x] **Word notes** (word page; shown on the back of the flashcard)
+- [x] Dashboard: due count, new words, today's goal, streak, 7-day forecast; due badge on "Flashcards" in the nav
+- [x] Learned / not-learned word lists, profile page (name, gender, date of birth, target level, bio, timezone), settings page
 
 ### Phase 2: Habits and progress
-- [ ] **Study time tracking** + `StudySession` / `DailyStat`
-- [ ] **Streaks** + daily goal in settings
-- [ ] **Progress** page: heatmap, charts, 7-day forecast
+- [ ] **Study time tracking**: `DailyStat` is filled from each card's time (capped at 60 s); the heartbeat / `StudySession` part is not built yet
+- [x] **Streaks** + daily goal in settings
+- [x] **Progress** page: heatmap, charts, 7-day forecast
 - [ ] PWA (manifest + service worker) + **Web Push**
 - [ ] `/api/cron/reminders` endpoint + hourly Upstash QStash schedule
 - [ ] **Email reminders** (Resend; needs a custom domain)

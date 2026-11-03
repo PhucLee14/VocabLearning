@@ -1,8 +1,12 @@
 @import "tailwindcss";
 
 /*
- * Design tokens ("reference manual" look: cool grey canvas, one teal accent,
- * hairline borders, monospace labels).
+ * Design tokens: a friendly learning-app look (see CLAUDE.md "UI design").
+ * - One face (Nunito, rounded, with a Vietnamese subset).
+ * - White page, pale "index card" green panels, one green accent.
+ * - Flat surfaces: a tone step or a 1px line, never a resting shadow, never a gradient.
+ * - Chunky pill buttons with a solid darker lip (no blur), pressed = the lip shrinks.
+ * - Colour on data: mastery levels m0..m5 are one green ramp; the streak is orange.
  *
  * Theme resolution:
  * - No `data-theme` on <html>: follow the OS setting (prefers-color-scheme).
@@ -11,58 +15,126 @@
  *   before first paint, so there is no flash.
  */
 :root {
-  --canvas: #f3f6f8;
-  --surface: #ffffff;
-  --ink: #13212c;
-  --muted: #5b6976;
-  --line: #d8e0e6;
-  --accent: #0a6f8c;
-  --accent-soft: #dceef3;
+  --canvas: #ffffff;
+  --surface: #f2f6f4;
+  --raised: #ffffff;
+  --sunken: #e6edea;
+  --ink: #1b2420;
+  --muted: #56625d;
+  --line: #e1e8e5;
+  --line-strong: #c9d4cf;
+  --accent: #14805d;
+  --accent-lip: #0d5c43;
+  --accent-soft: #dcf2e8;
+  --accent-ink: #0f6e4f;
   --on-accent: #ffffff;
-  --code: #e7eef2;
+  --streak: #c4570a;
+  --streak-soft: #fdebdc;
+  --danger: #b42318;
+  --danger-lip: #85190f;
+  --danger-soft: #fdecea;
+  --warning-soft: #fff4d6;
+  --warning-ink: #7a4a00;
+  --m0: #d7dfdb;
+  --m1: #bde6d3;
+  --m2: #8dd2b3;
+  --m3: #4fb488;
+  --m4: #1d9266;
+  --m5: #0c6847;
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --canvas: #0e151b;
-    --surface: #151f28;
-    --ink: #e2e9ef;
-    --muted: #93a2af;
-    --line: #24323d;
-    --accent: #53b6d2;
-    --accent-soft: #163845;
-    --on-accent: #04202a;
-    --code: #1c2933;
+    --canvas: #0f1412;
+    --surface: #17201c;
+    --raised: #1d2823;
+    --sunken: #121a17;
+    --ink: #e7eeeb;
+    --muted: #a2b0aa;
+    --line: #25312c;
+    --line-strong: #394842;
+    --accent: #34c08d;
+    --accent-lip: #1f8a62;
+    --accent-soft: #143a2c;
+    --accent-ink: #62d8aa;
+    --on-accent: #052016;
+    --streak: #ff9d4d;
+    --streak-soft: #3a2414;
+    --danger: #f07a6a;
+    --danger-lip: #b4493c;
+    --danger-soft: #3b1e1a;
+    --warning-soft: #33280f;
+    --warning-ink: #f4c86a;
+    --m0: #2a3631;
+    --m1: #1c4636;
+    --m2: #236650;
+    --m3: #2e8b66;
+    --m4: #46b384;
+    --m5: #86dfb6;
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --canvas: #0e151b;
-  --surface: #151f28;
-  --ink: #e2e9ef;
-  --muted: #93a2af;
-  --line: #24323d;
-  --accent: #53b6d2;
-  --accent-soft: #163845;
-  --on-accent: #04202a;
-  --code: #1c2933;
+  --canvas: #0f1412;
+  --surface: #17201c;
+  --raised: #1d2823;
+  --sunken: #121a17;
+  --ink: #e7eeeb;
+  --muted: #a2b0aa;
+  --line: #25312c;
+  --line-strong: #394842;
+  --accent: #34c08d;
+  --accent-lip: #1f8a62;
+  --accent-soft: #143a2c;
+  --accent-ink: #62d8aa;
+  --on-accent: #052016;
+  --streak: #ff9d4d;
+  --streak-soft: #3a2414;
+  --danger: #f07a6a;
+  --danger-lip: #b4493c;
+  --danger-soft: #3b1e1a;
+  --warning-soft: #33280f;
+  --warning-ink: #f4c86a;
+  --m0: #2a3631;
+  --m1: #1c4636;
+  --m2: #236650;
+  --m3: #2e8b66;
+  --m4: #46b384;
+  --m5: #86dfb6;
   color-scheme: dark;
 }
 
 @theme inline {
   --color-canvas: var(--canvas);
   --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-sunken: var(--sunken);
   --color-ink: var(--ink);
   --color-muted: var(--muted);
   --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
   --color-accent: var(--accent);
+  --color-accent-lip: var(--accent-lip);
   --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
   --color-on-accent: var(--on-accent);
-  --color-code: var(--code);
-  --font-sans: var(--font-be-vietnam), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --color-streak: var(--streak);
+  --color-streak-soft: var(--streak-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-ink: var(--warning-ink);
+  --color-m0: var(--m0);
+  --color-m1: var(--m1);
+  --color-m2: var(--m2);
+  --color-m3: var(--m3);
+  --color-m4: var(--m4);
+  --color-m5: var(--m5);
+  --font-sans: var(--font-nunito), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --radius-card: 22px;
+  --radius-inner: 14px;
 }
 
 /*
@@ -80,26 +152,21 @@
     background: var(--canvas);
     color: var(--ink);
     font-family: var(--font-sans);
-    font-size: 15px;
-    line-height: 1.6;
+    font-size: 16px;
+    line-height: 1.55;
   }
 
   a {
-    color: var(--accent);
-  }
-
-  code {
-    font-family: var(--font-mono);
-    font-size: 0.86em;
-    background: var(--code);
-    padding: 1px 5px;
-    border-radius: 4px;
-    overflow-wrap: anywhere;
+    color: var(--accent-ink);
   }
 
   :focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 3px solid var(--accent);
     outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--accent-soft);
   }
 }
 
@@ -107,91 +174,252 @@
  * Shared component classes, used where a utility string would repeat.
  */
 @layer components {
-  /* Small uppercase monospace label above a title */
-  .eyebrow {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--accent);
-  }
-
-  /* Pill badges that fade from "core" to "extra": solid, soft, dashed */
-  .badge {
-    display: inline-block;
-    flex: none;
-    padding: 1px 8px;
+  /* ── Buttons: pill, flat fill, solid lip underneath ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 20px;
     border-radius: 999px;
-    border: 1px solid transparent;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.03em;
-    white-space: nowrap;
+    border: 2px solid transparent;
+    border-bottom-width: 4px;
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    user-select: none;
+    transition:
+      transform 80ms ease-out,
+      border-bottom-width 80ms ease-out,
+      background-color 120ms ease-out;
   }
-  .badge-solid {
+  .btn:active:not(:disabled) {
+    transform: translateY(2px);
+    border-bottom-width: 2px;
+  }
+  .btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+  .btn-lg {
+    min-height: 52px;
+    padding: 0 28px;
+    font-size: 17px;
+  }
+  .btn-sm {
+    min-height: 36px;
+    padding: 0 14px;
+    font-size: 14px;
+    border-bottom-width: 3px;
+  }
+  .btn-primary {
     background: var(--accent);
+    border-color: var(--accent);
+    border-bottom-color: var(--accent-lip);
     color: var(--on-accent);
   }
-  .badge-soft {
-    background: var(--accent-soft);
-    color: var(--accent);
+  .btn-primary:hover:not(:disabled) {
+    filter: brightness(1.06);
   }
-  .badge-dashed {
-    border: 1px dashed var(--muted);
+  .btn-secondary {
+    background: var(--raised);
+    border-color: var(--line-strong);
+    color: var(--ink);
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--surface);
+  }
+  .btn-danger {
+    background: var(--danger);
+    border-color: var(--danger);
+    border-bottom-color: var(--danger-lip);
+    color: #fff;
+  }
+  .btn-ghost {
+    min-height: 36px;
+    padding: 0 10px;
+    border: 0;
+    background: transparent;
+    color: var(--accent-ink);
+    font-weight: 700;
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background: var(--accent-soft);
+  }
+  .btn-ghost:active:not(:disabled) {
+    transform: none;
+  }
+
+  /* ── Surfaces ── */
+  .panel {
+    background: var(--surface);
+    border-radius: var(--radius-card);
+    padding: 20px;
+  }
+  .card {
+    background: var(--raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+  }
+
+  /* ── Small data marks ── */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex: none;
+    min-height: 22px;
+    padding: 0 9px;
+    border-radius: 999px;
+    background: var(--sunken);
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .pill-accent {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+  }
+  .pill-streak {
+    background: var(--streak-soft);
+    color: var(--streak);
+  }
+  .pill-danger {
+    background: var(--danger-soft);
+    color: var(--danger);
+  }
+
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Forms ── */
+  .field-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .input {
+    width: 100%;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 2px solid var(--line-strong);
+    border-radius: var(--radius-inner);
+    background: var(--raised);
+    color: var(--ink);
+    font: inherit;
+    font-size: 15px;
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  textarea.input {
+    min-height: 96px;
+    padding: 10px 14px;
+    line-height: 1.5;
+    resize: vertical;
+  }
+  .input::placeholder {
     color: var(--muted);
   }
 
-  /* Segmented control: a row of joined buttons, pressed = accent fill */
+  /* Segmented control: joined pill buttons, pressed = accent fill */
   .seg {
     display: inline-flex;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    overflow: hidden;
-    background: var(--surface);
+    gap: 2px;
+    padding: 3px;
+    border-radius: 999px;
+    background: var(--sunken);
   }
-  .seg > button {
+  .seg > button,
+  .seg > a {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-family: var(--font-mono);
-    font-size: 13px;
-    line-height: 1.4;
-    padding: 5px 11px;
+    min-height: 32px;
+    padding: 0 12px;
     border: 0;
+    border-radius: 999px;
     background: transparent;
-    color: var(--ink);
+    color: var(--muted);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
     cursor: pointer;
   }
-  .seg > button + button {
-    border-left: 1px solid var(--line);
+  .seg > button:hover:not([aria-pressed="true"]),
+  .seg > a:hover:not([aria-current="page"]) {
+    color: var(--ink);
   }
-  .seg > button:hover:not([aria-pressed="true"]) {
-    background: var(--accent-soft);
-  }
-  .seg > button[aria-pressed="true"] {
-    background: var(--accent);
-    color: var(--on-accent);
+  .seg > button[aria-pressed="true"],
+  .seg > a[aria-current="page"] {
+    background: var(--raised);
+    color: var(--ink);
   }
   .seg > button:disabled {
     opacity: 0.6;
     cursor: default;
   }
 
-  /* Outline button (secondary action) */
-  .btn-outline {
+  /* Choice chips (filters, quiz options) */
+  .chip {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-size: 13px;
-    padding: 6px 12px;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    background: transparent;
+    min-height: 36px;
+    padding: 0 14px;
+    border: 2px solid var(--line-strong);
+    border-radius: 999px;
+    background: var(--raised);
     color: var(--ink);
+    font-size: 14px;
+    font-weight: 700;
     text-decoration: none;
+    cursor: pointer;
   }
-  .btn-outline:hover {
+  .chip:hover {
     border-color: var(--accent);
-    color: var(--accent);
+  }
+  .chip[aria-pressed="true"],
+  .chip[aria-current="page"] {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+  }
+}
+
+/* Flashcard flip (feedback motion; reduced motion swaps faces without travel).
+   Both faces share one grid cell, so the card is as tall as its taller face. */
+.flip {
+  perspective: 1600px;
+}
+.flip-inner {
+  display: grid;
+  transform-style: preserve-3d;
+  transition: transform 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.flip-inner[data-flipped="true"] {
+  transform: rotateY(180deg);
+}
+.flip-face {
+  grid-area: 1 / 1;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.flip-back {
+  transform: rotateY(180deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .flip-inner {
+    transition: none;
   }
 }

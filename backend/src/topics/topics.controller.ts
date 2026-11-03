@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { TopicsService } from './topics.service.js';
 
 @Controller('topics')
@@ -8,5 +8,10 @@ export class TopicsController {
   @Get()
   findTree() {
     return this.topics.findTree();
+  }
+
+  @Get(':slug')
+  findOne(@Param('slug') slug: string) {
+    return this.topics.findOne(slug);
   }
 }

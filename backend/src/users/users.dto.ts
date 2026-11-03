@@ -108,10 +108,11 @@ export class UpdateSettingsDto {
 }
 
 export class ChangePasswordDto {
+  /** Not needed when the account has no password yet (Google sign-in only). */
+  @IsOptional()
   @IsString()
-  @MinLength(1)
   @MaxLength(200)
-  currentPassword: string;
+  currentPassword?: string;
 
   @IsString()
   @MinLength(8)
@@ -119,9 +120,15 @@ export class ChangePasswordDto {
   newPassword: string;
 }
 
+/** Accounts with a password confirm with it; Google-only accounts type their email instead. */
 export class DeleteAccountDto {
+  @IsOptional()
   @IsString()
-  @MinLength(1)
   @MaxLength(200)
-  password: string;
+  password?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(254)
+  confirmEmail?: string;
 }

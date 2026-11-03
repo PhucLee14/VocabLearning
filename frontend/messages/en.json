@@ -93,7 +93,15 @@
     "errorCredentials": "Wrong email or password.",
     "errorExists": "This email already has an account. Please sign in.",
     "errorInvalid": "Please check: a valid email and a password of at least 8 characters.",
-    "errorGeneric": "Something went wrong. Please try again."
+    "errorGeneric": "Something went wrong. Please try again.",
+    "google": "Continue with Google",
+    "or": "or",
+    "error_google_cancelled": "You cancelled signing in with Google.",
+    "error_google_failed": "Couldn't sign in with Google. Please try again.",
+    "error_google_unverified": "Your Google email address isn't verified.",
+    "error_google_unavailable": "Google sign-in isn't enabled on the server yet.",
+    "error_google_conflict": "This email is already linked to another Google account.",
+    "googleHint": "If you signed up with Google, use “Continue with Google”."
   },
   "Mastery": {
     "level0": "New",
@@ -369,9 +377,20 @@
     "dangerLede": "This can't be undone.",
     "deleteWarning": "Delete the account {email} with all its progress, notes and history.",
     "deleteAccount": "Delete account…",
-    "deleteConfirm": "Enter your password to permanently delete {email}.",
+    "deleteConfirm": "Confirm to permanently delete {email}.",
     "deleteForever": "Delete forever",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "signInMethods": "Sign-in methods",
+    "methodPassword": "Email and password",
+    "methodGoogle": "Google",
+    "methodOn": "On",
+    "methodOff": "Not set up",
+    "googleLinkHelp": "Sign in with Google using this same email to link it.",
+    "setPassword": "Set a password",
+    "setPasswordLede": "You sign in with Google. Set a password to also sign in with your email.",
+    "passwordSet": "Password set",
+    "confirmEmail": "Type your email to confirm",
+    "wrongEmail": "The email doesn't match"
   },
   "Profile": {
     "title": "Profile",

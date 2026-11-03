@@ -172,7 +172,7 @@ How it works:
 | Backend | **NestJS 12 + TypeScript (ESM)** | `backend/`, REST API under `/api` |
 | ORM | **Prisma 7** + `pg` driver adapter | Schema in `backend/prisma/schema.prisma` |
 | Database | **PostgreSQL 18 on Neon**, region **Singapore** (`aws-ap-southeast-1`) | The app uses the pooled URL; migrate/seed use the direct URL |
-| Auth | Built in NestJS: email + password (argon2id via `@node-rs/argon2`) and a **database-backed session**: a random token in the httpOnly `vocab_session` cookie (SameSite=Lax, 30 days, sliding), only its SHA-256 hash stored in `sessions`. Google OAuth later. | Changed from JWT + refresh token on 2026-11-03: Server Components cannot set cookies, so an expired access token could not be refreshed while rendering; a session lookup is one indexed query and can be revoked at once. Email verification and password reset via Resend later. |
+| Auth | Built in NestJS: email + password (argon2id via `@node-rs/argon2`) and a **database-backed session**: a random token in the httpOnly `vocab_session` cookie (SameSite=Lax, 30 days, sliding), only its SHA-256 hash stored in `sessions`. Google sign-in: server-side OAuth code flow with PKCE (`backend/src/auth/google.ts`). | Changed from JWT + refresh token on 2026-11-03: Server Components cannot set cookies, so an expired access token could not be refreshed while rendering; a session lookup is one indexed query and can be revoked at once. Email verification and password reset via Resend later. |
 | Browser → API | ✔ Next.js rewrite `/api/*` → backend (`frontend/next.config.ts`) | Frontend and API share one domain, so the auth cookie is first-party. Safari/Chrome block third-party cookies. |
 | Hosting | **Vercel Hobby** for both apps, region `sin1` (`vercel.json`), Node 24 | Free. Non-commercial use only. See section 12. |
 | SRS | **ts-fsrs** (runs in the backend) | |
@@ -363,6 +363,7 @@ A starting point; editable from the admin pages or via import. Seed data: [backe
 - [x] Deployment config: `vercel.json` (`sin1`) for both apps, Node 24.x. Verified with a local `vercel build`.
 - [ ] Deploy to Vercel. Needs a GitHub repo + Vercel account; steps in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) §2.
 - [x] Sign up / sign in / sign out (DB session cookie, see section 4), change password, delete account
+- [x] Sign in with Google (server-side OAuth code flow + PKCE, `jose` ID-token check; links to an existing account by verified email). Setup: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) §2.5
 - [ ] Email verification and password reset (needs Resend + a custom domain)
 - [ ] Admin role checks (for `/admin/*`)
 

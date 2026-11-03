@@ -49,6 +49,8 @@ Prerequisites:
    | `DATABASE_URL` | Neon **pooled** URL (host contains `-pooler`) |
    | `DIRECT_URL` | Neon **direct** URL |
    | `FRONTEND_URL` | Placeholder for now, e.g. `https://example.com`; fix it in step 2.3 |
+   | `GOOGLE_CLIENT_ID` | Optional, for "Continue with Google" (section 2.5) |
+   | `GOOGLE_CLIENT_SECRET` | Optional, same OAuth client |
 
    - Do **not** add `PORT`: Vercel runs the app as a function and handles the port itself. `PORT=4300` only matters locally.
    - Paste the values **without** the surrounding quotes from `.env`, or the quotes become part of the value and the DB connection fails. Alternatively, paste the whole `.env` into the first Key field (Vercel splits it into variables), then delete `PORT` and fix `FRONTEND_URL`.
@@ -76,6 +78,23 @@ Migrations are **not** run during the Vercel build. After changing `prisma/schem
 2. Commit the migration and push.
 
 While dev and prod share one database, step 1 already updates production. Once there is a separate dev branch, run `npm run db:deploy` with the production `DIRECT_URL` before pushing.
+
+### 2.5 Sign in with Google
+
+The OAuth flow runs on the backend, but Google sends the user back to the **frontend** domain (`/api/auth/google/callback`, proxied to the backend by the rewrite), so the session cookie stays first-party. The callback URL is built from the **first** origin in `FRONTEND_URL`.
+
+1. Google Cloud console → **Google Auth Platform**:
+   - **Branding**: app name, support email.
+   - **Audience**: External. While testing, add your Google accounts under **Test users**; **Publish app** to open it to everyone. The app only asks for `openid email profile`, which normally needs no verification.
+2. **Clients → Create client → Web application**. **Authorized redirect URIs**, one per environment:
+   - `http://localhost:3300/api/auth/google/callback`
+   - `https://<frontend-domain>/api/auth/google/callback`
+
+   **Authorized JavaScript origins** can stay empty (no Google script runs in the page).
+3. Put the client ID and secret in `backend/.env` (local) and in the backend project's Vercel environment variables (production), then redeploy the backend.
+4. Check: `https://<frontend-domain>/vi/login` → **Continue with Google**. A `redirect_uri_mismatch` error from Google means the callback URL in step 2 does not exactly match `<first FRONTEND_URL>/api/auth/google/callback`.
+
+Preview deployments get their own random domains, which are not registered redirect URIs, so Google sign-in only works on localhost and the production domain.
 
 ### Alternative: deploy from the CLI (no GitHub)
 

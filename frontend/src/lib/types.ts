@@ -177,6 +177,9 @@ export interface Profile {
   timezone: string;
   emailVerifiedAt: string | null;
   createdAt: string;
+  /** How the account can sign in. */
+  hasPassword: boolean;
+  hasGoogle: boolean;
 }
 
 export interface Settings {

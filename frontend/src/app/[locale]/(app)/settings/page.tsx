@@ -51,14 +51,31 @@ async function SettingsView() {
       </Section>
 
       <Section title={t('accountTitle')} description={t('accountLede', { email: me.email })}>
-        <PasswordForm />
+        <div>
+          <p className="field-label">{t('signInMethods')}</p>
+          <ul className="flex flex-col gap-2">
+            {(
+              [
+                ['methodPassword', me.hasPassword],
+                ['methodGoogle', me.hasGoogle],
+              ] as const
+            ).map(([key, on]) => (
+              <li key={key} className="flex items-center justify-between gap-3 rounded-2xl bg-raised px-4 py-3 text-[15px]">
+                <span className="font-bold">{t(key)}</span>
+                <span className={`pill ${on ? 'pill-accent' : ''}`}>{on ? t('methodOn') : t('methodOff')}</span>
+              </li>
+            ))}
+          </ul>
+          {!me.hasGoogle && <p className="mt-2 text-[13px] text-muted">{t('googleLinkHelp')}</p>}
+        </div>
+        <PasswordForm hasPassword={me.hasPassword} />
         <div className="border-t border-line-strong pt-6">
           <SignOutButton className="btn btn-secondary" />
         </div>
       </Section>
 
       <Section title={t('dangerTitle')} description={t('dangerLede')} danger>
-        <DeleteAccountForm email={me.email} />
+        <DeleteAccountForm email={me.email} hasPassword={me.hasPassword} />
       </Section>
     </div>
   );

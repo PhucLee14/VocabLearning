@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Patch, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, HttpCode, Patch, Post, Res, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
 import { type AuthUser, AuthService } from '../auth/auth.service.js';
 import { clearSessionCookie } from '../auth/session-cookie.js';
@@ -53,7 +53,11 @@ export class UsersController {
     @Body() dto: DeleteAccountDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    await this.auth.assertPassword(user.id, dto.password);
+    const { hasPassword } = await this.users.profile(user.id);
+    if (hasPassword) await this.auth.assertPassword(user.id, dto.password ?? '');
+    else if ((dto.confirmEmail ?? '').trim().toLowerCase() !== user.email) {
+      throw new ForbiddenException('The email does not match');
+    }
     await this.users.deleteAccount(user.id);
     clearSessionCookie(res);
   }

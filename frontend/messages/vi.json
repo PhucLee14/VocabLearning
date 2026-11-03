@@ -93,7 +93,15 @@
     "errorCredentials": "Email hoặc mật khẩu không đúng.",
     "errorExists": "Email này đã có tài khoản. Hãy đăng nhập.",
     "errorInvalid": "Vui lòng kiểm tra lại: email hợp lệ và mật khẩu ít nhất 8 ký tự.",
-    "errorGeneric": "Có lỗi xảy ra. Vui lòng thử lại."
+    "errorGeneric": "Có lỗi xảy ra. Vui lòng thử lại.",
+    "google": "Tiếp tục với Google",
+    "or": "hoặc",
+    "error_google_cancelled": "Bạn đã hủy đăng nhập bằng Google.",
+    "error_google_failed": "Không đăng nhập được bằng Google. Vui lòng thử lại.",
+    "error_google_unverified": "Email Google của bạn chưa được xác minh.",
+    "error_google_unavailable": "Đăng nhập bằng Google chưa được bật trên máy chủ.",
+    "error_google_conflict": "Email này đã liên kết với một tài khoản Google khác.",
+    "googleHint": "Nếu bạn từng đăng ký bằng Google, hãy bấm “Tiếp tục với Google”."
   },
   "Mastery": {
     "level0": "Chưa học",
@@ -369,9 +377,20 @@
     "dangerLede": "Không thể hoàn tác.",
     "deleteWarning": "Xóa tài khoản {email} cùng toàn bộ tiến độ, ghi chú và lịch sử học.",
     "deleteAccount": "Xóa tài khoản…",
-    "deleteConfirm": "Nhập mật khẩu để xóa vĩnh viễn tài khoản {email}.",
+    "deleteConfirm": "Xác nhận để xóa vĩnh viễn tài khoản {email}.",
     "deleteForever": "Xóa vĩnh viễn",
-    "cancel": "Hủy"
+    "cancel": "Hủy",
+    "signInMethods": "Cách đăng nhập",
+    "methodPassword": "Email và mật khẩu",
+    "methodGoogle": "Google",
+    "methodOn": "Đã bật",
+    "methodOff": "Chưa có",
+    "googleLinkHelp": "Đăng nhập bằng Google với cùng email này để liên kết.",
+    "setPassword": "Đặt mật khẩu",
+    "setPasswordLede": "Tài khoản của bạn đang đăng nhập bằng Google. Đặt mật khẩu để có thể đăng nhập bằng email.",
+    "passwordSet": "Đã đặt mật khẩu",
+    "confirmEmail": "Gõ lại email để xác nhận",
+    "wrongEmail": "Email không khớp"
   },
   "Profile": {
     "title": "Hồ sơ",

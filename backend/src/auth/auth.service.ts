@@ -1,6 +1,7 @@
 import { hash, verify } from '@node-rs/argon2';
 import { ConflictException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
+import type { GoogleProfile } from './google.js';
 import {
   hashSessionToken,
   newSessionToken,
@@ -52,6 +53,72 @@ export class AuthService {
     }
     const { passwordHash: _omit, ...authUser } = user;
     return authUser;
+  }
+
+  /**
+   * Signs in (or up) with a verified Google identity:
+   * 1. a user already linked to this Google account → that user;
+   * 2. else a user with the same email → link Google to it;
+   * 3. else a new account (no password; the email counts as verified).
+   *
+   * Case 2 guards against account pre-hijacking: emails are not verified at
+   * sign-up yet, so someone could have registered this address first. When
+   * the existing account's email was never verified, Google is the first
+   * proof of ownership: its password is cleared and its sessions revoked, so
+   * only the Google owner gets in (they can set a new password in Settings).
+   */
+  async signInWithGoogle(profile: GoogleProfile, locale: 'vi' | 'en'): Promise<AuthUser> {
+    if (!profile.emailVerified) throw new UnauthorizedException('Google email is not verified');
+
+    const linked = await this.prisma.user.findUnique({ where: { googleId: profile.sub }, select: AUTH_USER_SELECT });
+    if (linked) return linked;
+
+    const existing = await this.prisma.user.findUnique({
+      where: { email: profile.email },
+      select: { ...AUTH_USER_SELECT, emailVerifiedAt: true, avatarUrl: true, googleId: true },
+    });
+    if (existing) {
+      if (existing.googleId) {
+        // The email belongs to an account linked to a different Google account.
+        throw new ConflictException('This email is linked to another Google account');
+      }
+      const unverified = existing.emailVerifiedAt === null;
+      const [user] = await this.prisma.$transaction([
+        this.prisma.user.update({
+          where: { id: existing.id },
+          data: {
+            googleId: profile.sub,
+            emailVerifiedAt: existing.emailVerifiedAt ?? new Date(),
+            avatarUrl: existing.avatarUrl ?? profile.picture,
+            ...(unverified ? { passwordHash: null } : {}),
+          },
+          select: AUTH_USER_SELECT,
+        }),
+        ...(unverified
+          ? [
+              this.prisma.session.updateMany({
+                where: { userId: existing.id, revokedAt: null },
+                data: { revokedAt: new Date() },
+              }),
+            ]
+          : []),
+      ]);
+      return user;
+    }
+
+    return this.prisma.user.create({
+      data: {
+        email: profile.email,
+        name: (profile.name ?? profile.email.split('@')[0]).slice(0, 80),
+        googleId: profile.sub,
+        avatarUrl: profile.picture,
+        emailVerifiedAt: new Date(),
+        locale,
+        settings: { create: {} },
+        streak: { create: {} },
+      },
+      select: AUTH_USER_SELECT,
+    });
   }
 
   /** Creates a session and returns the raw token for the cookie. */
@@ -108,11 +175,16 @@ export class AuthService {
     if (!ok) throw new ForbiddenException('The password is wrong');
   }
 
-  async changePassword(userId: string, currentPassword: string, newPassword: string, keepToken?: string) {
-    await this.assertPassword(userId, currentPassword);
+  /**
+   * Changes the password, or sets a first one for an account that signs in
+   * with Google only (then no current password is asked). Every other
+   * browser is signed out.
+   */
+  async changePassword(userId: string, currentPassword: string | undefined, newPassword: string, keepToken?: string) {
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { passwordHash: true } });
+    if (user.passwordHash) await this.assertPassword(userId, currentPassword ?? '');
     await this.prisma.$transaction([
       this.prisma.user.update({ where: { id: userId }, data: { passwordHash: await hash(newPassword) } }),
-      // Sign out every other browser.
       this.prisma.session.updateMany({
         where: {
           userId,

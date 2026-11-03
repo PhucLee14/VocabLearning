@@ -5,9 +5,13 @@ import { type FormEvent, useState } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { ApiError, api } from '@/lib/client-api';
 
-/** Change the password; every other signed-in browser is signed out. */
-export function PasswordForm() {
+/**
+ * Change the password, or set a first one for a Google-only account (no
+ * current password then). Every other signed-in browser is signed out.
+ */
+export function PasswordForm({ hasPassword }: { hasPassword: boolean }) {
   const t = useTranslations('Settings');
+  const router = useRouter();
   const [state, setState] = useState<'idle' | 'saving' | 'saved' | 'wrong' | 'error'>('idle');
 
   async function submit(e: FormEvent<HTMLFormElement>) {
@@ -18,10 +22,11 @@ export function PasswordForm() {
     try {
       await api('/me/password', {
         method: 'POST',
-        body: { currentPassword: data.get('current'), newPassword: data.get('next') },
+        body: { ...(hasPassword ? { currentPassword: data.get('current') } : {}), newPassword: data.get('next') },
       });
       form.reset();
       setState('saved');
+      if (!hasPassword) router.refresh();
     } catch (error) {
       setState(error instanceof ApiError && error.status === 403 ? 'wrong' : 'error');
     }
@@ -29,12 +34,16 @@ export function PasswordForm() {
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-4">
-      <div>
-        <label htmlFor="pw-current" className="field-label">
-          {t('currentPassword')}
-        </label>
-        <input id="pw-current" name="current" type="password" autoComplete="current-password" required className="input" />
-      </div>
+      {hasPassword ? (
+        <div>
+          <label htmlFor="pw-current" className="field-label">
+            {t('currentPassword')}
+          </label>
+          <input id="pw-current" name="current" type="password" autoComplete="current-password" required className="input" />
+        </div>
+      ) : (
+        <p className="text-[15px] text-muted">{t('setPasswordLede')}</p>
+      )}
       <div>
         <label htmlFor="pw-next" className="field-label">
           {t('newPassword')}
@@ -55,10 +64,10 @@ export function PasswordForm() {
       </div>
       <div className="flex items-center gap-3">
         <button type="submit" className="btn btn-secondary" disabled={state === 'saving'}>
-          {t('changePassword')}
+          {hasPassword ? t('changePassword') : t('setPassword')}
         </button>
         <span role="status" className={`text-[13px] font-bold ${state === 'wrong' || state === 'error' ? 'text-danger' : 'text-muted'}`}>
-          {state === 'saved' ? t('passwordChanged') : state === 'wrong' ? t('wrongPassword') : state === 'error' ? t('saveError') : ''}
+          {state === 'saved' ? (hasPassword ? t('passwordChanged') : t('passwordSet')) : state === 'wrong' ? t('wrongPassword') : state === 'error' ? t('saveError') : ''}
         </span>
       </div>
     </form>
@@ -66,7 +75,7 @@ export function PasswordForm() {
 }
 
 /** Delete the account after confirming with the password. */
-export function DeleteAccountForm({ email }: { email: string }) {
+export function DeleteAccountForm({ email, hasPassword }: { email: string; hasPassword: boolean }) {
   const t = useTranslations('Settings');
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -77,7 +86,10 @@ export function DeleteAccountForm({ email }: { email: string }) {
     const data = new FormData(e.currentTarget);
     setState('deleting');
     try {
-      await api('/me/delete', { method: 'POST', body: { password: data.get('password') } });
+      await api('/me/delete', {
+        method: 'POST',
+        body: hasPassword ? { password: data.get('password') } : { confirmEmail: data.get('confirmEmail') },
+      });
       router.replace('/');
       router.refresh();
     } catch (error) {
@@ -99,12 +111,21 @@ export function DeleteAccountForm({ email }: { email: string }) {
   return (
     <form onSubmit={submit} className="flex flex-col gap-4">
       <p className="text-[15px]">{t('deleteConfirm', { email })}</p>
-      <div>
-        <label htmlFor="del-pw" className="field-label">
-          {t('currentPassword')}
-        </label>
-        <input id="del-pw" name="password" type="password" autoComplete="current-password" required className="input" />
-      </div>
+      {hasPassword ? (
+        <div>
+          <label htmlFor="del-pw" className="field-label">
+            {t('currentPassword')}
+          </label>
+          <input id="del-pw" name="password" type="password" autoComplete="current-password" required className="input" />
+        </div>
+      ) : (
+        <div>
+          <label htmlFor="del-email" className="field-label">
+            {t('confirmEmail')}
+          </label>
+          <input id="del-email" name="confirmEmail" type="email" autoComplete="off" required placeholder={email} className="input" />
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-3">
         <button type="submit" className="btn btn-danger" disabled={state === 'deleting'}>
           {t('deleteForever')}
@@ -113,7 +134,7 @@ export function DeleteAccountForm({ email }: { email: string }) {
           {t('cancel')}
         </button>
         <span role="status" className="text-[13px] font-bold text-danger">
-          {state === 'wrong' ? t('wrongPassword') : state === 'error' ? t('saveError') : ''}
+          {state === 'wrong' ? (hasPassword ? t('wrongPassword') : t('wrongEmail')) : state === 'error' ? t('saveError') : ''}
         </span>
       </div>
     </form>

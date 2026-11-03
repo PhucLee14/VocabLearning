@@ -1,7 +1,7 @@
 {
   "Metadata": {
-    "brand": "Vocab",
-    "title": "Vocab – Học từ vựng tiếng Anh",
+    "brand": "Godee",
+    "title": "Godee – Học từ vựng tiếng Anh",
     "description": "Học từ vựng tiếng Anh theo chủ đề và cấp độ CEFR với flashcard, định nghĩa bằng tiếng Anh, nghĩa tiếng Việt và lịch ôn tập thông minh."
   },
   "Nav": {
@@ -23,7 +23,7 @@
     "close": "Đóng"
   },
   "Footer": {
-    "note": "Vocab · Dự án học tập cá nhân, phi thương mại. Dữ liệu từ điển: Wiktionary, WordNet, Tatoeba (CC BY-SA / CC BY)."
+    "note": "Godee · Dự án học tập cá nhân, phi thương mại. Dữ liệu từ điển: Wiktionary, WordNet, Tatoeba (CC BY-SA / CC BY)."
   },
   "LocaleSwitcher": {
     "label": "Đổi ngôn ngữ",

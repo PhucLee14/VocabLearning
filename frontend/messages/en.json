@@ -1,7 +1,7 @@
 {
   "Metadata": {
-    "brand": "Vocab",
-    "title": "Vocab – Learn English vocabulary",
+    "brand": "Godee",
+    "title": "Godee – Learn English vocabulary",
     "description": "Learn English vocabulary by topic and CEFR level with flashcards, English definitions, Vietnamese meanings and smart review scheduling."
   },
   "Nav": {
@@ -23,7 +23,7 @@
     "close": "Close"
   },
   "Footer": {
-    "note": "Vocab · A personal, non-commercial learning project. Dictionary data: Wiktionary, WordNet, Tatoeba (CC BY-SA / CC BY)."
+    "note": "Godee · A personal, non-commercial learning project. Dictionary data: Wiktionary, WordNet, Tatoeba (CC BY-SA / CC BY)."
   },
   "LocaleSwitcher": {
     "label": "Change language",

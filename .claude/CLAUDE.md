@@ -1,6 +1,6 @@
-# Vocab – project notes for Claude Code
+# Godee (repo: Vocab) – project notes for Claude Code
 
-Multi-user English vocabulary learning web app. Plan: `PLAN.md`. Deployment: `docs/DEPLOYMENT.md`. Word data sources: `docs/DATA_SOURCES.md`.
+Multi-user English vocabulary learning web app, named **Godee** (renamed from "Vocab" on 2026-11-03; folders, package names, the `vocab_session` cookie and DB names keep "vocab"). Production frontend: https://godee.vercel.app. Plan: `PLAN.md`. Deployment: `docs/DEPLOYMENT.md`. Word data sources: `docs/DATA_SOURCES.md`.
 
 ## Language
 
@@ -22,7 +22,7 @@ Multi-user English vocabulary learning web app. Plan: `PLAN.md`. Deployment: `do
 - Database: Neon Postgres 18 in **Singapore** (`aws-ap-southeast-1`).
   - `DATABASE_URL` (pooled) is used at runtime.
   - `DIRECT_URL` (direct) is used by the Prisma CLI.
-- Ports in use by the user's other projects: 3000–3002, 4000 (`forge tunnel`), 5000, 5173, 8000, 8080. Vocab uses **3300/4300** (moved from 3100/4100 on 2026-11-02 at the user's request); don't switch back.
+- Ports in use by the user's other projects: 3000–3002, 4000 (`forge tunnel`), 5000, 5173, 8000, 8080. This app uses **3300/4300** (moved from 3100/4100 on 2026-11-02 at the user's request); don't switch back.
 - **Hosting: Vercel Hobby (free)** for both apps, region `sin1` (`vercel.json` in each app), Node `24.x` (`engines`). See `docs/DEPLOYMENT.md`.
   - The backend runs as a **serverless Vercel Function** (NestJS zero-config, entry `src/main.ts`).
     - Do not rely on in-process cron (`@nestjs/schedule`), timers or background work after the response is sent.

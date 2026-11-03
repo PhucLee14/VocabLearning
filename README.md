@@ -1,4 +1,6 @@
-# Vocab – English vocabulary learning app
+# Godee – English vocabulary learning app
+
+Production: https://godee.vercel.app (the repository and its folders keep the original name `Vocab`).
 
 Learn English words by topic and CEFR level, with flashcards, spaced repetition (FSRS), streaks, study-time tracking and review reminders.
 Full plan: [PLAN.md](PLAN.md) · Deployment: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) · Word data: [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md)

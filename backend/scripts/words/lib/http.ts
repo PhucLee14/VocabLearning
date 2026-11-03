@@ -25,7 +25,7 @@ export type HttpOptions = {
   expectJson?: boolean;
 };
 
-const USER_AGENT = 'VocabApp-enricher/0.1 (personal, non-commercial English learning project)';
+const USER_AGENT = 'Godee-enricher/0.1 (personal, non-commercial English learning project)';
 const lastRequestAt = new Map<string, number>();
 
 const looksLikeJson = (body: string) => /^\s*[[{]/.test(body);

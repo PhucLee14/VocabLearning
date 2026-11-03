@@ -1,5 +1,7 @@
 # Plan: English Vocabulary Learning Web App
 
+> App name: **Godee** (repo and folders: `Vocab`). Production frontend: https://godee.vercel.app
+
 > Status: v4 (2026-11-02). Decisions in section 2 are final. Phase 0 is mostly done (see section 9). The database runs in Singapore, and the app is ready to deploy for free on Vercel.
 > Work log: [.claude/worklog/](.claude/worklog/). Deployment guide: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 

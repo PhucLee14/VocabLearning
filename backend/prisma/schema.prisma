@@ -1,4 +1,4 @@
-// Prisma schema – Vocab app
+// Prisma schema – Godee app (repo: Vocab)
 // Docs: https://pris.ly/d/prisma-schema
 // Conventions: PascalCase models, snake_case tables (@@map), camelCase columns.
 

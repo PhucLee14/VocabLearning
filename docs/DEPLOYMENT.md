@@ -63,11 +63,11 @@ Prerequisites:
 1. Vercel → **Add New… → Project** → import the **same repo** again.
 2. Set **Root Directory** to `frontend`. The preset is **Next.js**.
 3. Environment variable: `API_URL` = `https://<backend-domain>/api`.
-4. **Deploy**. Open `https://<frontend-domain>/`: it redirects to `/vi` and lists the 24 topics.
+4. **Deploy**. Open `https://<frontend-domain>/` (production: `https://godee.vercel.app`): it redirects to `/vi` and lists the 24 topics.
 
 ### 2.3 Finish
 
-1. Backend project → Settings → Environment Variables: set `FRONTEND_URL` to `https://<frontend-domain>`, then **Redeploy**.
+1. Backend project → Settings → Environment Variables: set `FRONTEND_URL` to `https://<frontend-domain>` (production: `https://godee.vercel.app`), then **Redeploy**. Do this again whenever the frontend domain changes, and add the new Google redirect URI (section 2.5).
 2. In both projects, check **Settings → Functions → Function Region**: it should be **Singapore (sin1)**. `vercel.json` already sets it.
 3. From now on, every push to the main branch redeploys both projects. Pushes to other branches create preview deployments.
 
@@ -88,7 +88,7 @@ The OAuth flow runs on the backend, but Google sends the user back to the **fron
    - **Audience**: External. While testing, add your Google accounts under **Test users**; **Publish app** to open it to everyone. The app only asks for `openid email profile`, which normally needs no verification.
 2. **Clients → Create client → Web application**. **Authorized redirect URIs**, one per environment:
    - `http://localhost:3300/api/auth/google/callback`
-   - `https://<frontend-domain>/api/auth/google/callback`
+   - `https://<frontend-domain>/api/auth/google/callback` (production: `https://godee.vercel.app/api/auth/google/callback`)
 
    **Authorized JavaScript origins** can stay empty (no Google script runs in the page).
 3. Put the client ID and secret in `backend/.env` (local) and in the backend project's Vercel environment variables (production), then redeploy the backend.

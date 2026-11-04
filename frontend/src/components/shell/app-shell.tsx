@@ -2,9 +2,7 @@ import { Settings } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { type ReactNode, Suspense } from 'react';
 import { Avatar } from '@/components/avatar';
-import { LocaleSwitcher } from '@/components/locale-switcher';
 import { Logo } from '@/components/logo';
-import { ThemeSwitcher } from '@/components/theme-switcher';
 import { Link } from '@/i18n/navigation';
 import { getDueCount, getViewer } from '@/lib/server-api';
 import { MoreSheet } from './more-sheet';
@@ -15,6 +13,7 @@ import { SignOutButton } from './sign-out-button';
  * The signed-in app: a labelled sidebar on the page ground (desktop, ≥1024px),
  * or a top bar plus a bottom bar of five destinations (phone and tablet).
  * Everything that reads the session streams in behind <Suspense>.
+ * Theme and language live on the Settings page (and in the public header).
  */
 export function AppShell({ children }: { children: ReactNode }) {
   const t = useTranslations('Nav');
@@ -48,10 +47,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             {t('settings')}
           </Link>
           <SignOutButton className="flex min-h-11 items-center gap-3 rounded-2xl px-3 text-left text-[15px] font-bold text-muted hover:bg-surface hover:text-ink" />
-          <div className="mt-3 flex flex-wrap items-center gap-2 px-3">
-            <LocaleSwitcher />
-            <ThemeSwitcher />
-          </div>
         </div>
       </aside>
 

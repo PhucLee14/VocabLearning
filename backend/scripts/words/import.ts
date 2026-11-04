@@ -16,7 +16,7 @@ import { extname } from 'node:path';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../src/generated/prisma/client.js';
 import { parseCsvRecords } from './lib/csv.js';
-import { normalizeRecord, validateWords, wordKey, wordSlug } from './lib/import-format.js';
+import { normalizeRecord, validateWords, wordSlug } from './lib/import-format.js';
 
 function parseArgs(argv: string[]) {
   const dryRun = argv.includes('--dry-run');
@@ -59,12 +59,10 @@ async function main() {
     }
 
     const existing = await prisma.word.findMany({
-      select: { headword: true, pos: true, senseNo: true },
+      select: { headword: true, pos: true, senseNo: true, slug: true },
     });
-    const existingKeys = new Set(
-      existing.map((w) => wordKey({ headword: w.headword, pos: w.pos, sense_no: w.senseNo })),
-    );
-    const updates = words.filter((w) => existingKeys.has(wordKey(w))).length;
+    const existingKeys = new Set(existing.map((w) => `${w.headword}|${w.pos}|${w.senseNo}`));
+    const updates = words.filter((w) => existingKeys.has(`${w.headword}|${w.pos}|${w.sense_no}`)).length;
     const creates = words.length - updates;
 
     if (dryRun) {
@@ -73,9 +71,28 @@ async function main() {
       return;
     }
 
+    // Slugs: an existing word keeps its slug (URLs stay stable). A new word whose
+    // slug is taken by a different word gets "-2", "-3"… ("March" the month and
+    // "march" the walk would both be "march-noun-1").
+    // Exact key: the DB's unique key (headword, pos, senseNo) is case-sensitive.
+    const exactKey = (h: string, pos: string, sense: number) => `${h}|${pos}|${sense}`;
+    const slugOwner = new Map(existing.map((w) => [w.slug, exactKey(w.headword, w.pos, w.senseNo)]));
+    const slugOf = new Map(existing.map((w) => [exactKey(w.headword, w.pos, w.senseNo), w.slug]));
+    const slugFor = (w: (typeof words)[number]) => {
+      const key = exactKey(w.headword, w.pos, w.sense_no);
+      const known = slugOf.get(key);
+      if (known) return known;
+      const base = wordSlug(w);
+      let slug = base;
+      for (let n = 2; slugOwner.has(slug) && slugOwner.get(slug) !== key; n++) slug = `${base}-${n}`;
+      slugOwner.set(slug, key);
+      slugOf.set(key, slug);
+      return slug;
+    };
+
     for (const [i, w] of words.entries()) {
       const data = {
-        slug: wordSlug(w),
+        slug: slugFor(w),
         ipa: w.ipa ?? null,
         cefrLevel: w.cefr_level,
         definitionEn: w.definition_en,

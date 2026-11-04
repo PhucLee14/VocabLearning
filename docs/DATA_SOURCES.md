@@ -7,6 +7,8 @@ Checked on 2026-11-02. Terms change, so re-check a source's page before a large 
 ## 1. Workflow
 
 ```text
+CEFR-J + Octanove lists ── npm run words:cefrj ──┐   (or your own CSV)
+                                                 ▼
 word list (headword, pos, CEFR, topics)
         │  npm run words:enrich      looks up the empty fields, caches every response
         ▼
@@ -46,16 +48,34 @@ npm run words:import -- <file> --dry-run   →   npm run words:import -- <file>
 
 ## 3. Word lists with CEFR levels
 
-`words:enrich` does not assign CEFR levels or topics. They come from your list.
+`words:enrich` does not assign CEFR levels. They come from the word list. **`npm run words:cefrj`** builds the lists from the open profiles below (checked 2026-11-03), downloading them into the cache on each run:
 
 | List | Levels | Licence | Use |
 |------|--------|---------|-----|
-| **CEFR-J Wordlist** (cefr-j.org/download.html) | A1–B2 | Not confirmed. Read the terms on the download page before redistributing. | Best candidate for the main list |
-| **Octanove Vocabulary Profile** (with CEFR-J) | C1–C2 | CC BY-SA 4.0 | C-level words |
+| **CEFR-J Wordlist 1.5** ([openlanguageprofiles/olp-en-cefrj](https://github.com/openlanguageprofiles/olp-en-cefrj)) | A1–B2, 7,799 rows | "Can be used for research and commercial purposes with no charge, provided that you cite the dataset properly." © Tono Laboratory, TUFS. Cite: *The CEFR-J Wordlist Version 1.5. Compiled by Yukio Tono, Tokyo University of Foreign Studies.* | **Used** (`words:cefrj`) |
+| **Octanove Vocabulary Profile C1/C2 1.0** (same repo) | C1–C2, 2,136 rows | CC BY-SA 4.0 | **Used** (`words:cefrj`) |
 | Oxford 3000 / 5000 | A1–C1 | © Oxford University Press. Free to view and download, but not an open licence. | Cross-checking only. Do not copy it into the app. |
 | English Vocabulary Profile (Cambridge) | A1–C2 per sense | Look-up only | Cross-checking only |
 
-The sample list `backend/prisma/seed/words-sample.csv` (53 words, one per leaf topic) is for testing the pipeline. **Its CEFR levels were assigned by hand.** Verify them against CEFR-J before relying on them.
+How `words:cefrj` builds the lists (`backend/scripts/words/build-cefrj.ts`):
+- Topics: CEFR-J's *CoreInventory* and *Threshold* labels are mapped onto our topic slugs (`TOPIC_MAP`). About 2,100 A1–B2 words get a topic; the rest (and all C1/C2 words) have none and are found by level.
+- Variants such as `adviser/advisor` keep the first spelling. Case is kept (`March` and `march` are different words).
+- Skipped: contractions (`'re`, `'s`), inflected *be/do/have* forms, and the articles *a/an/the*.
+- A word in both lists keeps the lower level. The 53 hand-curated sample words keep their reviewed content.
+- Output: `backend/scripts/words/out/cefrj-<level>.json` (gitignored; the lists are cited, not redistributed). Each word's `source` starts with `level: CEFR-J Wordlist 1.5 (Yukio Tono, TUFS)` or `level: Octanove Vocabulary Profile C1/C2 (CC BY-SA 4.0)`.
+
+The hand-made sample `backend/prisma/seed/words-sample.csv` (53 words) predates this; its levels are replaced by CEFR-J levels where the word is listed.
+
+**Cambridge Dictionary is not a source.** Its content belongs to Cambridge University Press and is only available through the official Cambridge Dictionaries API, which needs an application and an Application Development Agreement. Do not scrape the website.
+
+### Quality of automatic data at scale
+
+A 40-word trial (A1) on 2026-11-03 showed what to expect from the free sources without human review:
+- definitions are sometimes an old or rare first sense (*address* → "Direction.", *about* prep. → "In a circle around");
+- Vietnamese meanings from Wiktionary tables can belong to another sense (*afraid* → "đáng sợ"); MyMemory is a machine-translation fallback with a small daily quota;
+- function words (prepositions, determiners, modals) get grammar-style definitions.
+
+Review the `_review` notes of a level before importing it, or improve definitions and meanings in a later pass.
 
 ## 4. Attribution (required)
 
@@ -86,8 +106,26 @@ Each enriched word has a `_review` array. It is ignored by `words:import`, but r
 | `skipped N labelled sense(s); check the definition` | Obsolete, archaic or slang senses were skipped automatically. |
 | `"exam" is a clipping of "examination"; used its definition` | Informational. |
 | `<source> failed (…)` | The source was unreachable even after retries. Re-run later; cached results are kept. |
+| `MyMemory daily quota used up` (printed once) | MyMemory is skipped for the rest of the run, and the quota answer is not cached. Re-run another day (or set `MYMEMORY_EMAIL` for a larger quota) to fill the remaining `meaning_vi`. |
 
 If the automatic definition is the wrong sense, add `def_pick` (a 1-based index into the Datamuse definitions for that part of speech) to the input row and re-run. Example: `brand,noun,B1,marketing,3` picks "The symbolic identity… of a product" instead of "A mark made by burning".
+
+### Review pass (`words:review`)
+
+Between enrich and import, each level is reviewed in parts:
+
+```bash
+npm run words:review -- export scripts/words/out/cefrj-a1.enriched.json --size 230   # → out/review/cefrj-a1.part-NN.json
+# a reviewer (person or AI agent) follows scripts/words/REVIEW_GUIDE.md and writes part-NN.corrections.json
+npm run words:review -- apply scripts/words/out/cefrj-a1.enriched.json out/review/cefrj-a1.part-*.corrections.json -o scripts/words/out/cefrj-a1.reviewed.json
+npm run words:import -- scripts/words/out/cefrj-a1.reviewed.json --dry-run
+```
+
+- Reviewers write definitions **in their own words** (never copied from another dictionary), fix Vietnamese meanings and example translations, drop examples that use another sense or are sensitive, and assign topics from the slug list.
+- `apply` validates every correction (ids, topic slugs, example indexes) and appends `reviewed: … edited` to the word's `source`. A rewritten definition is the reviewer's own text, so it no longer carries the Wiktionary licence; untouched fields keep their original attribution.
+- **All levels done (2026-11-03/04): 9,704 words in the DB** (A1 1,144 · A2 1,402 · B1 2,436 · B2 2,760 · C1 1,035 · C2 927), every one with a definition, a Vietnamese meaning and at least one translated example; 4,610 have a topic. About 50 review runs of 210–255 words each; 57 entries were dropped (inflections, duplicates, garbled headwords, slurs, obsolete senses).
+- Lessons: run 3–4 reviewers at a time (the account's 5-hour usage limit stopped 15 runs that had 10–11 going); give each reviewer its own scratch folder; cross-check that every corrections file only holds ids of its own part before applying.
+- A1 (2026-11-03, five AI agents): 1,118 of 1,148 words edited, 4 dropped. After the review all 1,144 have a Vietnamese meaning, every kept example has a translation, 640 have a topic, and 237 have no example left (all of their examples used another sense).
 
 ## 6. Other free sources considered
 

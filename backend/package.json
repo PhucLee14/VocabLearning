@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "0.0.1",
-  "description": "Godee API – NestJS + Prisma + PostgreSQL",
+  "description": "Godee API \u2013 NestJS + Prisma + PostgreSQL",
   "author": "",
   "private": true,
   "license": "UNLICENSED",
@@ -25,6 +25,8 @@
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "words:enrich": "tsx scripts/words/enrich.ts",
+    "words:cefrj": "tsx scripts/words/build-cefrj.ts",
+    "words:review": "tsx scripts/words/review.ts",
     "words:import": "tsx scripts/words/import.ts"
   },
   "dependencies": {

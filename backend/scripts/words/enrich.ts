@@ -1,13 +1,14 @@
 /**
  * Enriches a plain word list into the import format (PLAN.md §7).
  *
- *   npm run words:enrich -- <input.csv|json> [-o out.json] [--refresh] [--no-mymemory] [--limit N]
+ *   npm run words:enrich -- <input.csv|json> [-o out.json] [--refresh] [--no-mymemory] [--limit N] [--concurrency N]
  *
  * Input columns: headword, cefr_level, topics (slug|slug), and optionally pos,
  * sense_no, def_pick (1-based index of the Datamuse definition to use when the
  * automatic choice is the wrong sense) and any import-format field
  * (definition_en, meaning_vi, ipa, examples…). Values you fill in are kept; only
- * empty fields are looked up.
+ * empty fields are looked up. `level_source` (e.g. "CEFR-J Wordlist 1.5") is
+ * credited first in the word's `source`.
  *
  * Lookups (docs/DATA_SOURCES.md):
  *   definition                → Datamuse (Wiktionary senses, most common first)
@@ -31,6 +32,7 @@ import {
   validateWords,
 } from './lib/import-format.js';
 import {
+  cleanMeaningVi,
   datamuseUrl,
   type FdEntry,
   freeDictionaryUrl,
@@ -51,6 +53,8 @@ type Args = {
   refresh: boolean;
   myMemory: boolean;
   limit: number | null;
+  /** Words enriched at the same time. Each host still gets its own minimum gap between requests. */
+  concurrency: number;
 };
 
 function parseArgs(argv: string[]): Args {
@@ -60,6 +64,7 @@ function parseArgs(argv: string[]): Args {
   let refresh = false;
   let myMemory = true;
   let limit: number | null = null;
+  let concurrency = 4;
 
   while (rest.length > 0) {
     const arg = rest.shift() as string;
@@ -67,16 +72,17 @@ function parseArgs(argv: string[]): Args {
     else if (arg === '--refresh') refresh = true;
     else if (arg === '--no-mymemory') myMemory = false;
     else if (arg === '--limit') limit = Number(rest.shift());
+    else if (arg === '--concurrency') concurrency = Math.max(1, Math.min(8, Number(rest.shift()) || 1));
     else if (!arg.startsWith('-') && !input) input = arg;
     else throw new Error(`Unknown argument: ${arg}`);
   }
   if (!input) {
     throw new Error(
-      'Usage: npm run words:enrich -- <input.csv|json> [-o out.json] [--refresh] [--no-mymemory] [--limit N]',
+      'Usage: npm run words:enrich -- <input.csv|json> [-o out.json] [--refresh] [--no-mymemory] [--limit N] [--concurrency N]',
     );
   }
   out ??= join(dirname(input), `${basename(input, extname(input))}.enriched.json`);
-  return { input, out, refresh, myMemory, limit };
+  return { input, out, refresh, myMemory, limit, concurrency };
 }
 
 function readRecords(path: string): Record<string, unknown>[] {
@@ -102,6 +108,9 @@ function knownTopicSlugs(): Set<string> {
 
 type Enriched = ImportWord & { _review: string[] };
 
+const MYMEMORY_QUOTA = /quotaFinished"\s*:\s*true|"responseStatus"\s*:\s*"?429|ALL AVAILABLE FREE TRANSLATIONS/i;
+let myMemoryExhausted = false;
+
 /** Runs a lookup; a failing source becomes a review note instead of aborting the run. */
 async function attempt<T>(label: string, review: string[], run: () => Promise<T | null>): Promise<T | null> {
   try {
@@ -117,6 +126,7 @@ async function enrichOne(raw: Record<string, unknown>, args: Args, http: HttpOpt
   const headword = given.headword;
   const review: string[] = [];
   const sources: string[] = [];
+  if (typeof raw.level_source === 'string' && raw.level_source) sources.push(`level: ${raw.level_source}`);
 
   // 1) IPA, audio, synonyms (+ definition fallback): Free Dictionary API.
   const defPick = raw.def_pick ? Number(raw.def_pick) : null;
@@ -177,18 +187,26 @@ async function enrichOne(raw: Record<string, unknown>, args: Args, http: HttpOpt
   // 3) meaning_vi: given → Wiktionary → MyMemory.
   let meaningVi = given.meaning_vi ?? null;
   if (!meaningVi && kaikki.vi.length > 0) {
-    meaningVi = kaikki.vi.join(', ');
+    meaningVi = cleanMeaningVi(kaikki.vi.join(', '), headword);
+  }
+  if (meaningVi && !given.meaning_vi) {
     sources.push('vi: Wiktionary via kaikki.org (CC BY-SA)');
     review.push('meaning_vi from Wiktionary translations; check it matches this sense');
   }
-  if (!meaningVi && args.myMemory) {
+  if (!meaningVi && args.myMemory && !myMemoryExhausted) {
     const mm = await attempt('MyMemory', review, () =>
       fetchJson<Parameters<typeof parseMyMemory>[0]>(myMemoryUrl(headword, process.env.MYMEMORY_EMAIL), {
         ...http,
         minIntervalMs: 500,
+        // A "quota used up" answer comes back as HTTP 200: never cache it.
+        shouldCache: (body) => !MYMEMORY_QUOTA.test(body),
       }),
     );
-    meaningVi = mm ? parseMyMemory(mm, headword) : null;
+    if (mm && MYMEMORY_QUOTA.test(JSON.stringify(mm))) {
+      myMemoryExhausted = true;
+      console.log('  MyMemory daily quota used up: no more MyMemory lookups in this run.');
+    }
+    meaningVi = mm ? cleanMeaningVi(parseMyMemory(mm, headword), headword) : null;
     if (meaningVi) {
       sources.push('vi: MyMemory');
       review.push('meaning_vi from MyMemory (machine/TM); verify it');
@@ -253,17 +271,25 @@ async function main() {
   if (args.limit !== null) records = records.slice(0, args.limit);
   console.log(`Enriching ${records.length} word(s) from ${args.input}`);
 
-  const words: Enriched[] = [];
-  for (const [i, raw] of records.entries()) {
-    const w = await enrichOne(raw, args, http);
-    words.push(w);
-    const mark = w.definition_en ? (w._review.length ? '•' : '✔') : '✘';
-    console.log(
-      `${mark} [${i + 1}/${records.length}] ${w.headword} (${w.pos || '?'}, ${w.cefr_level})` +
-        `  vi: ${w.meaning_vi ?? '-'}  examples: ${w.examples.length}` +
-        (w._review.length ? `\n    review: ${w._review.join('; ')}` : ''),
-    );
-  }
+  // A small worker pool; output keeps the input order.
+  const words: Enriched[] = Array.from({ length: records.length });
+  let nextIndex = 0;
+  let done = 0;
+  const worker = async () => {
+    while (nextIndex < records.length) {
+      const i = nextIndex++;
+      const w = await enrichOne(records[i], args, http);
+      words[i] = w;
+      done++;
+      const mark = w.definition_en ? (w._review.length ? '•' : '✔') : '✘';
+      console.log(
+        `${mark} [${done}/${records.length}] ${w.headword} (${w.pos || '?'}, ${w.cefr_level})` +
+          `  vi: ${w.meaning_vi ?? '-'}  examples: ${w.examples.length}` +
+          (w._review.length ? `\n    review: ${w._review.join('; ')}` : ''),
+      );
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(args.concurrency, records.length) }, worker));
 
   const errors = validateWords(words, knownTopicSlugs());
   writeFileSync(args.out, `${JSON.stringify(words, null, 2)}\n`);

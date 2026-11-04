@@ -3,8 +3,6 @@
 import { ChartColumn, LayoutGrid, Settings, UserRound, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
-import { LocaleSwitcher } from '@/components/locale-switcher';
-import { ThemeSwitcher } from '@/components/theme-switcher';
 import { Link, usePathname } from '@/i18n/navigation';
 import { MoreIcon } from './nav-links';
 import { SignOutButton } from './sign-out-button';
@@ -16,7 +14,7 @@ const LINKS = [
   { key: 'settings', href: '/settings', icon: Settings },
 ] as const;
 
-/** "More" on the phone's bottom bar: a sheet with the other screens, theme, language and sign out. */
+/** "More" on the phone's bottom bar: a sheet with the other screens and sign out (theme and language are in Settings). */
 export function MoreSheet() {
   const t = useTranslations('Nav');
   const dialog = useRef<HTMLDialogElement>(null);
@@ -74,10 +72,6 @@ export function MoreSheet() {
               <SignOutButton className={`${row} text-left`} />
             </li>
           </ul>
-          <div className="mt-4 flex flex-wrap items-center gap-3 px-3">
-            <LocaleSwitcher />
-            <ThemeSwitcher />
-          </div>
         </div>
       </dialog>
     </>

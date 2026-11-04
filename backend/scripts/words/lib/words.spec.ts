@@ -260,3 +260,128 @@ describe('Datamuse', () => {
     expect(cleanDefinition('(computing) A set of keys.')).toBe('(computing) A set of keys.');
   });
 });
+
+describe('CEFR-J list builder', () => {
+  it('maps topics, keeps the first spelling and the lower level, and keeps case', async () => {
+    const { buildList, mapTopics } = await import('../build-cefrj.js');
+    expect(mapTopics(['Food and drink', 'Shopping', 'unknown label', ''])).toEqual(['food-drink', 'money-shopping']);
+    const list = buildList(
+      [
+        { headword: 'adviser/advisor', pos: 'noun', cefr: 'B1', 'coreinventory 1': 'Work and Jobs', threshold: '' },
+        { headword: 'March', pos: 'noun', cefr: 'A1', 'coreinventory 1': '', threshold: '' },
+        { headword: 'march', pos: 'noun', cefr: 'B1', 'coreinventory 1': '', threshold: '' },
+        { headword: 'can', pos: 'modal auxiliary', cefr: 'A1', 'coreinventory 1': '', threshold: '' },
+        { headword: 'bad row', pos: 'noun', cefr: 'Z9', 'coreinventory 1': '', threshold: '' },
+      ],
+      [
+        { headword: 'adviser', pos: 'noun', cefr: 'C1', notes: '' },
+        { headword: 'laud ', pos: 'verb', cefr: 'C2', notes: '' },
+      ],
+    );
+    expect(list).toEqual([
+      { headword: 'adviser', pos: 'noun', cefr_level: 'B1', topics: ['work-jobs'], level_source: expect.stringContaining('CEFR-J') },
+      { headword: 'March', pos: 'noun', cefr_level: 'A1', topics: [], level_source: expect.stringContaining('CEFR-J') },
+      { headword: 'march', pos: 'noun', cefr_level: 'B1', topics: [], level_source: expect.stringContaining('CEFR-J') },
+      { headword: 'can', pos: 'verb', cefr_level: 'A1', topics: [], level_source: expect.stringContaining('CEFR-J') },
+      { headword: 'laud', pos: 'verb', cefr_level: 'C2', topics: [], level_source: expect.stringContaining('Octanove') },
+    ]);
+  });
+});
+
+describe('cleanMeaningVi and skipped rows', () => {
+  it('decodes entities, trims punctuation and drops a bare copy of the word', async () => {
+    const { cleanMeaningVi } = await import('./sources.js');
+    expect(cleanMeaningVi('&#10;ở trên', 'above')).toBe('ở trên');
+    expect(cleanMeaningVi('sáng.', 'a.m.')).toBe('sáng');
+    expect(cleanMeaningVi('a', 'a')).toBeNull();
+    expect(cleanMeaningVi('m', "'m")).toBeNull();
+    expect(cleanMeaningVi('  bữa   sáng ', 'breakfast')).toBe('bữa sáng');
+    expect(cleanMeaningVi(null, 'x')).toBeNull();
+  });
+
+  it('skips contractions, inflected be/do/have and articles', async () => {
+    const { isSkipped } = await import('../build-cefrj.js');
+    expect(["'re", 'am', 'Was', 'the', 'an'].map(isSkipped)).toEqual([true, true, true, true, true]);
+    expect(['be', 'have', 'do', 'about', 'can'].map(isSkipped)).toEqual([false, false, false, false, false]);
+  });
+});
+
+describe('review corrections', () => {
+  const word = (headword: string, pos: string) => ({
+    headword,
+    pos,
+    sense_no: 1,
+    cefr_level: 'A1' as const,
+    definition_en: 'Direction.',
+    meaning_vi: 'sai',
+    examples: [{ sentence: 'One.' }, { sentence: 'Two.' }],
+    topics: [],
+    synonyms: [],
+    antonyms: [],
+    source: 'definition: Wiktionary',
+    _review: ['note'],
+  });
+
+  it('fixes, drops and validates', async () => {
+    const { applyCorrections } = await import('../review.js');
+    const words = [word('address', 'noun'), word('the', 'determiner'), word('key', 'noun')];
+    const result = applyCorrections(
+      words,
+      [
+        {
+          id: 'address|noun',
+          action: 'fix',
+          definition_en: 'The number, street and town where someone lives.',
+          meaning_vi: 'địa chỉ',
+          drop_examples: [1],
+          example_translations: { '0': 'Một.' },
+          topics: ['people-family', 'nope'],
+        },
+        { id: 'the|determiner', action: 'drop' },
+        { id: 'ghost|noun', action: 'fix', meaning_vi: 'ma' },
+      ],
+      new Set(['people-family']),
+    );
+    expect(result.fixed).toBe(1);
+    expect(result.dropped).toBe(1);
+    expect(result.problems).toEqual(['address|noun: unknown topic(s) nope', 'unknown id "ghost|noun"']);
+    expect(result.words.map((w) => w.headword)).toEqual(['address', 'key']);
+    expect(result.words[0]).toMatchObject({
+      definition_en: 'The number, street and town where someone lives.',
+      meaning_vi: 'địa chỉ',
+      examples: [{ sentence: 'One.', translation_vi: 'Một.' }],
+      topics: ['people-family'],
+    });
+    expect(result.words[0].source).toContain('reviewed: definition, vi, example translations, examples, topics edited');
+    expect('_review' in result.words[1]).toBe(false); // reviewed and kept as is
+  });
+});
+
+describe('review: added examples', () => {
+  it('adds original examples up to two per word', async () => {
+    const { applyCorrections } = await import('../review.js');
+    const base = { pos: 'noun', sense_no: 1, cefr_level: 'A1' as const, definition_en: 'x', topics: [], synonyms: [], antonyms: [] };
+    const words = [
+      { ...base, headword: 'water', examples: [] },
+      { ...base, headword: 'key', examples: [{ sentence: 'One.' }] },
+    ];
+    const r = applyCorrections(
+      words,
+      [
+        { id: 'water|noun', action: 'fix', add_examples: [{ sentence: 'Drink some water.', translation_vi: 'Uống chút nước.' }] },
+        {
+          id: 'key|noun',
+          action: 'fix',
+          add_examples: [
+            { sentence: 'Where is my key?', translation_vi: 'Chìa khóa của tôi đâu?' },
+            { sentence: 'Too many.', translation_vi: 'Quá nhiều.' },
+          ],
+        },
+      ],
+      new Set(),
+    );
+    expect(r.words[0].examples).toEqual([{ sentence: 'Drink some water.', translation_vi: 'Uống chút nước.' }]);
+    expect(r.words[1].examples).toHaveLength(2);
+    expect(r.words[0].source).toContain('examples added');
+  });
+});

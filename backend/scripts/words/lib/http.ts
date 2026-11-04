@@ -6,7 +6,8 @@ import { join } from 'node:path';
  * Polite JSON/text fetching for the enrichment script:
  * - a disk cache (re-runs do not hit the APIs again; delete the folder or pass
  *   `refresh` to refetch),
- * - a minimum delay between requests to the same host,
+ * - a minimum delay between requests to the same host, kept even when several
+ *   words are enriched concurrently (request starts are queued per host),
  * - retries with backoff on 429 / 5xx / network errors.
  */
 
@@ -23,10 +24,27 @@ export type HttpOptions = {
    * page from a flaky upstream) is treated as transient: retried, never cached.
    */
   expectJson?: boolean;
+  /**
+   * Return false for a 200 response that must not be cached, e.g. a
+   * "quota used up" answer that would otherwise stick for every later run.
+   */
+  shouldCache?: (body: string) => boolean;
 };
 
 const USER_AGENT = 'Godee-enricher/0.1 (personal, non-commercial English learning project)';
 const lastRequestAt = new Map<string, number>();
+const hostQueue = new Map<string, Promise<void>>();
+
+/** Waits for this host's turn: request starts to one host are at least `minInterval` ms apart. */
+function takeTurn(host: string, minInterval: number): Promise<void> {
+  const turn = (hostQueue.get(host) ?? Promise.resolve()).then(async () => {
+    const wait = (lastRequestAt.get(host) ?? 0) + minInterval - Date.now();
+    if (wait > 0) await sleep(wait);
+    lastRequestAt.set(host, Date.now());
+  });
+  hostQueue.set(host, turn);
+  return turn;
+}
 
 const looksLikeJson = (body: string) => /^\s*[[{]/.test(body);
 
@@ -45,7 +63,9 @@ export async function fetchCached(url: string, opts: HttpOptions): Promise<HttpR
   if (!opts.refresh) {
     try {
       const cached = JSON.parse(readFileSync(file, 'utf8')) as HttpResult;
-      if (cached.status === 200 || isDefinitive404(cached, opts.expectJson)) return cached;
+      if ((cached.status === 200 && (opts.shouldCache?.(cached.body) ?? true)) || isDefinitive404(cached, opts.expectJson)) {
+        return cached;
+      }
     } catch {
       // Not cached yet.
     }
@@ -56,9 +76,7 @@ export async function fetchCached(url: string, opts: HttpOptions): Promise<HttpR
   const retries = opts.retries ?? 3;
 
   for (let attempt = 0; ; attempt++) {
-    const wait = (lastRequestAt.get(host) ?? 0) + minInterval - Date.now();
-    if (wait > 0) await sleep(wait);
-    lastRequestAt.set(host, Date.now());
+    await takeTurn(host, minInterval);
 
     let result: HttpResult | null = null;
     try {
@@ -83,7 +101,9 @@ export async function fetchCached(url: string, opts: HttpOptions): Promise<HttpR
     if (!result) throw new Error(`GET ${url} failed`);
 
     // Cache successes and definitive misses (404), never transient errors.
-    if (result.status === 200 || isDefinitive404(result, opts.expectJson)) {
+    const cacheable =
+      (result.status === 200 && (opts.shouldCache?.(result.body) ?? true)) || isDefinitive404(result, opts.expectJson);
+    if (cacheable) {
       mkdirSync(opts.cacheDir, { recursive: true });
       writeFileSync(file, JSON.stringify(result));
     }

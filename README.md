@@ -42,7 +42,8 @@ npm run dev                   # http://localhost:3300 → redirects to /vi
 |--------|---------|---------|
 | backend | `npm run db:migrate -- --name <name>` | Create a migration after editing `prisma/schema.prisma` |
 | backend | `npm run db:studio` | Browse data in Prisma Studio |
-| backend | `npm run words:enrich -- <list.csv>` | Fill definitions, IPA, audio, Vietnamese and examples from free sources ([docs/DATA_SOURCES.md](docs/DATA_SOURCES.md)) |
+| backend | `npm run words:cefrj` | Build A1–C2 word lists from CEFR-J + Octanove into `scripts/words/out/` |
+| backend | `npm run words:enrich -- <list.csv\|json> [--concurrency 4]` | Fill definitions, IPA, audio, Vietnamese and examples from free sources ([docs/DATA_SOURCES.md](docs/DATA_SOURCES.md)) |
 | backend | `npm run words:import -- <file> [--dry-run]` | Import words (JSON/CSV, PLAN.md §7) into the DB |
 | backend | `npm test` / `npm run test:e2e` | Unit tests / e2e tests (e2e uses the DB in `.env`) |
 | backend | `npm run lint` | oxlint |

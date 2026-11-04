@@ -13,5 +13,6 @@ coverage
 # Vercel CLI
 .vercel
 
-# words:enrich HTTP cache
+# words:enrich HTTP cache, and generated word lists (CEFR-J is cited, not redistributed)
 /scripts/words/.cache
+/scripts/words/out

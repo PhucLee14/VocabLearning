@@ -23,7 +23,7 @@
     "close": "Close"
   },
   "Footer": {
-    "note": "Godee · A personal, non-commercial learning project. Dictionary data: Wiktionary, WordNet, Tatoeba (CC BY-SA / CC BY)."
+    "note": "Godee · A personal, non-commercial learning project. Dictionary data: Wiktionary, WordNet, Tatoeba (CC BY-SA / CC BY). CEFR levels: CEFR-J Wordlist 1.5 (Yukio Tono, TUFS) and Octanove C1/C2 (CC BY-SA 4.0)."
   },
   "LocaleSwitcher": {
     "label": "Change language",

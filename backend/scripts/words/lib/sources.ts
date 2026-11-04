@@ -295,6 +295,28 @@ export function parseKaikki(jsonl: string, pos: string): KaikkiResult {
 // only; quality varies, so results are flagged for review.
 // ---------------------------------------------------------------------------
 
+const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+
+/**
+ * Tidies a Vietnamese meaning from any source: decodes HTML entities, collapses
+ * whitespace and line breaks, trims stray punctuation, and drops a "meaning"
+ * that is only the English word again. null when nothing useful is left.
+ */
+export function cleanMeaningVi(text: string | null | undefined, headword: string): string | null {
+  if (!text) return null;
+  const decoded = text
+    .replace(/&#(\d+);/g, (_m, n: string) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_m, n: string) => String.fromCodePoint(parseInt(n, 16)))
+    .replace(/&([a-z]+);/gi, (m, name: string) => ENTITIES[name.toLowerCase()] ?? m);
+  const cleaned = decoded
+    .replace(/\s+/g, ' ')
+    .replace(/^[\s.,;:!?-]+|[\s.,;:!?-]+$/g, '')
+    .trim();
+  const bare = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+  if (!cleaned || bare(cleaned) === bare(headword)) return null;
+  return cleaned;
+}
+
 export function myMemoryUrl(word: string, email?: string) {
   const params = new URLSearchParams({ q: word, langpair: 'en|vi' });
   if (email) params.set('de', email);

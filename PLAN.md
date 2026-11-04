@@ -372,6 +372,7 @@ A starting point; editable from the admin pages or via import. Seed data: [backe
 ### Phase 1: MVP (learn and review)
 - [x] ~50 sample words for testing: 53 words imported on 2026-11-02 (`backend/prisma/seed/words-sample*.{csv,json}`; hand-assigned CEFR levels, verify against CEFR-J later)
 - [x] CSV/JSON import CLI (`npm run words:import`, with `--dry-run`) + enrichment from free sources (`npm run words:enrich`), see [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md)
+- [x] **Word bank: 9,704 words, A1–C2** (CEFR-J + Octanove levels, enriched from open sources, every word reviewed by AI agents; imported 2026-11-03/04). See [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md) §3 and §5
 - [ ] `/admin/import` UI with a preview step
 - [x] Topic and word detail pages (recorded audio, Web Speech API fallback). Levels are filters on the word list, topics and learn/practice pages rather than their own route.
 - [x] **Learn new words** session (3.3): intro cards, "I already know this", end-of-session quiz

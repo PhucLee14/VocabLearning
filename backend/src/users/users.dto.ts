@@ -16,12 +16,14 @@ import {
   MinLength,
   ValidateIf,
 } from 'class-validator';
+import { CONFIRM_ACTIONS, type ConfirmAction } from '../auth/confirm-code.js';
 import { CEFR_LEVELS, type CefrLevel } from '../common/cefr.js';
+import { IsOptionalNotNull } from '../common/validation.js';
 
 export const GENDERS = ['MALE', 'FEMALE', 'OTHER'] as const;
 
 export class UpdateProfileDto {
-  @IsOptional()
+  @IsOptionalNotNull()
   @IsString()
   @MinLength(1)
   @MaxLength(80)
@@ -51,64 +53,69 @@ export class UpdateProfileDto {
   @IsIn(CEFR_LEVELS)
   targetLevel?: CefrLevel | null;
 
-  @IsOptional()
+  @IsOptionalNotNull()
   @IsIn(['vi', 'en'])
   locale?: 'vi' | 'en';
 
   /** IANA timezone, e.g. "Asia/Ho_Chi_Minh" (checked in the service) */
-  @IsOptional()
+  @IsOptionalNotNull()
   @IsString()
   @MaxLength(64)
   timezone?: string;
 }
 
 export class UpdateSettingsDto {
-  @IsOptional()
+  @IsOptionalNotNull()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   @Max(50)
   dailyNewWords?: number;
 
-  @IsOptional()
+  @IsOptionalNotNull()
   @IsInt()
   @Min(1)
   @Max(240)
   dailyGoalMinutes?: number;
 
-  @IsOptional()
+  @IsOptionalNotNull()
   @IsInt()
   @Min(1)
   @Max(500)
   dailyGoalCards?: number;
 
-  @IsOptional()
+  @IsOptionalNotNull()
   @IsNumber()
   @Min(0.7)
   @Max(0.97)
   desiredRetention?: number;
 
-  @IsOptional()
+  @IsOptionalNotNull()
   @IsBoolean()
   showVietnamese?: boolean;
 
-  @IsOptional()
+  @IsOptionalNotNull()
   @IsBoolean()
   reminderEnabled?: boolean;
 
-  @IsOptional()
+  @IsOptionalNotNull()
   @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
   reminderTime?: string;
 
-  @IsOptional()
+  @IsOptionalNotNull()
   @IsArray()
   @ArrayMaxSize(2)
   @IsIn(['EMAIL', 'PUSH'], { each: true })
   reminderChannels?: ('EMAIL' | 'PUSH')[];
 }
 
+export class ConfirmCodeDto {
+  @IsIn(CONFIRM_ACTIONS)
+  action: ConfirmAction;
+}
+
 export class ChangePasswordDto {
-  /** Not needed when the account has no password yet (Google sign-in only). */
+  /** Not needed when the account has no password yet (Google sign-in only): `code` is used instead. */
   @IsOptional()
   @IsString()
   @MaxLength(200)
@@ -118,17 +125,22 @@ export class ChangePasswordDto {
   @MinLength(8)
   @MaxLength(200)
   newPassword: string;
+
+  /** The 6-digit code emailed by POST /me/confirm-code (action "set_password"). */
+  @IsOptional()
+  @Matches(/^\d{6}$/)
+  code?: string;
 }
 
-/** Accounts with a password confirm with it; Google-only accounts type their email instead. */
+/** Accounts with a password confirm with it; Google-only accounts with an emailed code. */
 export class DeleteAccountDto {
   @IsOptional()
   @IsString()
   @MaxLength(200)
   password?: string;
 
+  /** The 6-digit code emailed by POST /me/confirm-code (action "delete_account"). */
   @IsOptional()
-  @IsString()
-  @MaxLength(254)
-  confirmEmail?: string;
+  @Matches(/^\d{6}$/)
+  code?: string;
 }

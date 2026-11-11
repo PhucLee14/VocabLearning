@@ -387,10 +387,16 @@
     "methodOff": "Chưa có",
     "googleLinkHelp": "Đăng nhập bằng Google với cùng email này để liên kết.",
     "setPassword": "Đặt mật khẩu",
-    "setPasswordLede": "Tài khoản của bạn đang đăng nhập bằng Google. Đặt mật khẩu để có thể đăng nhập bằng email.",
+    "setPasswordLede": "Tài khoản của bạn đang đăng nhập bằng Google. Đặt mật khẩu để có thể đăng nhập bằng email; cần xác nhận bằng mã gửi qua email.",
     "passwordSet": "Đã đặt mật khẩu",
-    "confirmEmail": "Gõ lại email để xác nhận",
-    "wrongEmail": "Email không khớp"
+    "code": "Mã xác nhận",
+    "codeSend": "Gửi mã",
+    "codeResend": "Gửi lại mã",
+    "codeHelp": "Bấm \"Gửi mã\" để nhận mã 6 số qua email {email}.",
+    "codeSent": "Đã gửi mã tới {email}. Mã có hiệu lực 10 phút; nhớ xem cả thư mục Spam.",
+    "codeWait": "Vui lòng đợi 1 phút trước khi gửi lại mã.",
+    "codeSendError": "Chưa gửi được mã. Thử lại sau ít phút.",
+    "wrongCode": "Mã không đúng hoặc đã hết hạn"
   },
   "Profile": {
     "title": "Hồ sơ",

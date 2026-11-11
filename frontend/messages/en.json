@@ -387,10 +387,16 @@
     "methodOff": "Not set up",
     "googleLinkHelp": "Sign in with Google using this same email to link it.",
     "setPassword": "Set a password",
-    "setPasswordLede": "You sign in with Google. Set a password to also sign in with your email.",
+    "setPasswordLede": "You sign in with Google. Set a password to also sign in with your email; confirm with a code sent to your email.",
     "passwordSet": "Password set",
-    "confirmEmail": "Type your email to confirm",
-    "wrongEmail": "The email doesn't match"
+    "code": "Confirmation code",
+    "codeSend": "Send code",
+    "codeResend": "Send again",
+    "codeHelp": "Press \"Send code\" to get a 6-digit code at {email}.",
+    "codeSent": "Code sent to {email}. It is valid for 10 minutes; check your Spam folder too.",
+    "codeWait": "Please wait a minute before asking for another code.",
+    "codeSendError": "Couldn't send the code. Try again in a few minutes.",
+    "wrongCode": "Wrong or expired code"
   },
   "Profile": {
     "title": "Profile",

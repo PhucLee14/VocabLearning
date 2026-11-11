@@ -367,7 +367,6 @@ A starting point; editable from the admin pages or via import. Seed data: [backe
 - [x] Sign up / sign in / sign out (DB session cookie, see section 4), change password, delete account
 - [x] Sign in with Google (server-side OAuth code flow + PKCE, `jose` ID-token check; links to an existing account by verified email). Setup: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) §2.5
 - [ ] Email verification and password reset (needs Resend + a custom domain)
-- [ ] Admin role checks (for `/admin/*`)
 
 ### Phase 1: MVP (learn and review)
 - [x] ~50 sample words for testing: 53 words imported on 2026-11-02 (`backend/prisma/seed/words-sample*.{csv,json}`; hand-assigned CEFR levels, verify against CEFR-J later)
@@ -382,6 +381,26 @@ A starting point; editable from the admin pages or via import. Seed data: [backe
 - [x] Dashboard: due count, new words, today's goal, streak, 7-day forecast; due badge on "Flashcards" in the nav
 - [x] Learned / not-learned word lists, profile page (name, gender, date of birth, target level, bio, timezone), settings page
 
+### Phase 1.5: Fixes from the code review (2026-11-04)
+
+No critical or high issues were found. Fix these before adding more features. Details are in `.claude/worklog/2026-11-04.md` (Session 4). Done on 2026-11-05 (except rate limiting): see `.claude/worklog/2026-11-05.md`.
+
+Security:
+- [ ] ~~Rate limiting on login/register/password checks~~: **deferred** (user decision, 2026-11-04). Revisit before a public launch; it must work on serverless (Upstash Ratelimit or a DB counter table).
+- [x] **Email confirmation codes** for sensitive actions (decision 2026-11-05, replaces "re-authenticate with Google"): setting a first password on a Google-only account, deleting an account (and later changing the email). A 6-digit code is sent to the account's email: valid 10 min, single use, bound to the user and the action, at most 5 attempts, at most 1 send per minute, only its hash stored (`AuthToken`, new type `ACTION_CONFIRM`). The same mailer then powers email verification and password reset (Phase 0).
+  - Mail transport: **Gmail SMTP with an App Password** for now (Nodemailer; env `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`), behind a small `Mailer` interface so it can switch to Resend + a custom domain later by changing env.
+- [x] **CSRF on form posts**: reject state-changing requests that are not `application/json` or whose `Origin` is not `FRONTEND_URL`. Today a cross-site form can sign the victim in to an attacker's account.
+- [x] `null` in `PATCH /me` and `/me/settings` → 500: use `@ValidateIf(v !== undefined)` on non-nullable fields. Map Prisma P2002 → 409 (also for the register race).
+- [x] Protect `/api/health/db` with `CRON_SECRET` (anyone can keep Neon awake). Add security headers (backend and `next.config.ts`) and `Cache-Control: private, no-store` on personal responses.
+- [x] Sessions: an absolute maximum age (e.g. 90 days), deleting old sessions, and failing fast in production when `FRONTEND_URL` is missing.
+
+Correctness:
+- [x] **Sliding sessions don't slide**: the extension happens on Server Component fetches, whose `Set-Cookie` is dropped, so users are signed out 30 days after login. Extend only on browser requests.
+- [x] **Double-submitted ratings** count twice (stats, new words): optimistic concurrency on `user_cards` (`reps` check) or an idempotency key.
+- [x] **Streak after a time-zone change** can reset: treat `lastActiveDate >= yesterday` as alive and never move it backwards.
+- [x] `page` has no upper bound (`page=1e300` → 500); paging needs a unique tiebreaker (`id`); practice and quiz-distractor picks are not random (use `ORDER BY random()`); notes need `@@unique([userId, wordId])` + upsert; `POST /study/cards` race → use upsert.
+- [x] `/study/progress` loads 8 weeks of review logs into memory: aggregate the weekly recall in SQL.
+
 ### Phase 2: Habits and progress
 - [ ] **Study time tracking**: `DailyStat` is filled from each card's time (capped at 60 s); the heartbeat / `StudySession` part is not built yet
 - [x] **Streaks** + daily goal in settings
@@ -392,9 +411,59 @@ A starting point; editable from the admin pages or via import. Seed data: [backe
 - [ ] Notebook (tags, search)
 - [x] Auto-enrich IPA/audio/definitions/Vietnamese/examples from free sources (offline, at import time: `words:enrich`)
 
+### Phase 3a: Admin site and feedback (requested 2026-11-04)
+
+- [ ] **Admin role checks**: `role = ADMIN` on `users`, a `RolesGuard` on every `/api/admin/*` route, and an audit log (who changed what).
+- [ ] **Admin site** at `/[locale]/admin` (in its own layout, hidden from learners):
+  - users: list and search, details (stats, sessions), disable or enable, reset sessions, change role;
+  - words: list, search and filters, edit (definition, Vietnamese, examples, topics, level), merge duplicates, delete;
+  - topics: create, edit, reorder, parent/child, word counts;
+  - import: upload CSV/JSON → preview (the same validation as `words:import`) → confirm (replaces the CLI for small batches);
+  - a dashboard: users, active learners per day, reviews per day, open feedback.
+- [ ] **Feedback**:
+  - learners send feedback from anywhere (a button in the shell) and report a word from its page or the flashcard back ("wrong meaning", "bad example", "other");
+  - the `Feedback` model holds type, word, message, status (open / in progress / done / won't fix), an admin reply and timestamps;
+  - an admin inbox with filters, a reply that the learner sees in the app, and an optional email;
+  - word reports link to the word's edit page.
+
+### Phase 3b: Social learning (requested 2026-11-04)
+
+- [ ] **Study groups**:
+  - create a group and join it by invite link or code, with roles (owner / member);
+  - a group page with members' streaks and words learned this week, and a shared goal ("500 reviews this week");
+  - group word lists (a deck the group studies together; reuses Learn and Flashcards).
+- [ ] **Group notifications** (requested 2026-11-04). Notify members when:
+  - someone **adds you to a study group** ("<name> added you to <group>"), with a link to the group;
+  - someone **edits a group** you belong to (name, description, goal, deck, members changed), saying who changed what;
+  - someone **deletes a group** you belong to ("<name> deleted <group>"); the notification survives the deletion, so it stores the group's name.
+
+  How: a `Notification` model (`userId`, `type`, `actorId`, `groupId?`, `data` JSON, `readAt`, `createdAt`), written in the same transaction as the group change. An in-app bell with an unread count in the shell, and a notifications page (mark read / mark all read). Delivered live through the Socket.IO service (a `user:<id>` room) when the user is online, and optionally by Web Push / email (Phase 2 reminder channels). No notification for your own actions. Notification settings live in Settings.
+
+- [ ] **Chat** (group chat first, then 1-to-1 between group members). **Decision (2026-11-04): Socket.IO.**
+  - Vercel Functions can't keep WebSocket connections open, so Socket.IO runs as a **separate long-running Node service** (e.g. `realtime/` in this repo, hosted on Render / Railway / Fly.io free tier, Singapore region).
+  - It authenticates with the same `vocab_session` cookie: a short-lived signed token from `GET /api/realtime/token`, because the realtime host is on another domain.
+  - Messages are stored in Postgres by the main API; the Socket.IO service only pushes them to rooms (one room per group / conversation). Use the Postgres or Redis adapter later if it needs more than one instance.
+  - Moderation from day one: report a message, delete your own message, admin removal, a rate limit, a length limit, block a user.
+  - A word in a message can link to its word page ("share a word").
+- [ ] **Engagement ideas** (suggested; pick a few):
+  - weekly leagues / leaderboard by XP (XP = new words + reviews), friends-only or group-only to keep it friendly;
+  - friends / follow, so you see friends' streaks and send a "nudge" when their streak is at risk;
+  - challenges: a 10-word quiz duel with a friend, or a group challenge week;
+  - daily quests ("review 20 cards", "learn 5 travel words") with small rewards (streak freeze);
+  - achievements and badges (first 100 words, a 30-day streak, finishing a topic);
+  - word of the day on the dashboard and in the reminder;
+  - a shareable progress card (an image of the streak and words learned) for social media;
+  - ~~learner-made decks~~ → accepted, see below.
+
+- [ ] **Learner-made decks** (accepted 2026-11-04):
+  - a learner creates a deck (name, description, public or private) from words in the bank, plus custom cards (own word, definition, Vietnamese, example);
+  - study a deck with Learn and Flashcards (the same SRS cards; custom cards get their own `UserCard`-like rows);
+  - share a public deck by link, copy someone else's deck, and add a deck to a study group;
+  - report a deck (goes to the admin feedback inbox).
+
 ### Phase 3: Extensions
 - [ ] More exercise types: multiple choice, spelling, listen → type, fill in the blank from example sentences
-- [ ] Personal decks, starred words
+- [ ] Starred words (personal decks: see Phase 3b)
 - [ ] Streak freeze, achievement badges
 - [ ] Placement test
 - [ ] Anki import/export

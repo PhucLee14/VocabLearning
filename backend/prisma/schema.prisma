@@ -63,6 +63,8 @@ enum Gender {
 enum AuthTokenType {
   EMAIL_VERIFY
   PASSWORD_RESET
+  /// A 6-digit code emailed to confirm a sensitive action (see `action`)
+  ACTION_CONFIRM
 }
 
 enum ImportStatus {
@@ -132,6 +134,10 @@ model AuthToken {
   userId    String        @db.Uuid
   type      AuthTokenType
   tokenHash String        @unique
+  /// For ACTION_CONFIRM: what the code confirms, e.g. "set_password", "delete_account"
+  action    String?
+  /// Wrong guesses so far (ACTION_CONFIRM codes are void after 5)
+  attempts  Int           @default(0)
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime      @default(now())
@@ -310,7 +316,8 @@ model Note {
   user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   word Word? @relation(fields: [wordId], references: [id], onDelete: SetNull)
 
-  @@index([userId, wordId])
+  /// One note per word per learner (general notebook entries have wordId = null; NULLs never clash)
+  @@unique([userId, wordId])
   @@map("notes")
 }
 

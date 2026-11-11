@@ -37,6 +37,14 @@ describe('streaks', () => {
     expect(displayedStreak(empty, day('2026-11-03'))).toBe(0);
   });
 
+  it('survives a time-zone change that makes "today" an earlier calendar day', () => {
+    // Goal met on Nov 4 in Vietnam, then the learner moves to a zone where it is still Nov 3.
+    const s = { current: 6, longest: 6, lastActiveDate: day('2026-11-04') };
+    expect(displayedStreak(s, day('2026-11-03'))).toBe(6);
+    expect(advanceStreak(s, day('2026-11-03'))).toBe(s); // never moves lastActiveDate backwards
+    expect(advanceStreak(s, day('2026-11-05'))).toMatchObject({ current: 7 });
+  });
+
   it('adds days', () => {
     expect(addDays(day('2026-12-31'), 1).toISOString().slice(0, 10)).toBe('2027-01-01');
   });

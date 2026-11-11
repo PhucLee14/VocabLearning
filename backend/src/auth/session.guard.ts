@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { type AuthUser, AuthService } from './auth.service.js';
-import { SESSION_COOKIE, setSessionCookie } from './session-cookie.js';
+import { SERVER_RENDER_HEADER, SESSION_COOKIE, setSessionCookie } from './session-cookie.js';
 
 type AuthedRequest = Request & { user?: AuthUser; sessionToken?: string };
 
@@ -16,13 +16,17 @@ async function attachUser(context: ExecutionContext, auth: AuthService): Promise
   const token = (req.cookies as Record<string, string> | undefined)?.[SESSION_COOKIE];
   if (!token) return false;
 
-  const resolved = await auth.resolveSession(token);
+  const res = context.switchToHttp().getResponse<Response>();
+  const fromServerRender = req.headers[SERVER_RENDER_HEADER] === '1';
+  const resolved = await auth.resolveSession(token, { extend: !fromServerRender });
   if (!resolved) return false;
 
   req.user = resolved.user;
   req.sessionToken = token;
+  // Personal data: never store it in a shared or browser cache.
+  res.setHeader('Cache-Control', 'private, no-store');
   // Re-send the cookie so the browser's expiry follows the extended session.
-  if (resolved.touched) setSessionCookie(context.switchToHttp().getResponse<Response>(), token);
+  if (resolved.touched) setSessionCookie(res, token);
   return true;
 }
 

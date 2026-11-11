@@ -51,12 +51,14 @@ Prerequisites:
    | `FRONTEND_URL` | Placeholder for now, e.g. `https://example.com`; fix it in step 2.3 |
    | `GOOGLE_CLIENT_ID` | Optional, for "Continue with Google" (section 2.5) |
    | `GOOGLE_CLIENT_SECRET` | Optional, same OAuth client |
+   | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | Email for confirmation codes (section 2.6). Required in production: without them, setting a password on or deleting a Google-only account fails with 503 |
+   | `CRON_SECRET` | Random string (`openssl rand -hex 32`); `/api/health/db` and future cron endpoints require `Authorization: Bearer <CRON_SECRET>` |
 
    - Do **not** add `PORT`: Vercel runs the app as a function and handles the port itself. `PORT=4300` only matters locally.
    - Paste the values **without** the surrounding quotes from `.env`, or the quotes become part of the value and the DB connection fails. Alternatively, paste the whole `.env` into the first Key field (Vercel splits it into variables), then delete `PORT` and fix `FRONTEND_URL`.
 
 4. Click **Deploy**. Note the production domain, e.g. `https://vocab-backend.vercel.app`.
-5. Check `https://<backend-domain>/api/health` and `/api/health/db`. Both should return `{"status":"ok"...}`.
+5. Check `https://<backend-domain>/api/health` (public) and `/api/health/db` (send `Authorization: Bearer <CRON_SECRET>`; without it the route answers 404). Both should return `{"status":"ok"...}`.
 
 ### 2.2 Frontend
 
@@ -95,6 +97,16 @@ The OAuth flow runs on the backend, but Google sends the user back to the **fron
 4. Check: `https://<frontend-domain>/vi/login` → **Continue with Google**. A `redirect_uri_mismatch` error from Google means the callback URL in step 2 does not exactly match `<first FRONTEND_URL>/api/auth/google/callback`.
 
 Preview deployments get their own random domains, which are not registered redirect URIs, so Google sign-in only works on localhost and the production domain.
+
+### 2.6 Email (confirmation codes)
+
+Google-only accounts confirm sensitive actions (setting a first password, deleting the account) with a 6-digit code sent to their email. Mail goes out over SMTP through Nodemailer (`backend/src/mail/`).
+
+1. Use a Gmail account for the app (today: the app's own Gmail address). Turn on **2-Step Verification**, then create an **App password** (Google account → Security → App passwords).
+2. Set `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=465`, `SMTP_SECURE=true`, `SMTP_USER=<the Gmail address>`, `SMTP_PASS=<the app password>` (spaces are ignored) and `MAIL_FROM="Godee <the Gmail address>"` in `backend/.env` and in the backend's Vercel environment variables, then redeploy.
+3. Locally, leaving `SMTP_HOST` empty writes the email (with the code) to the backend log instead of sending it.
+
+Gmail limits: about 500 recipients a day, and mail from a personal address may land in Spam. Moving to Resend with a custom domain later only changes these variables.
 
 ### Alternative: deploy from the CLI (no GitHub)
 

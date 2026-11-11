@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, HttpCode, Logger, Post, Query, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, Logger, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { CookieOptions, Request, Response } from 'express';
 import { LoginDto, RegisterDto } from './auth.dto.js';
@@ -18,6 +18,8 @@ import {
   verifyIdToken,
 } from './google.js';
 import { clearSessionCookie, SESSION_COOKIE, setSessionCookie } from './session-cookie.js';
+import { CurrentUser, OptionalSessionGuard } from './session.guard.js';
+import type { AuthUser } from './auth.service.js';
 
 const oauthCookieOptions = (): CookieOptions => ({
   httpOnly: true,
@@ -57,6 +59,17 @@ export class AuthController {
     const user = await this.auth.verifyCredentials(dto.email, dto.password);
     setSessionCookie(res, await this.auth.createSession(user.id, userAgent));
     return { user };
+  }
+
+  /**
+   * Called by the browser now and then (frontend SessionKeepAlive). The guard
+   * extends a session that is due for it and re-sends the cookie, which
+   * Server Component requests cannot do.
+   */
+  @Get('session')
+  @UseGuards(OptionalSessionGuard)
+  session(@CurrentUser() user?: AuthUser) {
+    return { signedIn: Boolean(user) };
   }
 
   @Post('logout')

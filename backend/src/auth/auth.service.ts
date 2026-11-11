@@ -5,6 +5,7 @@ import type { GoogleProfile } from './google.js';
 import {
   hashSessionToken,
   newSessionToken,
+  SESSION_MAX_AGE_MS,
   SESSION_TOUCH_AFTER_MS,
   SESSION_TTL_MS,
 } from './session-cookie.js';
@@ -121,9 +122,23 @@ export class AuthService {
     });
   }
 
-  /** Creates a session and returns the raw token for the cookie. */
+  /** Creates a session and returns the raw token for the cookie. Old sessions of the user are cleaned up. */
   async createSession(userId: string, userAgent?: string) {
     const token = newSessionToken();
+    const now = Date.now();
+    // Housekeeping without a cron job: drop this user's expired sessions (past
+    // their sliding expiry or the absolute max age) and ones revoked more than a
+    // week ago (kept briefly for troubleshooting).
+    await this.prisma.session.deleteMany({
+      where: {
+        userId,
+        OR: [
+          { expiresAt: { lt: new Date(now) } },
+          { createdAt: { lt: new Date(now - SESSION_MAX_AGE_MS) } },
+          { revokedAt: { lt: new Date(now - 7 * 86_400_000) } },
+        ],
+      },
+    });
     await this.prisma.session.create({
       data: {
         userId,
@@ -136,23 +151,34 @@ export class AuthService {
   }
 
   /**
-   * Resolves a session token to its user. Sliding expiry: a session used again
-   * more than a day after its last use is extended by SESSION_TTL_MS, and
-   * `touched` tells the caller to re-send the cookie.
+   * Resolves a session token to its user.
+   * Sliding expiry: a session used again more than a day after its last use is
+   * extended by SESSION_TTL_MS (never beyond SESSION_MAX_AGE_MS after sign-in),
+   * and `touched` tells the caller to re-send the cookie. Pass
+   * `extend: false` when the response cannot reach the browser (server render).
    */
-  async resolveSession(token: string): Promise<{ user: AuthUser; touched: boolean } | null> {
+  async resolveSession(token: string, { extend = true } = {}): Promise<{ user: AuthUser; touched: boolean } | null> {
     const session = await this.prisma.session.findUnique({
       where: { tokenHash: hashSessionToken(token) },
-      select: { id: true, expiresAt: true, lastUsedAt: true, revokedAt: true, user: { select: AUTH_USER_SELECT } },
+      select: {
+        id: true,
+        createdAt: true,
+        expiresAt: true,
+        lastUsedAt: true,
+        revokedAt: true,
+        user: { select: AUTH_USER_SELECT },
+      },
     });
     const now = Date.now();
     if (!session || session.revokedAt || session.expiresAt.getTime() <= now) return null;
+    const hardLimit = session.createdAt.getTime() + SESSION_MAX_AGE_MS;
+    if (hardLimit <= now) return null;
 
-    const touched = now - session.lastUsedAt.getTime() > SESSION_TOUCH_AFTER_MS;
+    const touched = extend && now - session.lastUsedAt.getTime() > SESSION_TOUCH_AFTER_MS;
     if (touched) {
       await this.prisma.session.update({
         where: { id: session.id },
-        data: { lastUsedAt: new Date(now), expiresAt: new Date(now + SESSION_TTL_MS) },
+        data: { lastUsedAt: new Date(now), expiresAt: new Date(Math.min(now + SESSION_TTL_MS, hardLimit)) },
       });
     }
     return { user: session.user, touched };
@@ -177,12 +203,20 @@ export class AuthService {
 
   /**
    * Changes the password, or sets a first one for an account that signs in
-   * with Google only (then no current password is asked). Every other
+   * with Google only (then an emailed code is required instead of the current password). Every other
    * browser is signed out.
    */
-  async changePassword(userId: string, currentPassword: string | undefined, newPassword: string, keepToken?: string) {
+  async changePassword(
+    userId: string,
+    currentPassword: string | undefined,
+    newPassword: string,
+    keepToken: string | undefined,
+    { codeVerified = false } = {},
+  ) {
     const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { passwordHash: true } });
     if (user.passwordHash) await this.assertPassword(userId, currentPassword ?? '');
+    // A first password (Google-only account) needs an emailed confirmation code, checked by the caller.
+    else if (!codeVerified) throw new ForbiddenException('Confirm with the code sent to your email');
     await this.prisma.$transaction([
       this.prisma.user.update({ where: { id: userId }, data: { passwordHash: await hash(newPassword) } }),
       this.prisma.session.updateMany({

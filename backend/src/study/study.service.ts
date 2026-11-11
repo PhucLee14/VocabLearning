@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import type { Grade } from 'ts-fsrs';
-import type { Prisma, UserCard } from '../generated/prisma/client.js';
+import { Prisma, type UserCard } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { flattenTopics, inTopic, shuffle, WORD_CARD_SELECT, WORD_SUMMARY_SELECT } from '../words/word-shape.js';
 import { addDays, advanceStreak, dayKey, displayedStreak, localDay } from './days.js';
@@ -65,9 +65,13 @@ export class StudyService {
       take: q.limit ?? ctx.dailyNewWords,
       select: WORD_CARD_SELECT,
     });
-    // Wrong answers for the end-of-session quiz, taken from other words.
+    // Wrong answers for the end-of-session quiz: 40 other words from a random place in the bank.
+    const notThese: Prisma.WordWhereInput = { id: { notIn: words.map((w) => w.id) } };
+    const pool = await this.prisma.word.count({ where: notThese });
     const others = await this.prisma.word.findMany({
-      where: { id: { notIn: words.map((w) => w.id) } },
+      where: notThese,
+      orderBy: { id: 'asc' },
+      skip: Math.floor(Math.random() * Math.max(1, pool - 40)),
       take: 40,
       select: { id: true, headword: true, definitionEn: true },
     });
@@ -109,10 +113,17 @@ export class StudyService {
       return { card: cardSummary(card), today: await this.todaySummary(userId, ctx) };
     }
 
-    const card = await this.prisma.userCard.create({
-      data: { userId, wordId: dto.wordId, ...newStoredCard(new Date()), masteryLevel: 1 },
-    });
-    return { card: cardSummary(card), today: await this.bumpDaily(userId, ctx, { newWords: 1 }) };
+    try {
+      const card = await this.prisma.userCard.create({
+        data: { userId, wordId: dto.wordId, ...newStoredCard(new Date()), masteryLevel: 1 },
+      });
+      return { card: cardSummary(card), today: await this.bumpDaily(userId, ctx, { newWords: 1 }) };
+    } catch (error) {
+      // A concurrent request (double click) created it first: same result, counted once.
+      if (!(error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002')) throw error;
+      const card = await this.prisma.userCard.findUniqueOrThrow({ where: key });
+      return { card: cardSummary(card), today: await this.todaySummary(userId, ctx) };
+    }
   }
 
   /** Forget a word: removes its card (and so its schedule). Review history is kept. */
@@ -146,7 +157,11 @@ export class StudyService {
     };
   }
 
-  /** Practice cards: shuffled, and ratings never touch the schedule. */
+  /**
+   * Practice cards: a random pick, and ratings never touch the schedule.
+   * All matching ids are fetched (ids only; the bank has about 10k words), so
+   * every word can come up, not just the first few hundred.
+   */
   async practiceQueue(userId: string, q: PracticeQuery) {
     const ctx = await this.context(userId);
     const filter = this.wordFilter(q);
@@ -156,12 +171,9 @@ export class StudyService {
             await this.prisma.userCard.findMany({
               where: { userId, word: { AND: filter } },
               select: { wordId: true },
-              take: 500,
             })
           ).map((c) => c.wordId)
-        : (await this.prisma.word.findMany({ where: { AND: filter }, select: { id: true }, take: 500 })).map(
-            (w) => w.id,
-          );
+        : (await this.prisma.word.findMany({ where: { AND: filter }, select: { id: true } })).map((w) => w.id);
     const picked = shuffle(ids).slice(0, q.limit ?? 20);
     const words = await this.prisma.word.findMany({
       where: { id: { in: picked } },
@@ -219,25 +231,34 @@ export class StudyService {
       masteryLevel: masteryLevel({ ...next, isKnown: card?.isKnown }),
       isLeech: next.lapses >= LEECH_LAPSES,
     };
-    const [saved] = await this.prisma.$transaction([
-      this.prisma.userCard.upsert({
-        where: key,
-        create: { userId, wordId: dto.wordId, ...next, ...derived },
-        update: { ...next, ...derived },
-      }),
-      this.prisma.reviewLog.create({
-        data: {
-          userId,
-          wordId: dto.wordId,
-          rating: dto.rating,
-          mode: dto.mode,
-          stateBefore: before.state,
-          prevIntervalDays: before.scheduledDays,
-          nextIntervalDays: next.scheduledDays,
-          durationMs,
-        },
-      }),
-    ]);
+    const log = {
+      userId,
+      wordId: dto.wordId,
+      rating: dto.rating,
+      mode: dto.mode,
+      stateBefore: before.state,
+      prevIntervalDays: before.scheduledDays,
+      nextIntervalDays: next.scheduledDays,
+      durationMs,
+    };
+    // Optimistic concurrency: the update only applies if nobody rated this card
+    // since we read it (every review bumps `reps`). A double click or a network
+    // retry then gets a 409 instead of being counted twice. A brand-new card
+    // races on the (userId, wordId) key instead, which the filter maps to 409.
+    const saved = await this.prisma.$transaction(async (tx) => {
+      if (card) {
+        const updated = await tx.userCard.updateMany({
+          where: { userId, wordId: dto.wordId, reps: card.reps },
+          data: { ...next, ...derived },
+        });
+        if (updated.count === 0) throw new ConflictException('This card was just rated');
+        await tx.reviewLog.create({ data: log });
+        return tx.userCard.findUniqueOrThrow({ where: key });
+      }
+      const created = await tx.userCard.create({ data: { userId, wordId: dto.wordId, ...next, ...derived } });
+      await tx.reviewLog.create({ data: log });
+      return created;
+    });
     // A word reviewed without a card yet counts as a new word.
     const today = await this.bumpDaily(userId, ctx, card ? { reviews: 1, correct, durationMs } : { newWords: 1, correct, durationMs });
     return { card: cardSummary(saved), today };
@@ -282,7 +303,7 @@ export class StudyService {
     const todayDay = localDay(now, ctx.timezone);
     const yearAgo = addDays(todayDay, -364);
 
-    const [stats, mastery, forecast, levelTotals, cards, byTopic, recentLogs, totalReviews, today] =
+    const [stats, mastery, forecast, levelTotals, cards, byTopic, weekly, totalReviews, today] =
       await Promise.all([
         this.prisma.dailyStat.findMany({
           where: { userId, date: { gte: yearAgo } },
@@ -307,10 +328,17 @@ export class StudyService {
           WHERE t."parentId" IS NULL
           GROUP BY t.id
           ORDER BY t."sortOrder"`,
-        this.prisma.reviewLog.findMany({
-          where: { userId, reviewedAt: { gte: addDays(todayDay, -7 * 8) }, mode: { not: 'PRACTICE' } },
-          select: { rating: true, reviewedAt: true },
-        }),
+        // Recall rate per week (weeks start on Monday, in the learner's timezone), aggregated in SQL.
+        this.prisma.$queryRaw<{ week: string; total: number; correct: number }[]>`
+          SELECT to_char(date_trunc('week', ("reviewedAt" AT TIME ZONE 'UTC') AT TIME ZONE ${ctx.timezone}), 'YYYY-MM-DD') AS week,
+                 count(*)::int AS total,
+                 (count(*) FILTER (WHERE rating >= 3))::int AS correct
+          FROM review_logs
+          WHERE "userId" = ${userId}::uuid
+            AND "reviewedAt" >= ${addDays(todayDay, -7 * 8)}
+            AND mode <> 'PRACTICE'
+          GROUP BY 1
+          ORDER BY 1`,
         this.prisma.reviewLog.count({ where: { userId } }),
         this.todaySummary(userId, ctx),
       ]);
@@ -326,17 +354,6 @@ export class StudyService {
       };
     });
 
-    // Recall rate per week (weeks start on Monday, in the learner's timezone).
-    const weeks = new Map<string, { total: number; correct: number }>();
-    for (const log of recentLogs) {
-      const day = localDay(log.reviewedAt, ctx.timezone);
-      const monday = dayKey(addDays(day, -((day.getUTCDay() + 6) % 7)));
-      const w = weeks.get(monday) ?? { total: 0, correct: 0 };
-      w.total++;
-      if (log.rating >= 3) w.correct++;
-      weeks.set(monday, w);
-    }
-
     return {
       heatmap: stats.map((s) => ({
         date: dayKey(s.date),
@@ -350,9 +367,7 @@ export class StudyService {
         .map((t) => ({ slug: t.slug, nameEn: t.nameEn, nameVi: t.nameVi, total: Number(t.total), learned: Number(t.learned) }))
         .filter((t) => t.total > 0),
       forecast,
-      weeklyRecall: [...weeks.entries()]
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([week, w]) => ({ week, total: w.total, rate: w.correct / w.total })),
+      weeklyRecall: weekly.map((w) => ({ week: w.week, total: w.total, rate: w.correct / w.total })),
       totals: {
         reviews: totalReviews,
         seconds: stats.reduce((n, s) => n + s.activeSeconds, 0),

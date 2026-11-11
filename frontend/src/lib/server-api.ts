@@ -30,6 +30,9 @@ async function authedFetch(path: string) {
   return fetch(`${API_URL}${path}`, {
     headers: {
       Accept: 'application/json',
+      // Server renders don't extend the session: the backend can't send the refreshed
+      // cookie back to the browser from here. SessionKeepAlive does it from the browser.
+      'x-vocab-ssr': '1',
       ...(token ? { Cookie: `${SESSION_COOKIE}=${token}` } : {}),
     },
   });

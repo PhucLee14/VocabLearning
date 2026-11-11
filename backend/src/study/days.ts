@@ -27,20 +27,26 @@ export const dayKey = (day: Date) => day.toISOString().slice(0, 10);
 
 export type StreakState = { current: number; longest: number; lastActiveDate: Date | null };
 
-/** The streak after the learner meets today's goal. Idempotent within one day. */
+/**
+ * The streak after the learner meets today's goal. Idempotent within one day.
+ * `lastActiveDate` never moves backwards: after a time-zone change "today" can
+ * be a calendar day earlier than the last active day, and that must not reset
+ * the streak (a day already counted stays counted).
+ */
 export function advanceStreak(streak: StreakState, today: Date): StreakState {
   const last = streak.lastActiveDate ? dayKey(streak.lastActiveDate) : null;
-  if (last === dayKey(today)) return streak;
+  const todayKey = dayKey(today);
+  if (last !== null && last >= todayKey) return streak;
   const current = last === dayKey(addDays(today, -1)) ? streak.current + 1 : 1;
   return { current, longest: Math.max(streak.longest, current), lastActiveDate: today };
 }
 
 /**
- * The streak to display today: it is still alive if the goal was met today or
- * yesterday (today's goal can still be met), otherwise it is broken (0).
+ * The streak to display today: it is still alive if the goal was met today,
+ * yesterday or — after a time-zone change — on a later calendar day;
+ * otherwise it is broken (0).
  */
 export function displayedStreak(streak: StreakState, today: Date): number {
   if (!streak.lastActiveDate) return 0;
-  const last = dayKey(streak.lastActiveDate);
-  return last === dayKey(today) || last === dayKey(addDays(today, -1)) ? streak.current : 0;
+  return dayKey(streak.lastActiveDate) >= dayKey(addDays(today, -1)) ? streak.current : 0;
 }

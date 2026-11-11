@@ -68,7 +68,7 @@ async function SettingsView() {
           </ul>
           {!me.hasGoogle && <p className="mt-2 text-[13px] text-muted">{t('googleLinkHelp')}</p>}
         </div>
-        <PasswordForm hasPassword={me.hasPassword} />
+        <PasswordForm hasPassword={me.hasPassword} email={me.email} />
         <div className="border-t border-line-strong pt-6">
           <SignOutButton className="btn btn-secondary" />
         </div>

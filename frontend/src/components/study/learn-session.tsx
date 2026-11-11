@@ -4,7 +4,7 @@ import { Check, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
-import { api } from '@/lib/client-api';
+import { ApiError, api } from '@/lib/client-api';
 import type { CardWord, LearnQueue, Today } from '@/lib/types';
 import { WordBody, WordHead } from './word-faces';
 
@@ -94,7 +94,10 @@ export function LearnSession({ queue, showVietnamese }: { queue: LearnQueue; sho
       body: { wordId: question.word.id, rating: ok ? 3 : 1, mode: 'LEARN', durationMs: Date.now() - shownAt.current },
     })
       .then((res) => setToday(res.today))
-      .catch(() => setError(t('saveError')));
+      // 409: the card was just rated elsewhere (another tab); that rating stands.
+      .catch((error) => {
+        if (!(error instanceof ApiError && error.status === 409)) setError(t('saveError'));
+      });
   }
 
   function next() {

@@ -17,6 +17,15 @@ export const SESSION_COOKIE = 'vocab_session';
 export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 /** Extend a session (and re-send the cookie) at most once per day. */
 export const SESSION_TOUCH_AFTER_MS = 24 * 60 * 60 * 1000;
+/** No session lives longer than this after sign-in, however often it is used. */
+export const SESSION_MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000;
+/**
+ * Header the frontend's Server Components add when they call the API with the
+ * browser's cookie. Their responses never reach the browser, so a session is
+ * not extended on such requests (the browser's cookie could not follow); the
+ * next request from the browser itself extends it and re-sends the cookie.
+ */
+export const SERVER_RENDER_HEADER = 'x-vocab-ssr';
 
 export const newSessionToken = () => randomBytes(32).toString('base64url');
 

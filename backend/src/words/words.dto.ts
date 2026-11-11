@@ -36,6 +36,7 @@ export class ListWordsQuery {
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  @Max(10_000)
   page?: number;
 
   @IsOptional()

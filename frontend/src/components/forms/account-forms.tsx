@@ -5,11 +5,71 @@ import { type FormEvent, useState } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { ApiError, api } from '@/lib/client-api';
 
+type ConfirmAction = 'set_password' | 'delete_account';
+
 /**
- * Change the password, or set a first one for a Google-only account (no
- * current password then). Every other signed-in browser is signed out.
+ * "Send code" + a 6-digit code input. The backend emails the code
+ * (POST /me/confirm-code) and checks it when the form is submitted.
  */
-export function PasswordForm({ hasPassword }: { hasPassword: boolean }) {
+function CodeField({ action, email }: { action: ConfirmAction; email: string }) {
+  const t = useTranslations('Settings');
+  const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'wait' | 'error'>('idle');
+
+  async function send() {
+    setState('sending');
+    try {
+      await api('/me/confirm-code', { method: 'POST', body: { action } });
+      setState('sent');
+    } catch (error) {
+      setState(error instanceof ApiError && error.status === 429 ? 'wait' : 'error');
+    }
+  }
+
+  return (
+    <div>
+      <label htmlFor={`code-${action}`} className="field-label">
+        {t('code')}
+      </label>
+      <div className="flex flex-wrap items-center gap-3">
+        <input
+          id={`code-${action}`}
+          name="code"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          pattern="\d{6}"
+          maxLength={6}
+          required
+          placeholder="123456"
+          aria-describedby={`code-${action}-help`}
+          className="input max-w-[160px] tracking-[0.3em]"
+        />
+        <button type="button" className="btn btn-secondary btn-sm" onClick={send} disabled={state === 'sending'}>
+          {state === 'sent' || state === 'wait' ? t('codeResend') : t('codeSend')}
+        </button>
+      </div>
+      <p
+        id={`code-${action}-help`}
+        role="status"
+        className={`mt-1.5 text-[13px] ${state === 'error' || state === 'wait' ? 'text-danger' : 'text-muted'}`}
+      >
+        {state === 'sent'
+          ? t('codeSent', { email })
+          : state === 'wait'
+            ? t('codeWait')
+            : state === 'error'
+              ? t('codeSendError')
+              : t('codeHelp', { email })}
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Change the password, or set a first one for a Google-only account (then
+ * confirmed with a code emailed to the account). Every other signed-in
+ * browser is signed out.
+ */
+export function PasswordForm({ hasPassword, email }: { hasPassword: boolean; email: string }) {
   const t = useTranslations('Settings');
   const router = useRouter();
   const [state, setState] = useState<'idle' | 'saving' | 'saved' | 'wrong' | 'error'>('idle');
@@ -22,7 +82,10 @@ export function PasswordForm({ hasPassword }: { hasPassword: boolean }) {
     try {
       await api('/me/password', {
         method: 'POST',
-        body: { ...(hasPassword ? { currentPassword: data.get('current') } : {}), newPassword: data.get('next') },
+        body: {
+          ...(hasPassword ? { currentPassword: data.get('current') } : { code: data.get('code') }),
+          newPassword: data.get('next'),
+        },
       });
       form.reset();
       setState('saved');
@@ -62,19 +125,30 @@ export function PasswordForm({ hasPassword }: { hasPassword: boolean }) {
           {t('passwordRule')}
         </p>
       </div>
+      {!hasPassword && <CodeField action="set_password" email={email} />}
       <div className="flex items-center gap-3">
         <button type="submit" className="btn btn-secondary" disabled={state === 'saving'}>
           {hasPassword ? t('changePassword') : t('setPassword')}
         </button>
         <span role="status" className={`text-[13px] font-bold ${state === 'wrong' || state === 'error' ? 'text-danger' : 'text-muted'}`}>
-          {state === 'saved' ? (hasPassword ? t('passwordChanged') : t('passwordSet')) : state === 'wrong' ? t('wrongPassword') : state === 'error' ? t('saveError') : ''}
+          {state === 'saved'
+            ? hasPassword
+              ? t('passwordChanged')
+              : t('passwordSet')
+            : state === 'wrong'
+              ? hasPassword
+                ? t('wrongPassword')
+                : t('wrongCode')
+              : state === 'error'
+                ? t('saveError')
+                : ''}
         </span>
       </div>
     </form>
   );
 }
 
-/** Delete the account after confirming with the password. */
+/** Delete the account after confirming with the password, or with an emailed code (Google-only accounts). */
 export function DeleteAccountForm({ email, hasPassword }: { email: string; hasPassword: boolean }) {
   const t = useTranslations('Settings');
   const router = useRouter();
@@ -88,7 +162,7 @@ export function DeleteAccountForm({ email, hasPassword }: { email: string; hasPa
     try {
       await api('/me/delete', {
         method: 'POST',
-        body: hasPassword ? { password: data.get('password') } : { confirmEmail: data.get('confirmEmail') },
+        body: hasPassword ? { password: data.get('password') } : { code: data.get('code') },
       });
       router.replace('/');
       router.refresh();
@@ -119,12 +193,7 @@ export function DeleteAccountForm({ email, hasPassword }: { email: string; hasPa
           <input id="del-pw" name="password" type="password" autoComplete="current-password" required className="input" />
         </div>
       ) : (
-        <div>
-          <label htmlFor="del-email" className="field-label">
-            {t('confirmEmail')}
-          </label>
-          <input id="del-email" name="confirmEmail" type="email" autoComplete="off" required placeholder={email} className="input" />
-        </div>
+        <CodeField action="delete_account" email={email} />
       )}
       <div className="flex flex-wrap items-center gap-3">
         <button type="submit" className="btn btn-danger" disabled={state === 'deleting'}>
@@ -134,7 +203,7 @@ export function DeleteAccountForm({ email, hasPassword }: { email: string; hasPa
           {t('cancel')}
         </button>
         <span role="status" className="text-[13px] font-bold text-danger">
-          {state === 'wrong' ? (hasPassword ? t('wrongPassword') : t('wrongEmail')) : state === 'error' ? t('saveError') : ''}
+          {state === 'wrong' ? (hasPassword ? t('wrongPassword') : t('wrongCode')) : state === 'error' ? t('saveError') : ''}
         </span>
       </div>
     </form>

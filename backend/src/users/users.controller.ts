@@ -1,9 +1,10 @@
-import { Body, Controller, ForbiddenException, Get, HttpCode, Patch, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Patch, Post, Res, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
 import { type AuthUser, AuthService } from '../auth/auth.service.js';
+import { ConfirmCodeService } from '../auth/confirm-code.service.js';
 import { clearSessionCookie } from '../auth/session-cookie.js';
 import { CurrentUser, SessionGuard, SessionToken } from '../auth/session.guard.js';
-import { ChangePasswordDto, DeleteAccountDto, UpdateProfileDto, UpdateSettingsDto } from './users.dto.js';
+import { ChangePasswordDto, ConfirmCodeDto, DeleteAccountDto, UpdateProfileDto, UpdateSettingsDto } from './users.dto.js';
 import { UsersService } from './users.service.js';
 
 @Controller('me')
@@ -12,6 +13,7 @@ export class UsersController {
   constructor(
     private readonly users: UsersService,
     private readonly auth: AuthService,
+    private readonly codes: ConfirmCodeService,
   ) {}
 
   @Get()
@@ -34,7 +36,20 @@ export class UsersController {
     return this.users.updateSettings(user.id, dto);
   }
 
-  /** Changes the password and signs out every other browser. */
+  /**
+   * Emails a 6-digit code that confirms a sensitive action (setting a first
+   * password, deleting an account without a password). At most one per minute.
+   */
+  @Post('confirm-code')
+  @HttpCode(204)
+  async sendConfirmCode(@CurrentUser() user: AuthUser, @Body() dto: ConfirmCodeDto) {
+    await this.codes.send(user.id, dto.action);
+  }
+
+  /**
+   * Changes the password and signs out every other browser. An account
+   * without a password (Google only) confirms with the emailed code instead.
+   */
   @Post('password')
   @HttpCode(204)
   async changePassword(
@@ -42,10 +57,14 @@ export class UsersController {
     @SessionToken() token: string,
     @Body() dto: ChangePasswordDto,
   ) {
-    await this.auth.changePassword(user.id, dto.currentPassword, dto.newPassword, token);
+    const { hasPassword } = await this.users.profile(user.id);
+    if (!hasPassword) await this.codes.verify(user.id, 'set_password', dto.code);
+    await this.auth.changePassword(user.id, dto.currentPassword, dto.newPassword, token, {
+      codeVerified: !hasPassword,
+    });
   }
 
-  /** Deletes the account and all of its data, after re-checking the password. */
+  /** Deletes the account and all of its data, after re-checking the password (or an emailed code). */
   @Post('delete')
   @HttpCode(204)
   async deleteAccount(
@@ -55,9 +74,7 @@ export class UsersController {
   ) {
     const { hasPassword } = await this.users.profile(user.id);
     if (hasPassword) await this.auth.assertPassword(user.id, dto.password ?? '');
-    else if ((dto.confirmEmail ?? '').trim().toLowerCase() !== user.email) {
-      throw new ForbiddenException('The email does not match');
-    }
+    else await this.codes.verify(user.id, 'delete_account', dto.code);
     await this.users.deleteAccount(user.id);
     clearSessionCookie(res);
   }

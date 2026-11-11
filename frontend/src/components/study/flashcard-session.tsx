@@ -4,7 +4,7 @@ import { ArrowLeftRight, X } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
-import { api } from '@/lib/client-api';
+import { ApiError, api } from '@/lib/client-api';
 import { formatInterval } from '@/lib/format';
 import type { Rating, StudyItem, Today } from '@/lib/types';
 import { WordBody, WordHead } from './word-faces';
@@ -68,7 +68,10 @@ export function FlashcardSession({
         body: { wordId: current.word.id, rating, mode, durationMs },
       })
         .then((res) => setToday(res.today))
-        .catch(() => setError(t('saveError')))
+        // 409: the card was just rated elsewhere (another tab); that rating stands.
+        .catch((error) => {
+          if (!(error instanceof ApiError && error.status === 409)) setError(t('saveError'));
+        })
         .finally(() => pending.current--);
 
       setCounts((c) => ({ ...c, [rating]: c[rating] + 1 }));

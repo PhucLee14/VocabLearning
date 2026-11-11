@@ -64,7 +64,10 @@ export class WordsService {
       const filtered: Prisma.WordWhereInput =
         status === 'new' ? { AND: [where, { cards: { none: { userId } } }] } : where;
       const orderBy: Prisma.WordOrderByWithRelationInput[] =
-        query.sort === 'level' ? [{ cefrLevel: 'asc' }, { headword: 'asc' }] : [{ headword: 'asc' }, { senseNo: 'asc' }];
+        // `id` last: a unique tiebreaker keeps paging stable (no repeats or gaps between pages).
+        query.sort === 'level'
+          ? [{ cefrLevel: 'asc' }, { headword: 'asc' }, { id: 'asc' }]
+          : [{ headword: 'asc' }, { senseNo: 'asc' }, { id: 'asc' }];
       const [total, words] = await Promise.all([
         this.prisma.word.count({ where: filtered }),
         this.prisma.word.findMany({
@@ -84,7 +87,7 @@ export class WordsService {
 
     // Statuses about the learner's own cards: list cards, so they can be ordered by card fields.
     const cardWhere: Prisma.UserCardWhereInput = { ...cardFilter(status, userId as string), word: where };
-    const orderBy: Prisma.UserCardOrderByWithRelationInput[] =
+    const primary: Prisma.UserCardOrderByWithRelationInput[] =
       query.sort === 'az'
         ? [{ word: { headword: 'asc' } }]
         : query.sort === 'level'
@@ -94,6 +97,8 @@ export class WordsService {
             : query.sort === 'mastery'
               ? [{ masteryLevel: 'asc' }, { due: 'asc' }]
               : [{ updatedAt: 'desc' }];
+    // `wordId` last: unique per user, so paging is stable.
+    const orderBy = [...primary, { wordId: 'asc' as const }];
     const [total, cards] = await Promise.all([
       this.prisma.userCard.count({ where: cardWhere }),
       this.prisma.userCard.findMany({
@@ -197,14 +202,16 @@ export class WordsService {
     if (!word) throw new NotFoundException(`No word "${slug}"`);
     const text = content.trim();
 
-    const existing = await this.prisma.note.findFirst({ where: { userId, wordId: word.id }, select: { id: true } });
+    // One note per (user, word) – a unique key, so concurrent saves cannot create two.
     if (!text) {
-      if (existing) await this.prisma.note.delete({ where: { id: existing.id } });
+      await this.prisma.note.deleteMany({ where: { userId, wordId: word.id } });
       return { note: null };
     }
-    const note = existing
-      ? await this.prisma.note.update({ where: { id: existing.id }, data: { content: text } })
-      : await this.prisma.note.create({ data: { userId, wordId: word.id, content: text } });
+    const note = await this.prisma.note.upsert({
+      where: { userId_wordId: { userId, wordId: word.id } },
+      create: { userId, wordId: word.id, content: text },
+      update: { content: text },
+    });
     return { note: { content: note.content, updatedAt: note.updatedAt } };
   }
 

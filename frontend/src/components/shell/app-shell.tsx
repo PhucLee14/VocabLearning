@@ -7,6 +7,7 @@ import { Link } from '@/i18n/navigation';
 import { getDueCount, getViewer } from '@/lib/server-api';
 import { MoreSheet } from './more-sheet';
 import { BottomLinks, SidebarLinks, SidebarLinksFallback } from './nav-links';
+import { SessionKeepAlive } from './session-keep-alive';
 import { SignOutButton } from './sign-out-button';
 
 /**
@@ -25,6 +26,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[256px_minmax(0,1fr)]">
+      <SessionKeepAlive />
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-screen flex-col border-r border-line px-4 py-6 lg:flex">
         <div className="px-3 pb-6">

@@ -6,9 +6,19 @@ import type { TopicDetail, TopicNode } from './types';
 export const API_URL =
   typeof window === 'undefined' ? (process.env.API_URL ?? 'http://localhost:4300/api') : '/api';
 
+/**
+ * Give up on the backend after this long. Static pages fetch public data while
+ * `next build` prerenders them; a hanging backend must not hang the build
+ * (a "use cache" function that runs too long fails the whole build).
+ */
+const PUBLIC_TIMEOUT_MS = 10_000;
+
 /** Public (anonymous) GET. For the signed-in user's data use lib/server-api.ts. */
 export async function apiGet<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, { headers: { Accept: 'application/json' } });
+  const res = await fetch(`${API_URL}${path}`, {
+    headers: { Accept: 'application/json' },
+    signal: AbortSignal.timeout(PUBLIC_TIMEOUT_MS),
+  });
   if (!res.ok) throw new Error(`GET ${path} → ${res.status}`);
   return (await res.json()) as T;
 }
@@ -20,6 +30,7 @@ export const getTopics = cache(() => apiGet<TopicNode[]>('/topics'));
 export const getTopic = cache(async (slug: string) => {
   const res = await fetch(`${API_URL}/topics/${encodeURIComponent(slug)}`, {
     headers: { Accept: 'application/json' },
+    signal: AbortSignal.timeout(PUBLIC_TIMEOUT_MS),
   });
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`GET /topics/${slug} → ${res.status}`);

@@ -26,6 +26,7 @@ Multi-user English vocabulary learning web app, named **Godee** (renamed from "V
 - **Hosting: Vercel Hobby (free)** for both apps, region `sin1` (`vercel.json` in each app), Node `24.x` (`engines`). See `docs/DEPLOYMENT.md`.
   - The backend runs as a **serverless Vercel Function** (NestJS zero-config, entry `src/main.ts`).
     - Do not rely on in-process cron (`@nestjs/schedule`), timers or background work after the response is sent.
+    - `src/main.ts` must call `bootstrap()` **without** a top-level `await`. Vercel's launcher stubs `http.Server.listen` (the callback never fires) and waits for the module to load, so `await bootstrap()` hangs every request with no logs (production outage on 2026-11-12).
     - Max 300 s per request; 4.5 MB request/response bodies.
     - Scheduled work = HTTP endpoints protected by `CRON_SECRET`, triggered by Upstash QStash.
   - The browser calls same-origin `/api/*`; `frontend/next.config.ts` rewrites it to `API_URL` (read at build time). Server Components call `API_URL` directly (`src/lib/api.ts`).

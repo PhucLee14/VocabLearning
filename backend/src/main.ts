@@ -38,4 +38,12 @@ async function bootstrap() {
 
   await app.listen(config.get<number>('PORT', 4300));
 }
-await bootstrap();
+// Not awaited at the top level: on Vercel the launcher replaces
+// http.Server.listen with a stub that only captures the server (its callback
+// never fires), and it waits for this module to finish loading before it
+// serves anything. `await bootstrap()` here would never finish, so every
+// request would hang (seen in production on 2026-11-12).
+bootstrap().catch((error: unknown) => {
+  console.error(error);
+  process.exit(1);
+});

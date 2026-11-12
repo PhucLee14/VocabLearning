@@ -421,3 +421,15 @@ model ImportJob {
 
   @@map("import_jobs")
 }
+
+/// Fixed-window counters for rate limiting (login, register, emails sent).
+/// `key` is "<bucket>:<hash of the IP, email or user id>", never the raw value.
+/// Expired rows are deleted now and then by RateLimitService.
+model RateLimit {
+  key     String   @id
+  count   Int
+  resetAt DateTime
+
+  @@index([resetAt])
+  @@map("rate_limits")
+}

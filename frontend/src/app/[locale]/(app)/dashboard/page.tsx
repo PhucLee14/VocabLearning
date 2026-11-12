@@ -6,6 +6,7 @@ import { ForecastBars } from '@/components/charts/forecast-bars';
 import { GoalRing } from '@/components/charts/goal-ring';
 import { MasteryLadder } from '@/components/charts/mastery-ladder';
 import { WeekStrip } from '@/components/charts/week-strip';
+import { VerifyEmailNotice } from '@/components/forms/email-link-forms';
 import { Page } from '@/components/shell/app-shell';
 import { LevelPill } from '@/components/word/level-pill';
 import { MasteryMeter } from '@/components/word/mastery-meter';
@@ -65,6 +66,11 @@ async function Dashboard() {
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-12">
+      {!viewer.emailVerifiedAt && (
+        <div className="col-span-2 lg:col-span-12">
+          <VerifyEmailNotice email={viewer.email} />
+        </div>
+      )}
       {/* Title row: greeting with today's one fact, and the main job one click away */}
       <header className="flex flex-col gap-5 pb-3 col-span-2 lg:col-span-12 lg:flex-row lg:items-end lg:justify-between">
         <div>

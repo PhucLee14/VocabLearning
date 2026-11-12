@@ -1,4 +1,5 @@
 import { Global, Module } from '@nestjs/common';
+import { AccountEmailService } from './account-email.service.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { ConfirmCodeService } from './confirm-code.service.js';
@@ -8,7 +9,7 @@ import { OptionalSessionGuard, SessionGuard } from './session.guard.js';
 @Global()
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, ConfirmCodeService, SessionGuard, OptionalSessionGuard],
-  exports: [AuthService, ConfirmCodeService, SessionGuard, OptionalSessionGuard],
+  providers: [AuthService, AccountEmailService, ConfirmCodeService, SessionGuard, OptionalSessionGuard],
+  exports: [AuthService, AccountEmailService, ConfirmCodeService, SessionGuard, OptionalSessionGuard],
 })
 export class AuthModule {}

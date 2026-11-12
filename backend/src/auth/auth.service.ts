@@ -227,6 +227,11 @@ export class AuthService {
         },
         data: { revokedAt: new Date() },
       }),
+      // A reset link sent before this change must not undo it.
+      this.prisma.authToken.updateMany({
+        where: { userId, type: 'PASSWORD_RESET', usedAt: null },
+        data: { usedAt: new Date() },
+      }),
     ]);
   }
 }

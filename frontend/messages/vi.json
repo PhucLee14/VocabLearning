@@ -101,7 +101,9 @@
     "error_google_unverified": "Email Google của bạn chưa được xác minh.",
     "error_google_unavailable": "Đăng nhập bằng Google chưa được bật trên máy chủ.",
     "error_google_conflict": "Email này đã liên kết với một tài khoản Google khác.",
-    "googleHint": "Nếu bạn từng đăng ký bằng Google, hãy bấm “Tiếp tục với Google”."
+    "googleHint": "Nếu bạn từng đăng ký bằng Google, hãy bấm “Tiếp tục với Google”.",
+    "forgot": "Quên mật khẩu?",
+    "errorTooMany": "Bạn thử quá nhiều lần. Vui lòng đợi vài phút rồi thử lại."
   },
   "Mastery": {
     "level0": "Chưa học",
@@ -426,5 +428,35 @@
     "saving": "Đang lưu…",
     "saved": "Đã lưu",
     "saveError": "Chưa lưu được. Kiểm tra lại thông tin."
+  },
+  "AccountEmail": {
+    "email": "Email",
+    "newPassword": "Mật khẩu mới",
+    "passwordRule": "Ít nhất 8 ký tự.",
+    "forgotTitle": "Quên mật khẩu",
+    "forgotLede": "Nhập email của tài khoản, chúng tôi sẽ gửi link để đặt mật khẩu mới.",
+    "forgotSubmit": "Gửi link đặt lại",
+    "forgotSent": "Nếu {email} có tài khoản Godee, link đặt lại mật khẩu đã được gửi tới đó. Link có hiệu lực 30 phút; nhớ xem cả thư mục Spam.",
+    "backToLogin": "Quay lại đăng nhập",
+    "resetTitle": "Đặt mật khẩu mới",
+    "resetLede": "Sau khi đổi, mọi thiết bị đang đăng nhập sẽ bị đăng xuất.",
+    "resetSubmit": "Lưu mật khẩu mới",
+    "resetDone": "Đã đổi mật khẩu. Hãy đăng nhập bằng mật khẩu mới.",
+    "linkInvalid": "Link không hợp lệ hoặc đã hết hạn. Hãy yêu cầu link mới.",
+    "askAgain": "Yêu cầu link mới",
+    "toLogin": "Đăng nhập",
+    "verifyTitle": "Xác minh email",
+    "verifyLede": "Bấm nút bên dưới để xác nhận đây là email của bạn.",
+    "verifySubmit": "Xác minh email",
+    "verifyDone": "Email đã được xác minh. Cảm ơn bạn!",
+    "verifyInvalid": "Link không hợp lệ hoặc đã hết hạn. Bạn có thể gửi link mới trong Cài đặt.",
+    "toSettings": "Mở Cài đặt",
+    "toApp": "Vào học",
+    "unverifiedTitle": "Email chưa được xác minh.",
+    "unverifiedBody": "Mở link chúng tôi đã gửi tới {email} để xác minh.",
+    "unverifiedSent": "Đã gửi link mới tới {email}. Nhớ xem cả thư mục Spam.",
+    "unverifiedResend": "Gửi lại link",
+    "tooMany": "Bạn thử quá nhiều lần. Vui lòng đợi một lúc rồi thử lại.",
+    "error": "Có lỗi xảy ra. Vui lòng thử lại."
   }
 }

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { Suspense } from 'react';
 import { DeleteAccountForm, PasswordForm } from '@/components/forms/account-forms';
+import { VerifyEmailNotice } from '@/components/forms/email-link-forms';
 import { Section, SettingsForm } from '@/components/forms/settings-form';
 import { LocaleSwitcher } from '@/components/locale-switcher';
 import { Page } from '@/components/shell/app-shell';
@@ -51,6 +52,7 @@ async function SettingsView() {
       </Section>
 
       <Section title={t('accountTitle')} description={t('accountLede', { email: me.email })}>
+        {!me.emailVerifiedAt && <VerifyEmailNotice email={me.email} />}
         <div>
           <p className="field-label">{t('signInMethods')}</p>
           <ul className="flex flex-col gap-2">

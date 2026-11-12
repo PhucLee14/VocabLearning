@@ -60,6 +60,8 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
             ? t('errorExists')
             : status === 400
               ? t('errorInvalid')
+              : status === 429
+                ? t('errorTooMany')
               : t('errorGeneric'),
       );
       setPending(false);
@@ -101,9 +103,15 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
             aria-describedby={mode === 'register' ? 'a-password-rule' : undefined}
             className="input"
           />
-          {mode === 'register' && (
+          {mode === 'register' ? (
             <p id="a-password-rule" className="mt-1.5 text-[13px] text-muted">
               {t('passwordRule')}
+            </p>
+          ) : (
+            <p className="mt-1.5 text-right text-[14px]">
+              <Link href="/forgot-password" className="font-bold">
+                {t('forgot')}
+              </Link>
             </p>
           )}
         </div>

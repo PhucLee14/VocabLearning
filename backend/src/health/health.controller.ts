@@ -1,5 +1,7 @@
 import { timingSafeEqual } from 'node:crypto';
-import { Controller, Get, Headers, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import { Controller, Get, Headers, NotFoundException, Req, ServiceUnavailableException } from '@nestjs/common';
+import type { Request } from 'express';
+import { clientIp } from '../common/client-ip.js';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service.js';
 
@@ -23,9 +25,10 @@ export class HealthController {
   /**
    * DB connectivity check. Wakes Neon up, so it needs
    * `Authorization: Bearer <CRON_SECRET>`; without it the route looks absent.
+   * Also reports the client IP the backend sees.
    */
   @Get('db')
-  async db(@Headers('authorization') authorization: string | undefined) {
+  async db(@Headers('authorization') authorization: string | undefined, @Req() req: Request) {
     const secret = this.config.get<string>('CRON_SECRET');
     const given = Buffer.from(authorization ?? '');
     const expected = Buffer.from(`Bearer ${secret ?? ''}`);
@@ -34,7 +37,9 @@ export class HealthController {
     }
     try {
       await this.prisma.$queryRaw`SELECT 1`;
-      return { status: 'ok', db: 'ok' };
+      // `ip`: the client IP as the backend sees it, to check that rate limits by IP
+      // see visitors and not a proxy (src/common/client-ip.ts).
+      return { status: 'ok', db: 'ok', ip: clientIp(req) };
     } catch {
       throw new ServiceUnavailableException({ status: 'error', db: 'unreachable' });
     }

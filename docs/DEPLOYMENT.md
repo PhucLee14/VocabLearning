@@ -54,6 +54,8 @@ Prerequisites:
    | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | Email for confirmation codes (section 2.6). Required in production: without them, setting a password on or deleting a Google-only account fails with 503 |
    | `CRON_SECRET` | Random string (`openssl rand -hex 32`); `/api/health/db` and future cron endpoints require `Authorization: Bearer <CRON_SECRET>` |
 
+   After deploying, call `/api/health/db` **through the frontend domain** (`https://<frontend-domain>/api/health/db` with the Bearer header): its `ip` field is the client IP the backend sees for rate limiting. It should be your own public IP; a Vercel/AWS address means every visitor shares one IP and the per-IP limits (`backend/src/auth/auth.controller.ts`) act as global limits.
+
    - Do **not** add `PORT`: Vercel runs the app as a function and handles the port itself. `PORT=4300` only matters locally.
    - Paste the values **without** the surrounding quotes from `.env`, or the quotes become part of the value and the DB connection fails. Alternatively, paste the whole `.env` into the first Key field (Vercel splits it into variables), then delete `PORT` and fix `FRONTEND_URL`.
 
@@ -100,7 +102,7 @@ Preview deployments get their own random domains, which are not registered redir
 
 ### 2.6 Email (confirmation codes)
 
-Google-only accounts confirm sensitive actions (setting a first password, deleting the account) with a 6-digit code sent to their email. Mail goes out over SMTP through Nodemailer (`backend/src/mail/`).
+The mailer sends: 6-digit codes with which Google-only accounts confirm sensitive actions (setting a first password, deleting the account), the email verification link after sign-up, and password reset links. Links point at the **first** origin in `FRONTEND_URL`. Mail goes out over SMTP through Nodemailer (`backend/src/mail/`).
 
 1. Use a Gmail account for the app (today: the app's own Gmail address). Turn on **2-Step Verification**, then create an **App password** (Google account → Security → App passwords).
 2. Set `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=465`, `SMTP_SECURE=true`, `SMTP_USER=<the Gmail address>`, `SMTP_PASS=<the app password>` (spaces are ignored) and `MAIL_FROM="Godee <the Gmail address>"` in `backend/.env` and in the backend's Vercel environment variables, then redeploy.

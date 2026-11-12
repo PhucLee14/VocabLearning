@@ -1,7 +1,10 @@
 import { Body, Controller, Get, Headers, HttpCode, Logger, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { CookieOptions, Request, Response } from 'express';
-import { LoginDto, RegisterDto } from './auth.dto.js';
+import { clientIp } from '../common/client-ip.js';
+import { HOUR, MINUTE, RateLimitService } from '../rate-limit/rate-limit.service.js';
+import { AccountEmailService } from './account-email.service.js';
+import { ForgotPasswordDto, LinkTokenDto, LoginDto, RegisterDto, ResetPasswordDto } from './auth.dto.js';
 import { AuthService } from './auth.service.js';
 import {
   authorizationUrl,
@@ -18,7 +21,7 @@ import {
   verifyIdToken,
 } from './google.js';
 import { clearSessionCookie, SESSION_COOKIE, setSessionCookie } from './session-cookie.js';
-import { CurrentUser, OptionalSessionGuard } from './session.guard.js';
+import { CurrentUser, OptionalSessionGuard, SessionGuard } from './session.guard.js';
 import type { AuthUser } from './auth.service.js';
 
 const oauthCookieOptions = (): CookieOptions => ({
@@ -36,16 +39,21 @@ export class AuthController {
   constructor(
     private readonly auth: AuthService,
     private readonly config: ConfigService,
+    private readonly emails: AccountEmailService,
+    private readonly limits: RateLimitService,
   ) {}
 
   @Post('register')
   async register(
     @Body() dto: RegisterDto,
     @Headers('user-agent') userAgent: string | undefined,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
+    await this.limits.consume({ bucket: 'register:ip', id: clientIp(req), limit: 20, windowMs: HOUR });
     const user = await this.auth.register(dto);
     setSessionCookie(res, await this.auth.createSession(user.id, userAgent));
+    await this.emails.sendVerificationQuietly(user.id);
     return { user };
   }
 
@@ -54,8 +62,19 @@ export class AuthController {
   async login(
     @Body() dto: LoginDto,
     @Headers('user-agent') userAgent: string | undefined,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
+    const ip = clientIp(req);
+    const email = dto.email.trim().toLowerCase();
+    // Per IP + email stops guessing one account from one place; per email
+    // stops guessing it from many (high enough not to lock the owner out);
+    // per IP stops spraying many accounts.
+    await this.limits.consume(
+      { bucket: 'login:ip-email', id: `${ip}|${email}`, limit: 10, windowMs: 15 * MINUTE },
+      { bucket: 'login:email', id: email, limit: 50, windowMs: HOUR },
+      { bucket: 'login:ip', id: ip, limit: 100, windowMs: 15 * MINUTE },
+    );
     const user = await this.auth.verifyCredentials(dto.email, dto.password);
     setSessionCookie(res, await this.auth.createSession(user.id, userAgent));
     return { user };
@@ -70,6 +89,40 @@ export class AuthController {
   @UseGuards(OptionalSessionGuard)
   session(@CurrentUser() user?: AuthUser) {
     return { signedIn: Boolean(user) };
+  }
+
+  // ───────────── Email verification and password reset ─────────────
+
+  /** Emails a new verification link to the signed-in user (204; 429 when asked too often). */
+  @Post('verify-email/send')
+  @HttpCode(204)
+  @UseGuards(SessionGuard)
+  async sendVerification(@CurrentUser() user: AuthUser) {
+    await this.emails.sendVerification(user.id);
+  }
+
+  /** The verification link's page posts its token here. Works signed out (another device). */
+  @Post('verify-email')
+  @HttpCode(204)
+  async verifyEmail(@Body() dto: LinkTokenDto, @Req() req: Request) {
+    await this.limits.consume({ bucket: 'link:ip', id: clientIp(req), limit: 60, windowMs: 15 * MINUTE });
+    await this.emails.verifyEmail(dto.token);
+  }
+
+  /** Always 204, whether or not the email has an account (no account discovery). */
+  @Post('forgot-password')
+  @HttpCode(204)
+  async forgotPassword(@Body() dto: ForgotPasswordDto, @Req() req: Request) {
+    await this.limits.consume({ bucket: 'forgot:ip', id: clientIp(req), limit: 20, windowMs: HOUR });
+    await this.emails.requestPasswordReset(dto.email);
+  }
+
+  /** Sets a new password from a reset link and signs out every session; the user then signs in. */
+  @Post('reset-password')
+  @HttpCode(204)
+  async resetPassword(@Body() dto: ResetPasswordDto, @Req() req: Request) {
+    await this.limits.consume({ bucket: 'link:ip', id: clientIp(req), limit: 60, windowMs: 15 * MINUTE });
+    await this.emails.resetPassword(dto.token, dto.newPassword);
   }
 
   @Post('logout')

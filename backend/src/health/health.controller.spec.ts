@@ -4,6 +4,8 @@ import { Test } from '@nestjs/testing';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { HealthController } from './health.controller.js';
 
+const req = { headers: { 'x-forwarded-for': '203.0.113.9, 10.0.0.1' }, socket: {} } as never;
+
 describe('HealthController', () => {
   const prisma = { $queryRaw: vi.fn() };
   const env: Record<string, string | undefined> = {};
@@ -29,19 +31,19 @@ describe('HealthController', () => {
 
   it('db check returns ok when the DB responds', async () => {
     prisma.$queryRaw.mockResolvedValue([{ '?column?': 1 }]);
-    await expect(controller.db('Bearer cron-secret')).resolves.toEqual({ status: 'ok', db: 'ok' });
+    await expect(controller.db('Bearer cron-secret', req)).resolves.toEqual({ status: 'ok', db: 'ok', ip: '203.0.113.9' });
   });
 
   it('db check returns 503 when the DB is down', async () => {
     prisma.$queryRaw.mockRejectedValue(new Error('down'));
-    await expect(controller.db('Bearer cron-secret')).rejects.toBeInstanceOf(ServiceUnavailableException);
+    await expect(controller.db('Bearer cron-secret', req)).rejects.toBeInstanceOf(ServiceUnavailableException);
   });
 
   it('db check is hidden without the secret, so anyone cannot keep the DB awake', async () => {
-    await expect(controller.db(undefined)).rejects.toBeInstanceOf(NotFoundException);
-    await expect(controller.db('Bearer wrong')).rejects.toBeInstanceOf(NotFoundException);
+    await expect(controller.db(undefined, req)).rejects.toBeInstanceOf(NotFoundException);
+    await expect(controller.db('Bearer wrong', req)).rejects.toBeInstanceOf(NotFoundException);
     env.CRON_SECRET = undefined;
-    await expect(controller.db('Bearer ')).rejects.toBeInstanceOf(NotFoundException);
+    await expect(controller.db('Bearer ', req)).rejects.toBeInstanceOf(NotFoundException);
     expect(prisma.$queryRaw).not.toHaveBeenCalled();
   });
 });

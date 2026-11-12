@@ -6,6 +6,7 @@ import { clearSessionCookie } from '../auth/session-cookie.js';
 import { CurrentUser, SessionGuard, SessionToken } from '../auth/session.guard.js';
 import { ChangePasswordDto, ConfirmCodeDto, DeleteAccountDto, UpdateProfileDto, UpdateSettingsDto } from './users.dto.js';
 import { UsersService } from './users.service.js';
+import { HOUR, MINUTE, RateLimitService } from '../rate-limit/rate-limit.service.js';
 
 @Controller('me')
 @UseGuards(SessionGuard)
@@ -14,7 +15,13 @@ export class UsersController {
     private readonly users: UsersService,
     private readonly auth: AuthService,
     private readonly codes: ConfirmCodeService,
+    private readonly limits: RateLimitService,
   ) {}
+
+  /** Password and code checks on a signed-in account: at most 10 per 15 minutes. */
+  private checkLimit(userId: string) {
+    return this.limits.consume({ bucket: 'account-check', id: userId, limit: 10, windowMs: 15 * MINUTE });
+  }
 
   @Get()
   profile(@CurrentUser() user: AuthUser) {
@@ -43,6 +50,7 @@ export class UsersController {
   @Post('confirm-code')
   @HttpCode(204)
   async sendConfirmCode(@CurrentUser() user: AuthUser, @Body() dto: ConfirmCodeDto) {
+    await this.limits.consume({ bucket: 'code-send', id: user.id, limit: 10, windowMs: HOUR });
     await this.codes.send(user.id, dto.action);
   }
 
@@ -57,6 +65,7 @@ export class UsersController {
     @SessionToken() token: string,
     @Body() dto: ChangePasswordDto,
   ) {
+    await this.checkLimit(user.id);
     const { hasPassword } = await this.users.profile(user.id);
     if (!hasPassword) await this.codes.verify(user.id, 'set_password', dto.code);
     await this.auth.changePassword(user.id, dto.currentPassword, dto.newPassword, token, {
@@ -72,6 +81,7 @@ export class UsersController {
     @Body() dto: DeleteAccountDto,
     @Res({ passthrough: true }) res: Response,
   ) {
+    await this.checkLimit(user.id);
     const { hasPassword } = await this.users.profile(user.id);
     if (hasPassword) await this.auth.assertPassword(user.id, dto.password ?? '');
     else await this.codes.verify(user.id, 'delete_account', dto.code);

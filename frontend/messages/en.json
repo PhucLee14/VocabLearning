@@ -101,7 +101,9 @@
     "error_google_unverified": "Your Google email address isn't verified.",
     "error_google_unavailable": "Google sign-in isn't enabled on the server yet.",
     "error_google_conflict": "This email is already linked to another Google account.",
-    "googleHint": "If you signed up with Google, use “Continue with Google”."
+    "googleHint": "If you signed up with Google, use “Continue with Google”.",
+    "forgot": "Forgot password?",
+    "errorTooMany": "Too many attempts. Please wait a few minutes and try again."
   },
   "Mastery": {
     "level0": "New",
@@ -426,5 +428,35 @@
     "saving": "Saving…",
     "saved": "Saved",
     "saveError": "Couldn't save. Check the details."
+  },
+  "AccountEmail": {
+    "email": "Email",
+    "newPassword": "New password",
+    "passwordRule": "At least 8 characters.",
+    "forgotTitle": "Forgot your password?",
+    "forgotLede": "Enter your account's email and we'll send you a link to choose a new password.",
+    "forgotSubmit": "Send reset link",
+    "forgotSent": "If {email} has a Godee account, a reset link is on its way. It's valid for 30 minutes; check your Spam folder too.",
+    "backToLogin": "Back to sign in",
+    "resetTitle": "Choose a new password",
+    "resetLede": "Every device signed in to your account will be signed out.",
+    "resetSubmit": "Save new password",
+    "resetDone": "Your password has been changed. Sign in with the new one.",
+    "linkInvalid": "This link is invalid or has expired. Ask for a new one.",
+    "askAgain": "Ask for a new link",
+    "toLogin": "Sign in",
+    "verifyTitle": "Verify your email",
+    "verifyLede": "Press the button below to confirm this is your email.",
+    "verifySubmit": "Verify email",
+    "verifyDone": "Your email is verified. Thank you!",
+    "verifyInvalid": "This link is invalid or has expired. You can send a new one from Settings.",
+    "toSettings": "Open Settings",
+    "toApp": "Start learning",
+    "unverifiedTitle": "Your email isn't verified.",
+    "unverifiedBody": "Open the link we sent to {email} to verify it.",
+    "unverifiedSent": "A new link is on its way to {email}. Check your Spam folder too.",
+    "unverifiedResend": "Send link again",
+    "tooMany": "Too many tries. Please wait a while and try again.",
+    "error": "Something went wrong. Please try again."
   }
 }

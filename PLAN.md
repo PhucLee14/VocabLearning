@@ -483,7 +483,7 @@ Constraints that shape the design:
 - Recordings are personal data: say how long they are kept (ideally not at all after scoring), and ask for microphone consent.
 
 Features:
-- [ ] **US/UK voices** for words and examples (Kokoro, generated offline), with an accent setting.
+- [ ] **US/UK voices** for words and examples (Kokoro, generated offline), with an accent setting. Until then (decided 2026-11-13) every word uses the browser's speech synthesis: the Free Dictionary mp3 links were dropped because they are blocked. Needs a storage account (Cloudflare R2 suggested) and Python on the dev machine.
 - [ ] **IPA sound chart**: the 44 sounds with audio, mouth or tongue hints and example words; tap to hear, record to compare.
 - [ ] **Pronunciation scoring** (ELSA-like): record a word or sentence and get a 0–100 score with each word coloured, the expected IPA next to the IPA heard, and a tip for the worst sound. Save attempts to track progress per sound (e.g. /θ/, /æ/).
 - [ ] **Speaking exercises** in learn and review sessions: "say this word" cards scored by the service; they count towards SRS ratings only if the learner opts in.

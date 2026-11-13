@@ -461,6 +461,110 @@ Correctness:
   - share a public deck by link, copy someone else's deck, and add a deck to a study group;
   - report a deck (goes to the admin feedback inbox).
 
+### Phase 3c: Speaking – pronunciation scoring and YouTube shadowing (requested 2026-11-12)
+
+Sources suggested by the user (to evaluate, nothing decided yet):
+- Pronunciation scoring: **OpenPronounce** (https://github.com/Halleck45/OpenPronounce, MIT).
+  - Phoneme-level assessment, a self-hosted alternative to Azure Pronunciation Assessment. Given a recording and the expected sentence, it returns a 0–100 score, the mispronounced words with the IPA actually heard, a transcript, and pitch and energy curves.
+  - How it scores: Wav2Vec2 phone recognition plus espeak-ng phonemes for the target sentence, aligned by edit distance; DTW against a TTS reference; word error rate.
+  - Runs in Python 3.10+ with ffmpeg, espeak-ng and two Wav2Vec2 checkpoints of about 1.2 GB each. CPU works, GPU is optional. It exposes a FastAPI server (`/pronunciation`, `/phonemes`, `/tts`).
+  - Only English is calibrated (Spearman ρ ≈ 0.65 against human scores on speechocean762). Strong accents, noise and short words reduce accuracy.
+- Voices: **Kokoro** TTS (https://github.com/hexgrad/kokoro, Apache-2.0).
+  - 82M parameters, with American (`a`) and British (`b`) English voices; Python/PyTorch, 24 kHz output.
+  - The repo also has a `kokoro.js` folder (browser use still to be checked).
+  - Vietnamese is not in the official model; the user mentioned a community "Kokoro Vietnamese" voice (storyvert), to be found and checked (licence, quality).
+- Audio for the **44 English IPA sounds** (a phonemic chart, à la ELSA). Source: **TBD** (the user will add the name of the chart/alphabet resource later). Candidates to compare: the British Council phonemic chart, Adrian Underhill's Sound Foundations chart.
+
+Constraints that shape the design:
+- None of these models fits a Vercel Function (Python, GBs of weights, slow cold starts).
+  - Scoring needs its own long-running service: Docker on Fly.io, Railway, Render or a small VPS; CPU first, measure the latency.
+  - It is called from the backend (or straight from the browser with a short-lived signed token), and its endpoints need rate limits. This is the same kind of separate service as the planned Socket.IO server; consider hosting both on one machine.
+- Word audio does not need a server at request time: generate US and UK audio for the ~9.7k words and the example sentences **offline** with Kokoro (like `words:enrich`). Store the files in object storage (Vercel Blob or Cloudflare R2), save the URLs on `Word`, and cache them on the CDN.
+- Recordings are personal data: say how long they are kept (ideally not at all after scoring), and ask for microphone consent.
+
+Features:
+- [ ] **US/UK voices** for words and examples (Kokoro, generated offline), with an accent setting.
+- [ ] **IPA sound chart**: the 44 sounds with audio, mouth or tongue hints and example words; tap to hear, record to compare.
+- [ ] **Pronunciation scoring** (ELSA-like): record a word or sentence and get a 0–100 score with each word coloured, the expected IPA next to the IPA heard, and a tip for the worst sound. Save attempts to track progress per sound (e.g. /θ/, /æ/).
+- [ ] **Speaking exercises** in learn and review sessions: "say this word" cards scored by the service; they count towards SRS ratings only if the learner opts in.
+- [ ] **YouTube shadowing**:
+  - paste a YouTube link, and the video plays in the official IFrame Player with the transcript line by line;
+  - loop a line, slow it down, record yourself, then score the attempt against that line;
+  - translate each line into Vietnamese (machine translation, cached);
+  - tap a word to see its card and add it to your words.
+  - **Open (legal):**
+    - Downloading YouTube audio or scraping captions goes against YouTube's Terms of Service, and the YouTube Data API only downloads captions for videos the API user owns.
+    - Options: transcripts that learners paste; a curated list of videos whose captions are licensed (e.g. Creative Commons); or speech-to-text on audio the learner records or uploads.
+    - Decide before building.
+- [ ] Shadowing library: curated videos by CEFR level and topic, with each user's progress.
+
+### Phase 3d: 3D landing page – "Word Island" (requested 2026-11-12)
+
+The user picked this direction out of three (the others: a deck of 3D flashcards that rearranges itself on scroll; physics letters that assemble into words).
+
+**Concept.** A small low-poly island floats in the hero. Scrolling down the landing page flies the camera around it, and each stop illustrates the HTML section next to it:
+
+| Section | What the island shows | Interaction |
+|---|---|---|
+| Hero | The whole island, bobbing gently | Drag to turn it (limited angle); it tilts slightly with the mouse |
+| How it works | A path of 6 stepping stones labelled 10m → 1d → 3d → 8d → 3w → 2mo; a card hops along it, its colour following the mastery ramp `m0` → `m5` | Driven by scroll |
+| CEFR levels | A mountain with 6 terraces: A1 at the beach up to C2 at the peak, each with the real word count from `/levels` | Hover or tap a terrace to see its count |
+| Topics | Districts with a landmark each (e.g. Food & Drink = market, Travel = airport, Education = school, Nature = forest, Work = offices, Home = houses); the remaining topics are generic buildings with a sign | Hover to highlight; click opens `/topics/<slug>` |
+| Call to action | The camera pulls back to the whole island | None |
+
+**Design rules carried over to 3D**
+- The house style (flat, no gradients, no resting shadows, no emoji):
+  - flat shading with one palette texture (low-poly colour atlas);
+  - lighting baked into vertex colours;
+  - no realtime shadows, no bloom, a plain sky colour.
+- Colours come from the CSS tokens (`--accent`, `--m0` … `--m5`, `--surface`, …), read at runtime.
+- Dark theme: the same island at night (darker palette, lit windows), following `data-theme`.
+- Topics are data, not hard-coded scenery:
+  - a config maps a topic slug to a landmark model;
+  - any other topic, including ones added later by admins, gets a generic building automatically. There are 24 topics in the seed, too many for 24 landmarks.
+
+**Technical approach**
+- Libraries: `three` + `@react-three/fiber` + `@react-three/drei` (`useGLTF`); GSAP ScrollTrigger (or `motion`'s `useScroll`) + Lenis for scroll progress.
+- The camera follows a `CatmullRomCurve3` path keyed to scroll progress, with one waypoint per section.
+- The page's HTML sections stay as they are (SEO, accessibility, static shell/PPR). The canvas is `position: fixed` behind them and `aria-hidden`.
+  - Don't use drei's `ScrollControls`: it takes over scrolling and moves the content into the canvas.
+- Loading:
+  - the scene is a Client Component loaded with `next/dynamic` (`ssr: false`) after the page is idle;
+  - `levels` and `topics` come as props from the existing cached `landingData()`;
+  - a pre-rendered image of the island (AVIF/WebP) is shown first, so LCP does not change. The same image is the fallback with no WebGL, after a WebGL context loss, and on weak devices.
+- `prefers-reduced-motion`: no fly-through; one still view of the island per section, or just the image.
+- Budgets (to check in the prototype):
+  - assets ≤ 1.5 MB compressed (glTF with Meshopt or Draco, KTX2 textures; `gltf-transform` to merge meshes);
+  - about 100 draw calls or fewer;
+  - 60 fps on a mid-range phone; `dpr` capped at 1.5;
+  - rendering stops when the tab is hidden or the canvas is scrolled out of view;
+  - JS for three + r3f (about 150–200 KB gzip) loads on the landing page only.
+- Mobile: a lighter model (LOD), no mouse tilt, touch drag only in the hero (vertical swipes must still scroll the page).
+
+**Assets**
+- Either model the island in Blender, or start from CC0 low-poly kits (e.g. Kenney, Quaternius) and recolour them to the palette.
+- Check every asset's licence (Poly Pizza mixes CC0 and CC-BY) and record sources and attribution, as `docs/DATA_SOURCES.md` does for word data.
+
+Steps:
+- [ ] **Art direction**: a moodboard and a map sketch of the island (districts, terraces, the SRS path, the camera path); choose which topics get a landmark.
+- [ ] **Assets**: model the island or pick a kit; one palette texture; compress and merge; check the budget.
+- [ ] **Prototype** at `/[locale]/lab/island` (`noindex`): the scene, the camera path and the scroll sync. Measure FPS and bundle size on a real phone (iOS Safari and Android Chrome) before going further.
+- [ ] **Landing integration**:
+  - the fixed canvas behind the existing sections;
+  - real data as props;
+  - the poster image and fallbacks;
+  - reduced motion and the dark theme.
+- [ ] **Interactions**: drag in the hero; hover or tap on terraces and districts. Keyboard users already have the HTML links.
+- [ ] **QA**:
+  - Lighthouse: LCP, CLS and TBT no worse than the current landing page;
+  - WebGL context loss;
+  - low-end Android;
+  - both themes and both locales.
+
+Open:
+- Who makes the models: the user or a designer, or a CC0 kit recoloured by us?
+- Later idea: reuse the island inside the app, e.g. a progress map on the dashboard where districts light up as the learner masters words in that topic.
+
 ### Phase 3: Extensions
 - [ ] More exercise types: multiple choice, spelling, listen → type, fill in the blank from example sentences
 - [ ] Starred words (personal decks: see Phase 3b)

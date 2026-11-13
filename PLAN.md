@@ -363,7 +363,7 @@ A starting point; editable from the admin pages or via import. Seed data: [backe
 - [x] Move Neon to Singapore (`aws-ap-southeast-1`)
 - [x] Next.js rewrite `/api/*` → backend, so the auth cookie is first-party
 - [x] Deployment config: `vercel.json` (`sin1`) for both apps, Node 24.x. Verified with a local `vercel build`.
-- [ ] Deploy to Vercel. Needs a GitHub repo + Vercel account; steps in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) §2.
+- [x] Deploy to Vercel (live at https://godee.vercel.app, checked 2026-11-13: API, Google sign-in, security headers). Steps in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) §2. Still to check: the client IP that `/api/health/db` reports (decides the per-IP rate limits).
 - [x] Sign up / sign in / sign out (DB session cookie, see section 4), change password, delete account
 - [x] Sign in with Google (server-side OAuth code flow + PKCE, `jose` ID-token check; links to an existing account by verified email). Setup: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) §2.5
 - [x] Email verification and password reset (2026-11-11): one-time links in the URL fragment, sent through the Gmail SMTP mailer; verification is soft (nothing is blocked yet)

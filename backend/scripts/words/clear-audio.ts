@@ -41,18 +41,19 @@ async function main() {
       return;
     }
 
-    // One small update per word (the source string differs per word), in batches.
+    // One UPDATE statement per batch (the source string differs per word, so the
+    // new values come in as arrays). One update() call per word inside a
+    // transaction hit Prisma's 5 s transaction timeout on a far-away connection.
     let done = 0;
-    for (let i = 0; i < blocked.length; i += 200) {
-      const batch = blocked.slice(i, i + 200);
-      await prisma.$transaction(
-        batch.map((w) =>
-          prisma.word.update({
-            where: { id: w.id },
-            data: { audioUrl: null, source: stripAudioCredit(w.source) },
-          }),
-        ),
-      );
+    for (let i = 0; i < blocked.length; i += 1000) {
+      const batch = blocked.slice(i, i + 1000);
+      const ids = batch.map((w) => w.id);
+      const sources = batch.map((w) => stripAudioCredit(w.source));
+      await prisma.$executeRaw`
+        UPDATE words AS w
+        SET "audioUrl" = NULL, source = v.source
+        FROM unnest(${ids}::uuid[], ${sources}::text[]) AS v(id, source)
+        WHERE w.id = v.id`;
       done += batch.length;
       console.log(`  cleared ${done}/${blocked.length}`);
     }

@@ -27,7 +27,8 @@
     "words:enrich": "tsx scripts/words/enrich.ts",
     "words:cefrj": "tsx scripts/words/build-cefrj.ts",
     "words:review": "tsx scripts/words/review.ts",
-    "words:import": "tsx scripts/words/import.ts"
+    "words:import": "tsx scripts/words/import.ts",
+    "words:clear-audio": "tsx scripts/words/clear-audio.ts"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",

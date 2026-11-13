@@ -31,7 +31,8 @@ npm run words:import -- <file> --dry-run   →   npm run words:import -- <file>
 | Field | Source, in order of preference | Licence |
 |-------|--------------------------------|---------|
 | `definition_en` | **Datamuse** (Wiktionary senses ordered by how common they are, so the first is usually the learner's sense). Falls back to the Free Dictionary API, then kaikki.org. | Wiktionary: CC BY-SA. WordNet: WordNet licence (permissive). |
-| `ipa`, `audio_url`, `synonyms`, `antonyms` | **Free Dictionary API** (`api.dictionaryapi.dev`). IPA falls back to kaikki.org. | Wiktionary text: CC BY-SA 3.0. Audio: Wikimedia Commons, mostly CC BY-SA 3.0/4.0 (per file). |
+| `ipa`, `synonyms`, `antonyms` | **Free Dictionary API** (`api.dictionaryapi.dev`). IPA falls back to kaikki.org. | Wiktionary text: CC BY-SA 3.0. |
+| `audio_url` | **None for now.** The Free Dictionary API's mp3 links (`api.dictionaryapi.dev/media/…`) answer 403 behind a Cloudflare block (2026-11-13), so `BLOCKED_AUDIO_HOSTS` drops them in enrich and import, and `npm run words:clear-audio` removed them from the DB. Words without audio use the browser's speech synthesis. Self-hosted audio (Kokoro, PLAN.md Phase 3c) is the plan. | — |
 | `meaning_vi` | **kaikki.org** (Wiktionary translation tables, via wiktextract). Falls back to **MyMemory**. | Wiktionary: CC BY-SA. MyMemory: translation memory plus machine translation, no clear licence. Treat it as a draft and always review it. |
 | `examples` (+ `translation_vi`) | **Tatoeba** English sentences with a Vietnamese translation, 4–14 words. Only CC BY 2.0 FR or CC0 sentences are used. Falls back to a Wiktionary example (no translation). | CC BY 2.0 FR: attribute the sentence owner. |
 | `cefr_level`, `topics` | **Not looked up.** Comes from your word list (see §3). | — |

@@ -17,9 +17,10 @@ const isDev = process.env.NODE_ENV === "development";
  * relative URLs (base-uri). A stricter script-src via hashes (experimental
  * SRI) is a possible next step.
  *
- * External sources:
- * - media-src: word audio from the Free Dictionary API (`Word.audioUrl`).
- * Add a host here when the app starts loading something new from it.
+ * External sources: none today. Add a host to the matching directive when the
+ * app starts loading something from it (e.g. the word audio storage to
+ * media-src once audio is self-hosted; `Word.audioUrl` is played by
+ * AudioButton).
  */
 const csp = [
   "default-src 'self'",
@@ -28,7 +29,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self'",
-  "media-src 'self' https://api.dictionaryapi.dev",
+  "media-src 'self'",
   "connect-src 'self'",
   "object-src 'none'",
   "base-uri 'self'",

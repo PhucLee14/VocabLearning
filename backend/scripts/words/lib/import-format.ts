@@ -41,6 +41,30 @@ const optionalString = (value: unknown): string | null => {
   return s === '' ? null : s;
 };
 
+/**
+ * Audio hosts the app must not link to. `api.dictionaryapi.dev` serves its mp3
+ * files behind a Cloudflare block (403 HTML instead of audio, seen 2026-11-13),
+ * so a word with such a URL plays nothing and only then falls back to the
+ * browser's speech synthesis.
+ */
+export const BLOCKED_AUDIO_HOSTS: readonly string[] = ['api.dictionaryapi.dev'];
+
+/** True when the URL points at a host in BLOCKED_AUDIO_HOSTS. */
+export function isBlockedAudioUrl(url: string): boolean {
+  try {
+    return BLOCKED_AUDIO_HOSTS.includes(new URL(url).hostname.toLowerCase());
+  } catch {
+    return false;
+  }
+}
+
+/** Removes the `audio: …` credit from a `source` string (parts are joined with " · "). */
+export function stripAudioCredit(source: string | null): string | null {
+  if (!source) return source;
+  const parts = source.split(' · ').filter((part) => !part.trimStart().startsWith('audio:'));
+  return parts.length ? parts.join(' · ') : null;
+}
+
 /** Maps one raw record (a CSV row or a JSON object) onto the import shape, without validating. */
 export function normalizeRecord(raw: Record<string, unknown>): ImportWord {
   const examples: ImportExample[] = Array.isArray(raw.examples)
@@ -56,6 +80,10 @@ export function normalizeRecord(raw: Record<string, unknown>): ImportWord {
     : splitList(raw.examples).map((sentence) => ({ sentence }));
 
   const senseRaw = optionalString(raw.sense_no);
+  // Older enrich output links audio on blocked hosts: drop it, and its credit.
+  const audioRaw = optionalString(raw.audio_url);
+  const audioBlocked = audioRaw !== null && isBlockedAudioUrl(audioRaw);
+  const sourceRaw = optionalString(raw.source);
   return {
     headword: String(raw.headword ?? '').trim(),
     pos: String(raw.pos ?? '')
@@ -72,8 +100,8 @@ export function normalizeRecord(raw: Record<string, unknown>): ImportWord {
     topics: splitList(raw.topics).map((t) => t.toLowerCase()),
     synonyms: splitList(raw.synonyms),
     antonyms: splitList(raw.antonyms),
-    audio_url: optionalString(raw.audio_url),
-    source: optionalString(raw.source),
+    audio_url: audioBlocked ? null : audioRaw,
+    source: audioBlocked ? stripAudioCredit(sourceRaw) : sourceRaw,
   };
 }
 

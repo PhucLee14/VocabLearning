@@ -28,6 +28,7 @@ import { fetchCached, fetchJson, type HttpOptions } from './lib/http.js';
 import {
   type ImportExample,
   type ImportWord,
+  isBlockedAudioUrl,
   normalizeRecord,
   validateWords,
 } from './lib/import-format.js';
@@ -237,7 +238,9 @@ async function enrichOne(raw: Record<string, unknown>, args: Args, http: HttpOpt
     }
   }
 
-  const audioUrl = given.audio_url ?? picked?.audioUrl ?? null;
+  // Free Dictionary's own mp3 links are blocked (see BLOCKED_AUDIO_HOSTS).
+  const pickedAudio = picked?.audioUrl && !isBlockedAudioUrl(picked.audioUrl) ? picked.audioUrl : null;
+  const audioUrl = given.audio_url ?? pickedAudio;
   if (audioUrl && !given.audio_url) {
     sources.push(`audio: Wikimedia Commons (${picked?.audioLicense ?? 'CC BY-SA'})`);
   }

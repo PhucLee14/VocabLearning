@@ -314,7 +314,7 @@ See [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md): sources, licences, attribution
 | CEFR-J Wordlist | Word lists with CEFR levels | Check the terms of use |
 | English Vocabulary Profile (Cambridge) | CEFR level per word sense | Lookup only; no bulk copying |
 | WordNet (Princeton) | English definitions, synonyms | Permissive licence |
-| Free Dictionary API / Wiktionary | IPA, audio, definitions | CC BY-SA; attribution required |
+| Free Dictionary API / Wiktionary | IPA, definitions (its audio links are blocked since 2026-11-13) | CC BY-SA; attribution required |
 | Tatoeba | Example sentences with translations | CC BY; attribution required |
 
 ---

@@ -1,5 +1,5 @@
 import { parseCsv, parseCsvRecords } from './csv.js';
-import { normalizeRecord, validateWords, wordSlug } from './import-format.js';
+import { isBlockedAudioUrl, normalizeRecord, stripAudioCredit, validateWords, wordSlug } from './import-format.js';
 import {
   cleanDefinition,
   type FdEntry,
@@ -80,6 +80,23 @@ describe('import format', () => {
       '2:definition_en is required',
       '2:cefr_level must be one of A1 A2 B1 B2 C1 C2 (got "Z9")',
     ]);
+  });
+
+  it('drops audio on blocked hosts together with its credit, and keeps other audio', () => {
+    const blocked = normalizeRecord({
+      audio_url: 'https://api.dictionaryapi.dev/media/pronunciations/en/brand-us.mp3',
+      source: 'definition: Datamuse (CC BY-SA) · audio: Wikimedia Commons (BY-SA 3.0) · vi: kaikki',
+    });
+    expect(blocked.audio_url).toBeNull();
+    expect(blocked.source).toBe('definition: Datamuse (CC BY-SA) · vi: kaikki');
+
+    const own = normalizeRecord({ audio_url: 'https://cdn.example.com/brand-us.mp3', source: 'audio: Kokoro' });
+    expect(own).toMatchObject({ audio_url: 'https://cdn.example.com/brand-us.mp3', source: 'audio: Kokoro' });
+
+    expect(isBlockedAudioUrl('https://API.dictionaryapi.dev/x.mp3')).toBe(true);
+    expect(isBlockedAudioUrl('/audio/x.mp3')).toBe(false);
+    expect(stripAudioCredit('audio: Wikimedia Commons (BY-SA 3.0)')).toBeNull();
+    expect(stripAudioCredit(null)).toBeNull();
   });
 
   it('builds URL slugs', () => {

@@ -78,7 +78,7 @@ Multi-user English vocabulary learning web app, named **Godee** (renamed from "V
 Backend:
 - `npm run start:dev`, `npm test`, `npm run test:e2e`, `npm run lint`
 - Database: `npm run db:migrate -- --name x`, `npm run db:deploy`, `npm run db:seed`, `npm run db:studio`
-- Words: `npm run words:cefrj` (A1–C2 lists from CEFR-J + Octanove into `scripts/words/out/`, gitignored), `npm run words:enrich -- <list.csv|json> [--concurrency 4]` (free sources, cached in `scripts/words/.cache`), then `npm run words:import -- <file> --dry-run` / without `--dry-run`. Sources, licences and attribution: `docs/DATA_SOURCES.md`. Never call these external APIs from request handlers. Cambridge Dictionary content must not be scraped (licensed API only).
+- Words: `npm run words:cefrj` (A1–C2 lists from CEFR-J + Octanove into `scripts/words/out/`, gitignored), `npm run words:enrich -- <list.csv|json> [--concurrency 4]` (free sources, cached in `scripts/words/.cache`), then `npm run words:import -- <file> --dry-run` / without `--dry-run`. Audio links on `api.dictionaryapi.dev` are blocked (403) and dropped on import (`BLOCKED_AUDIO_HOSTS`); `npm run words:clear-audio` removes them from the DB. Sources, licences and attribution: `docs/DATA_SOURCES.md`. Never call these external APIs from request handlers. Cambridge Dictionary content must not be scraped (licensed API only).
 
 Frontend:
 - `npm run dev`, `npm run typecheck`, `npm run lint`, `npm run build`

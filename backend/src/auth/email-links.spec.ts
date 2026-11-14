@@ -20,12 +20,12 @@ describe('email links', () => {
     );
   });
 
-  it('escapes the name in the HTML email', () => {
-    const mail = linkMail('vi', '<img src=x onerror=alert(1)>', 'verify', 'https://x.test/vi/verify-email#token=a');
-    expect(mail.html).not.toContain('<img');
-    expect(mail.html).toContain('&lt;img');
+  it('builds the link email from fixed copy only (no user-chosen name)', () => {
+    const mail = linkMail('vi', 'verify', 'https://x.test/vi/verify-email#token=a');
+    expect(mail.text.startsWith('Chào bạn,')).toBe(true);
     expect(mail.html).toContain('href="https://x.test/vi/verify-email#token=a"');
     expect(mail.text).toContain('https://x.test/vi/verify-email#token=a');
+    expect(linkMail('en', 'reset', 'https://x.test/en/reset-password#token=a').text.startsWith('Hi,')).toBe(true);
   });
 });
 

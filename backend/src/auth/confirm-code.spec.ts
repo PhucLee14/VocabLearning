@@ -16,13 +16,12 @@ describe('confirmation codes', () => {
     expect(hashCode('user-1', 'delete_account', '012345')).not.toBe(stored);
   });
 
-  it('builds a localised email that escapes the user-chosen name', () => {
-    const mail = codeMail('vi', '<script>x</script> Hà', 'set_password', '482913');
+  it('builds a localised email from fixed copy only (no user-chosen name)', () => {
+    const mail = codeMail('vi', 'set_password', '482913');
     expect(mail.subject).toContain('482913');
+    expect(mail.text.startsWith('Chào bạn,')).toBe(true);
     expect(mail.text).toContain('đặt mật khẩu');
-    expect(mail.html).not.toContain('<script>');
-    expect(mail.html).toContain('&lt;script&gt;');
     expect(mail.html).toContain('<strong style="font-size:22px;letter-spacing:3px">482913</strong>');
-    expect(codeMail('en', 'Ann', 'delete_account', '000001').text).toContain('permanently delete');
+    expect(codeMail('en', 'delete_account', '000001').text).toContain('permanently delete');
   });
 });

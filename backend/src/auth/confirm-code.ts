@@ -36,23 +36,26 @@ const COPY = {
     set_password: 'đặt mật khẩu cho tài khoản',
     delete_account: 'xóa vĩnh viễn tài khoản',
     subject: (code: string) => `Mã xác nhận Godee: ${code}`,
-    body: (name: string, what: string, code: string) =>
-      `Chào ${name},\n\nMã xác nhận để ${what} của bạn là: ${code}\n\nMã có hiệu lực trong 10 phút và chỉ dùng được một lần.\nNếu bạn không yêu cầu, hãy bỏ qua email này và đổi mật khẩu hoặc đăng xuất các thiết bị khác.\n\n— Godee`,
+    body: (what: string, code: string) =>
+      `Chào bạn,\n\nMã xác nhận để ${what} của bạn là: ${code}\n\nMã có hiệu lực trong 10 phút và chỉ dùng được một lần.\nNếu bạn không yêu cầu, hãy bỏ qua email này và đổi mật khẩu hoặc đăng xuất các thiết bị khác.\n\n— Godee`,
   },
   en: {
     set_password: 'set a password for your account',
     delete_account: 'permanently delete your account',
     subject: (code: string) => `Your Godee code: ${code}`,
-    body: (name: string, what: string, code: string) =>
-      `Hi ${name},\n\nYour code to ${what} is: ${code}\n\nIt is valid for 10 minutes and can be used once.\nIf you didn't ask for it, ignore this email and sign out your other devices.\n\n— Godee`,
+    body: (what: string, code: string) =>
+      `Hi,\n\nYour code to ${what} is: ${code}\n\nIt is valid for 10 minutes and can be used once.\nIf you didn't ask for it, ignore this email and sign out your other devices.\n\n— Godee`,
   },
 } as const;
 
-/** The email that carries a code, in the learner's language. */
-export function codeMail(locale: 'vi' | 'en', name: string, action: ConfirmAction, code: string) {
+/**
+ * The email that carries a code, in the learner's language. Like linkMail, it
+ * contains no user-chosen text (an account may use a stranger's address).
+ */
+export function codeMail(locale: 'vi' | 'en', action: ConfirmAction, code: string) {
   const c = COPY[locale];
-  const text = c.body(name, c[action], code);
-  // Escape everything first (the name is user input), then highlight the code (digits only).
+  const text = c.body(c[action], code);
+  // Escape the text, then highlight the code (digits only).
   const escape = (s: string) =>
     s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const html =

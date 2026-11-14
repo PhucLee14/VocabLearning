@@ -17,6 +17,15 @@ import { publicOrigin } from './google.js';
 
 const INVALID_LINK = 'This link is invalid or has expired';
 
+/**
+ * Site-wide cap on verification emails per day. Mail goes through one Gmail
+ * account (about 500 recipients a day), and anyone can sign up with any
+ * address, so sign-ups alone must not use up the quota that password resets
+ * and confirmation codes need. Over the cap, sign-up still works; the user can
+ * ask for the link again later from Settings.
+ */
+export const VERIFY_MAILS_PER_DAY = 200;
+
 /** Email verification and password reset (one-time links, see email-links.ts). */
 @Injectable()
 export class AccountEmailService {
@@ -34,7 +43,7 @@ export class AccountEmailService {
   }
 
   /** Creates a link token (replacing unused ones of the same kind) and emails it. */
-  private async sendLink(user: { id: string; email: string; name: string; locale: 'vi' | 'en' }, kind: LinkKind) {
+  private async sendLink(user: { id: string; email: string; locale: 'vi' | 'en' }, kind: LinkKind) {
     const type = kind === 'verify' ? 'EMAIL_VERIFY' : 'PASSWORD_RESET';
     const token = newLinkToken();
     const [, created] = await this.prisma.$transaction([
@@ -51,24 +60,29 @@ export class AccountEmailService {
     ]);
     try {
       const url = linkUrl(this.origin(), user.locale, kind, token);
-      await this.mailer.send({ to: user.email, ...linkMail(user.locale, user.name, kind, url) });
+      await this.mailer.send({ to: user.email, ...linkMail(user.locale, kind, url) });
     } catch (error) {
       await this.prisma.authToken.delete({ where: { id: created.id } });
       throw error;
     }
   }
 
-  /** Emails a verification link to a signed-in user (no-op once verified). 429 when asked too often. */
+  /**
+   * Emails a verification link to a signed-in user (no-op once verified).
+   * 429 when this user asks too often, or when the site-wide daily cap is reached.
+   */
   async sendVerification(userId: string) {
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id: userId },
-      select: { id: true, email: true, name: true, locale: true, emailVerifiedAt: true },
+      select: { id: true, email: true, locale: true, emailVerifiedAt: true },
     });
     if (user.emailVerifiedAt) return;
     await this.limits.consume(
       { bucket: 'verify-send:min', id: userId, limit: 1, windowMs: MINUTE },
       { bucket: 'verify-send:hour', id: userId, limit: 5, windowMs: HOUR },
     );
+    // Separate call so requests refused per user above don't count site-wide.
+    await this.limits.consume({ bucket: 'verify-send:site', id: 'all', limit: VERIFY_MAILS_PER_DAY, windowMs: 24 * HOUR });
     await this.sendLink(user, 'verify');
   }
 
@@ -101,7 +115,7 @@ export class AccountEmailService {
     if (!perEmail.allowed) return;
     const user = await this.prisma.user.findUnique({
       where: { email },
-      select: { id: true, email: true, name: true, locale: true },
+      select: { id: true, email: true, locale: true },
     });
     if (!user) return;
     try {

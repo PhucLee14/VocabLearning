@@ -37,7 +37,7 @@ const COPY = {
       button: 'Đặt mật khẩu mới',
       note: 'Link có hiệu lực trong 30 phút và chỉ dùng được một lần. Nếu bạn không yêu cầu, hãy bỏ qua email này: mật khẩu hiện tại vẫn giữ nguyên.',
     },
-    greeting: (name: string) => `Chào ${name},`,
+    greeting: 'Chào bạn,',
     fallback: 'Nếu nút không bấm được, hãy mở link này:',
   },
   en: {
@@ -53,7 +53,7 @@ const COPY = {
       button: 'Choose a new password',
       note: "The link is valid for 30 minutes and works once. If you didn't ask for it, ignore this email: your password stays the same.",
     },
-    greeting: (name: string) => `Hi ${name},`,
+    greeting: 'Hi,',
     fallback: "If the button doesn't work, open this link:",
   },
 } as const;
@@ -61,15 +61,21 @@ const COPY = {
 const escape = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-/** The email that carries a link, in the learner's language. */
-export function linkMail(locale: 'vi' | 'en', name: string, kind: LinkKind, url: string) {
+/**
+ * The email that carries a link, in the learner's language.
+ *
+ * No user-chosen text goes in (not even the name): anyone can sign up with a
+ * stranger's address, and the account's name would then reach that stranger
+ * in a verification or reset email sent from our address (spam / phishing).
+ */
+export function linkMail(locale: 'vi' | 'en', kind: LinkKind, url: string) {
   const c = COPY[locale];
   const k = c[kind];
-  const text = `${c.greeting(name)}\n\n${k.intro}\n\n${url}\n\n${k.note}\n\n— Godee`;
+  const text = `${c.greeting}\n\n${k.intro}\n\n${url}\n\n${k.note}\n\n— Godee`;
   const u = escape(url);
   const html =
     `<div style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.5;color:#1b2420">` +
-    `<p>${escape(c.greeting(name))}</p><p>${escape(k.intro)}</p>` +
+    `<p>${escape(c.greeting)}</p><p>${escape(k.intro)}</p>` +
     `<p><a href="${u}" style="display:inline-block;padding:12px 22px;border-radius:999px;background:#1f9d55;color:#ffffff;font-weight:700;text-decoration:none">${escape(k.button)}</a></p>` +
     `<p style="font-size:13px;color:#5b6660">${escape(c.fallback)}<br><a href="${u}">${u}</a></p>` +
     `<p style="font-size:13px;color:#5b6660">${escape(k.note)}</p><p>— Godee</p></div>`;

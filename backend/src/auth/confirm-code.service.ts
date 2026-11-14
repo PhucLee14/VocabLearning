@@ -23,7 +23,7 @@ export class ConfirmCodeService {
   async send(userId: string, action: ConfirmAction) {
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id: userId },
-      select: { email: true, name: true, locale: true },
+      select: { email: true, locale: true },
     });
     const last = await this.prisma.authToken.findFirst({
       where: { userId, type: 'ACTION_CONFIRM', action },
@@ -53,7 +53,7 @@ export class ConfirmCodeService {
       }),
     ]);
     try {
-      await this.mailer.send({ to: user.email, ...codeMail(user.locale, user.name, action, code) });
+      await this.mailer.send({ to: user.email, ...codeMail(user.locale, action, code) });
     } catch (error) {
       // Not delivered: drop the code so the learner can ask again right away.
       await this.prisma.authToken.delete({ where: { id: token.id } });

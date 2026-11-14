@@ -5,10 +5,10 @@ import type { Request } from 'express';
  *
  * On Vercel the platform sets `x-vercel-forwarded-for` / `x-forwarded-for`
  * (and overwrites values sent by the client). Requests reach the backend
- * through the frontend's /api rewrite, so the IP seen here may be a Vercel
- * proxy address instead of the visitor's: `/api/health/db` reports it so this
- * can be checked. IP limits are therefore generous; per-email and per-account
- * limits do the real work.
+ * through the frontend's /api rewrite, and the headers still carry the
+ * visitor's own IP there (checked in production on 2026-11-14 with
+ * `/api/health/db`, which reports it). Per-IP limits are therefore per visitor;
+ * per-email and per-account limits back them up.
  */
 export function clientIp(req: Pick<Request, 'headers' | 'socket'>): string {
   const header = (name: string) => {

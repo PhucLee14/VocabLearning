@@ -363,7 +363,7 @@ A starting point; editable from the admin pages or via import. Seed data: [backe
 - [x] Move Neon to Singapore (`aws-ap-southeast-1`)
 - [x] Next.js rewrite `/api/*` → backend, so the auth cookie is first-party
 - [x] Deployment config: `vercel.json` (`sin1`) for both apps, Node 24.x. Verified with a local `vercel build`.
-- [x] Deploy to Vercel (live at https://godee.vercel.app, checked 2026-11-13: API, Google sign-in, security headers). Steps in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) §2. Still to check: the client IP that `/api/health/db` reports (decides the per-IP rate limits).
+- [x] Deploy to Vercel (live at https://godee.vercel.app, checked 2026-11-13: API, Google sign-in, security headers). Steps in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) §2. On 2026-11-14 `/api/health/db` confirmed the backend sees the visitor's real IP through the frontend rewrite.
 - [x] Sign up / sign in / sign out (DB session cookie, see section 4), change password, delete account
 - [x] Sign in with Google (server-side OAuth code flow + PKCE, `jose` ID-token check; links to an existing account by verified email). Setup: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) §2.5
 - [x] Email verification and password reset (2026-11-11): one-time links in the URL fragment, sent through the Gmail SMTP mailer; verification is soft (nothing is blocked yet)
@@ -386,7 +386,7 @@ A starting point; editable from the admin pages or via import. Seed data: [backe
 No critical or high issues were found. Fix these before adding more features. Details are in `.claude/worklog/2026-11-04.md` (Session 4). Done on 2026-11-05 (except rate limiting): see `.claude/worklog/2026-11-05.md`.
 
 Security:
-- [x] Rate limiting on login/register/password checks and on every endpoint that sends email (2026-11-11): fixed windows in a Postgres table (`rate_limits`). Per-IP limits are generous until the IP seen behind the frontend rewrite is checked in production (`/api/health/db` reports it).
+- [x] Rate limiting on login/register/password checks and on every endpoint that sends email (2026-11-11): fixed windows in a Postgres table (`rate_limits`). The IP seen behind the frontend rewrite is the visitor's own (checked 2026-11-14 with `/api/health/db`), so per-IP limits are per visitor.
 - [x] **Email confirmation codes** for sensitive actions (decision 2026-11-05, replaces "re-authenticate with Google"): setting a first password on a Google-only account, deleting an account (and later changing the email). A 6-digit code is sent to the account's email: valid 10 min, single use, bound to the user and the action, at most 5 attempts, at most 1 send per minute, only its hash stored (`AuthToken`, new type `ACTION_CONFIRM`). The same mailer then powers email verification and password reset (Phase 0).
   - Mail transport: **Gmail SMTP with an App Password** for now (Nodemailer; env `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`), behind a small `Mailer` interface so it can switch to Resend + a custom domain later by changing env.
 - [x] **CSRF on form posts**: reject state-changing requests that are not `application/json` or whose `Origin` is not `FRONTEND_URL`. Today a cross-site form can sign the victim in to an attacker's account.

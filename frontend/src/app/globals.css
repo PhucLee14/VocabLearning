@@ -41,6 +41,11 @@
   --m3: #4fb488;
   --m4: #1d9266;
   --m5: #0c6847;
+  /* The sky behind the 3D island on the landing page. */
+  --sky: #e8f3f6;
+  /* 3D scene only, same in both themes: the sun (light theme), the moon and stars (dark theme). */
+  --sun: #ffc94d;
+  --moon: #f3f1dc;
   color-scheme: light;
 }
 
@@ -72,6 +77,7 @@
     --m3: #2e8b66;
     --m4: #46b384;
     --m5: #86dfb6;
+    --sky: #0b1418;
     color-scheme: dark;
   }
 }
@@ -103,6 +109,7 @@
   --m3: #2e8b66;
   --m4: #46b384;
   --m5: #86dfb6;
+  --sky: #0b1418;
   color-scheme: dark;
 }
 
@@ -132,6 +139,9 @@
   --color-m3: var(--m3);
   --color-m4: var(--m4);
   --color-m5: var(--m5);
+  --color-sky: var(--sky);
+  --color-sun: var(--sun);
+  --color-moon: var(--moon);
   --font-sans: var(--font-nunito), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --radius-card: 22px;
   --radius-inner: 14px;
@@ -145,6 +155,21 @@
   @media (prefers-reduced-motion: no-preference) {
     html {
       scroll-behavior: smooth;
+    }
+  }
+
+  /*
+   * Pages built from island "floors" (IslandStop, the landing page) snap from
+   * floor to floor. On wide screens every floor fits the screen, so one scroll
+   * gesture moves exactly one floor; on smaller screens floors can be taller
+   * than the screen, so snapping only applies when the scroll ends near a floor.
+   */
+  html:has([data-island-stop]) {
+    scroll-snap-type: y proximity;
+  }
+  @media (min-width: 1280px) {
+    html:has([data-island-stop]) {
+      scroll-snap-type: y mandatory;
     }
   }
 

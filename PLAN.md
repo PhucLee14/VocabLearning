@@ -516,15 +516,18 @@ The user picked this direction out of three (the others: a deck of 3D flashcards
 - The house style (flat, no gradients, no resting shadows, no emoji):
   - flat shading with one palette texture (low-poly colour atlas);
   - lighting baked into vertex colours;
-  - no realtime shadows, no bloom, a plain sky colour.
+  - no realtime shadows, no bloom, a plain sky colour (the `--sky` token; clouds and birds are flat-shaded meshes).
 - Colours come from the CSS tokens (`--accent`, `--m0` … `--m5`, `--surface`, …), read at runtime.
-- Dark theme: the same island at night (darker palette, lit windows), following `data-theme`.
+- Dark theme: the same island at night (darker palette, moon and stars; lit windows still to do), following `data-theme`.
 - Topics are data, not hard-coded scenery:
   - a config maps a topic slug to a landmark model;
   - any other topic, including ones added later by admins, gets a generic building automatically. There are 24 topics in the seed, too many for 24 landmarks.
 
 **Technical approach**
-- Libraries: `three` + `@react-three/fiber` + `@react-three/drei` (`useGLTF`); GSAP ScrollTrigger (or `motion`'s `useScroll`) + Lenis for scroll progress.
+- Libraries: plain `three` only (decided 2026-11-14 from the prototype's numbers):
+  - no `@react-three/fiber`: it imports all of three, so nothing is tree-shaken. The scene chunk was 245 KB gzip with fiber and 136 KB without;
+  - no scroll library: a passive `scroll` listener turns the positions of the `data-island-stop` sections into a progress value, and the camera eases towards it each frame;
+  - models will load with three's own `GLTFLoader` (no drei).
 - The camera follows a `CatmullRomCurve3` path keyed to scroll progress, with one waypoint per section.
 - The page's HTML sections stay as they are (SEO, accessibility, static shell/PPR). The canvas is `position: fixed` behind them and `aria-hidden`.
   - Don't use drei's `ScrollControls`: it takes over scrolling and moves the content into the canvas.
@@ -538,7 +541,7 @@ The user picked this direction out of three (the others: a deck of 3D flashcards
   - about 100 draw calls or fewer;
   - 60 fps on a mid-range phone; `dpr` capped at 1.5;
   - rendering stops when the tab is hidden or the canvas is scrolled out of view;
-  - JS for three + r3f (about 150–200 KB gzip) loads on the landing page only.
+  - JS for the scene (139 KB gzip with the scenery; keep it under 200 KB with the glTF loader) loads on the landing page only, in its own chunk, after the page is idle.
 - Mobile: a lighter model (LOD), no mouse tilt, touch drag only in the hero (vertical swipes must still scroll the page).
 
 **Assets**
@@ -549,11 +552,18 @@ Steps:
 - [ ] **Art direction**: a moodboard and a map sketch of the island (districts, terraces, the SRS path, the camera path); choose which topics get a landmark.
 - [ ] **Assets**: model the island or pick a kit; one palette texture; compress and merge; check the budget.
 - [ ] **Prototype** at `/[locale]/lab/island` (`noindex`): the scene, the camera path and the scroll sync. Measure FPS and bundle size on a real phone (iOS Safari and Android Chrome) before going further.
-- [ ] **Landing integration**:
-  - the fixed canvas behind the existing sections;
-  - real data as props;
-  - the poster image and fallbacks;
-  - reduced motion and the dark theme.
+  - Built 2026-11-14 (`frontend/src/components/island/`), with an island made of primitives in code: 1 merged mesh with vertex colours + the card = 2 draw calls, about 1,100 triangles; colours from the CSS tokens, live theme switch, reduced motion, phone layout. Checked in headless Chrome only (software rendering, so its FPS means nothing).
+  - Still to do before ticking: FPS on real phones (the lab page shows fps / draw calls / triangles in the corner).
+- [ ] **Landing integration** (started 2026-11-14 at the user's request, with the prototype island, before the phone measurements):
+  - [x] the fixed canvas behind the sections. The sections were reshaped for it (`IslandStop`): a 520px column on the left from 1280px (island on the right), a panel at the bottom of the screen below that (island above). The demo card moved out of the hero to its own block after it; the CTA band became a panel;
+  - [x] real data as props (topic slugs);
+  - [ ] the poster image and fallbacks: today, without WebGL or before the scene loads, the island's place is simply empty;
+  - [x] reduced motion and the dark theme.
+- [x] **Floors and scenery** (requested 2026-11-14, modelled on a "one scroll gesture = one camera stage" brief the user shared):
+  - six screen-high floors: hero, try a card, how it works, levels, topics, call to action. One wheel gesture moves one floor (CSS scroll snap, plus a wheel handler on wide screens because a single wheel notch is too short for CSS snap); trackpad momentum can't skip floors; touch and keyboard use native snapping;
+  - the island and the text swap sides from floor to floor (text left on even floors, right on odd ones). The camera orbits: every floor shows the whole island in the free half of the screen, turned so that floor's subject faces the viewer (close-ups were dropped the same day: the rest of the island sat under the text panel);
+  - scenery: a sky colour (`--sky` token), a sea of clouds under the island that fades into the sky (scene fog), drifting low-poly clouds, two small flocks of birds, a slight mouse parallax. About 38,000 triangles (most of them the cloud sea);
+  - day and night (2026-11-14): light theme = a sun with rays and warm sunlight; dark theme = a crescent moon, twinkling stars and cooler moonlight. The scene's one directional light shines from the side of the screen where the sun or moon is. Follows the theme live.
 - [ ] **Interactions**: drag in the hero; hover or tap on terraces and districts. Keyboard users already have the HTML links.
 - [ ] **QA**:
   - Lighthouse: LCP, CLS and TBT no worse than the current landing page;
@@ -562,7 +572,7 @@ Steps:
   - both themes and both locales.
 
 Open:
-- Who makes the models: the user or a designer, or a CC0 kit recoloured by us?
+- ~~Who makes the models?~~ Decided 2026-11-14: a CC0 low-poly kit (Kenney / Quaternius), recoloured to the palette.
 - Later idea: reuse the island inside the app, e.g. a progress map on the dashboard where districts light up as the learner masters words in that topic.
 
 ### Phase 3: Extensions

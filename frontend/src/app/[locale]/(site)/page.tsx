@@ -1,38 +1,22 @@
-import { cacheLife } from 'next/cache';
 import { useTranslations } from 'next-intl';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { DemoCard } from '@/components/demo-card';
+import { Island } from '@/components/island/island';
+import { IslandStop } from '@/components/island/stop';
 import { Link } from '@/i18n/navigation';
-import { apiGet } from '@/lib/api';
 import { formatNumber } from '@/lib/format';
-import { CEFR_LEVELS, type TopicNode, type WordDetail, type WordList } from '@/lib/types';
+import { landingData } from '@/lib/landing-data';
+import { CEFR_LEVELS } from '@/lib/types';
 
 /**
- * Public data for the landing page, cached so the page stays in the static
- * shell. If the API is down (e.g. while building), the page still renders
- * without the numbers and the demo card.
+ * Landing page with the 3D "Word Island" behind it (PLAN.md Phase 3d).
+ *
+ * Every section is one screen-high "floor" of ordinary HTML in a narrow column
+ * (`IslandStop`), and scrolling snaps from floor to floor. The island is a
+ * fixed canvas behind the page: its camera moves to one stop per floor, and the
+ * island and the text swap sides from one floor to the next. Without WebGL the page is the same, minus
+ * the island.
  */
-async function landingData() {
-  'use cache';
-  cacheLife('hours');
-  try {
-    const [topics, levels, list] = await Promise.all([
-      apiGet<TopicNode[]>('/topics'),
-      apiGet<Record<string, number>>('/levels'),
-      apiGet<WordList>('/words?level=A1&pageSize=60'),
-    ]);
-    // A few A1 words with an example, for the demo card.
-    const picks = list.items.filter((w) => w.meaningVi).slice(0, 40);
-    const step = Math.max(1, Math.floor(picks.length / 6));
-    const chosen = picks.filter((_, i) => i % step === 0).slice(0, 6);
-    const details = await Promise.all(chosen.map((w) => apiGet<WordDetail>(`/words/${w.slug}`).catch(() => null)));
-    const demo = chosen.map((w, i) => ({ ...w, example: details[i]?.examples[0]?.sentence ?? null }));
-    return { topics, levels, demo };
-  } catch {
-    return { topics: [] as TopicNode[], levels: {} as Record<string, number>, demo: [] };
-  }
-}
-
 export default async function LandingPage() {
   const [{ topics, levels, demo }, locale, t] = await Promise.all([landingData(), getLocale(), getTranslations('Landing')]);
   const totalWords = Object.values(levels).reduce((n, c) => n + c, 0);
@@ -40,82 +24,85 @@ export default async function LandingPage() {
 
   return (
     <>
-      {/* Hero: what it is, and a real card to try */}
-      <section className="mx-auto grid max-w-[1100px] items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[minmax(0,1fr)_440px] lg:py-20">
-        <div>
-          <h1 className="text-[40px] leading-[1.05] font-black tracking-tight sm:text-[56px]">{t('title')}</h1>
-          <p className="mt-5 max-w-[52ch] text-[18px] text-muted">{t('lede')}</p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/register" className="btn btn-primary btn-lg">
-              {t('ctaPrimary')}
-            </Link>
-            <Link href="/login" className="btn btn-secondary btn-lg">
-              {t('ctaSecondary')}
-            </Link>
-          </div>
-          {totalWords > 0 && (
-            <p className="mt-6 text-[15px] text-muted">
-              {t('stats', {
-                words: formatNumber(totalWords, locale),
-                topics: topics.length,
-                subtopics: topics.reduce((n, x) => n + x.children.length, 0),
-              })}
-            </p>
-          )}
+      <Island topicSlugs={topics.map((topic) => topic.slug)} />
+
+      {/* Hero: what it is. The island shows whole. */}
+      <IslandStop stop="hero" panel="narrow">
+        <h1 className="text-[36px] leading-[1.05] font-black tracking-tight sm:text-[48px]">{t('title')}</h1>
+        <p className="mt-5 text-[17px] text-muted sm:text-[18px]">{t('lede')}</p>
+        <div className="mt-7 flex flex-wrap gap-3">
+          <Link href="/register" className="btn btn-primary btn-lg">
+            {t('ctaPrimary')}
+          </Link>
+          <Link href="/login" className="btn btn-secondary btn-lg">
+            {t('ctaSecondary')}
+          </Link>
         </div>
-        <DemoCard words={demo} />
-      </section>
+        {totalWords > 0 && (
+          <p className="mt-6 text-[15px] text-muted">
+            {t('stats', {
+              words: formatNumber(totalWords, locale),
+              topics: topics.length,
+              subtopics: topics.reduce((n, x) => n + x.children.length, 0),
+            })}
+          </p>
+        )}
+      </IslandStop>
 
-      <HowItWorks />
+      {/* A real card to try. The island shows its own card on the first stepping stone. */}
+      {demo.length > 0 && (
+        <IslandStop stop="try" panel="never">
+          <DemoCard words={demo} />
+        </IslandStop>
+      )}
 
-      {/* CEFR levels with the real word counts */}
-      <section className="bg-surface">
-        <div className="mx-auto max-w-[1100px] px-4 py-16 sm:px-6">
-          <h2 className="text-[30px] font-extrabold tracking-tight">{t('levelsTitle')}</h2>
-          <p className="mt-2 max-w-[60ch] text-[16px] text-muted">{t('levelsLede')}</p>
-          <ul className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            {CEFR_LEVELS.map((level) => (
-              <li key={level} className="rounded-[22px] bg-raised p-5">
-                <p className="text-[28px] font-black">{level}</p>
-                <p className="text-[15px] font-bold">{t(`level_${level}`)}</p>
-                <p className="num mt-2 text-[14px] text-muted">{t('levelWords', { count: levels[level] ?? 0 })}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
+      {/* The island shows the stepping-stone path of the review schedule. */}
+      <IslandStop stop="how">
+        <HowItWorks />
+      </IslandStop>
 
+      {/* CEFR levels with the real word counts. The island shows the mountain. */}
+      <IslandStop stop="levels">
+        <h2 className="text-[28px] font-extrabold tracking-tight">{t('levelsTitle')}</h2>
+        <p className="mt-2 text-[16px] text-muted">{t('levelsLede')}</p>
+        <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {CEFR_LEVELS.map((level) => (
+            <li key={level} className="rounded-[18px] bg-surface p-4">
+              <p className="text-[24px] font-black">{level}</p>
+              <p className="text-[14px] font-bold">{t(`level_${level}`)}</p>
+              <p className="num mt-1 text-[13px] text-muted">{t('levelWords', { count: levels[level] ?? 0 })}</p>
+            </li>
+          ))}
+        </ul>
+      </IslandStop>
+
+      {/* The island shows the topic district. */}
       {topics.length > 0 && (
-        <section className="mx-auto max-w-[1100px] px-4 py-16 sm:px-6">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <h2 className="text-[30px] font-extrabold tracking-tight">{t('topicsTitle')}</h2>
-              <p className="mt-2 max-w-[60ch] text-[16px] text-muted">{t('topicsLede')}</p>
-            </div>
-            <Link href="/topics" className="btn btn-secondary">
-              {t('topicsAll')}
-            </Link>
-          </div>
-          <ul className="mt-8 flex flex-wrap gap-2.5">
+        <IslandStop stop="topics">
+          <h2 className="text-[28px] font-extrabold tracking-tight">{t('topicsTitle')}</h2>
+          <p className="mt-2 text-[16px] text-muted">{t('topicsLede')}</p>
+          <ul className="mt-6 flex flex-wrap gap-2">
             {topics.map((topic) => (
               <li key={topic.slug}>
-                <Link href={`/topics/${topic.slug}`} className="chip !min-h-11 !px-5 !text-[15px]">
+                <Link href={`/topics/${topic.slug}`} className="chip">
                   {name(topic)}
                 </Link>
               </li>
             ))}
           </ul>
-        </section>
+          <Link href="/topics" className="btn btn-secondary mt-6">
+            {t('topicsAll')}
+          </Link>
+        </IslandStop>
       )}
 
-      <section className="bg-accent text-on-accent">
-        <div className="mx-auto flex max-w-[1100px] flex-col items-start gap-6 px-4 py-14 sm:px-6 md:flex-row md:items-center md:justify-between">
-          <h2 className="max-w-[30ch] text-[30px] leading-tight font-extrabold tracking-tight">{t('closeTitle')}</h2>
-          <Link href="/register" className="btn btn-lg border-white border-b-black/25 bg-white text-accent-lip">
-            {t('ctaPrimary')}
-          </Link>
-        </div>
-      </section>
+      {/* Call to action. The camera pulls back to the whole island. */}
+      <IslandStop stop="close">
+        <h2 className="text-[28px] leading-tight font-extrabold tracking-tight">{t('closeTitle')}</h2>
+        <Link href="/register" className="btn btn-primary btn-lg mt-6">
+          {t('ctaPrimary')}
+        </Link>
+      </IslandStop>
     </>
   );
 }
@@ -125,36 +112,37 @@ function HowItWorks() {
   const t = useTranslations('Landing');
   const ladder = ['10m', '1d', '3d', '8d', '3w', '2mo'] as const;
   return (
-    <section className="mx-auto max-w-[1100px] px-4 py-16 sm:px-6">
-      <h2 className="text-[30px] font-extrabold tracking-tight">{t('howTitle')}</h2>
-      <div className="mt-8 grid gap-10 lg:grid-cols-3">
+    <>
+      <h2 className="text-[28px] font-extrabold tracking-tight">{t('howTitle')}</h2>
+      <div className="mt-5 grid gap-4">
         <div>
-          <h3 className="text-[20px] font-extrabold">{t('learnTitle')}</h3>
-          <p className="mt-2 text-[16px] text-muted">{t('learnBody')}</p>
+          <h3 className="text-[18px] font-extrabold">{t('learnTitle')}</h3>
+          <p className="mt-1 text-[15px] text-muted">{t('learnBody')}</p>
         </div>
         <div>
-          <h3 className="text-[20px] font-extrabold">{t('reviewTitle')}</h3>
-          <p className="mt-2 text-[16px] text-muted">{t('reviewBody')}</p>
+          <h3 className="text-[18px] font-extrabold">{t('reviewTitle')}</h3>
+          <p className="mt-1 text-[15px] text-muted">{t('reviewBody')}</p>
         </div>
         <div>
-          <h3 className="text-[20px] font-extrabold">{t('trackTitle')}</h3>
-          <p className="mt-2 text-[16px] text-muted">{t('trackBody')}</p>
+          <h3 className="text-[18px] font-extrabold">{t('trackTitle')}</h3>
+          <p className="mt-1 text-[15px] text-muted">{t('trackBody')}</p>
         </div>
       </div>
-      <figure className="mt-10 rounded-[22px] bg-surface p-6">
-        <ol className="flex items-end gap-2 sm:gap-3" aria-label={t('ladderLabel')}>
+      {/* Same colours as the island's stepping stones: the mastery ramp m0 → m5. */}
+      <figure className="mt-6 rounded-[18px] bg-surface p-4">
+        <ol className="flex items-end gap-1.5 sm:gap-2" aria-label={t('ladderLabel')}>
           {ladder.map((step, i) => (
             <li key={step} className="flex flex-1 flex-col items-center gap-2">
               <span
-                className={`w-full rounded-t-[12px] rounded-b-[4px] ${i === ladder.length - 1 ? 'bg-accent' : 'bg-m2'}`}
-                style={{ height: 18 + i * 22 }}
+                className="w-full rounded-t-[10px] rounded-b-[4px]"
+                style={{ height: 14 + i * 12, background: `var(--m${i})` }}
               />
-              <span className="text-[13px] font-extrabold sm:text-[15px]">{t(`ladder_${step}`)}</span>
+              <span className="text-[11px] font-extrabold whitespace-nowrap sm:text-[13px]">{t(`ladder_${step}`)}</span>
             </li>
           ))}
         </ol>
-        <figcaption className="mt-4 text-[14px] text-muted">{t('ladderCaption')}</figcaption>
+        <figcaption className="mt-3 text-[13px] text-muted">{t('ladderCaption')}</figcaption>
       </figure>
-    </section>
+    </>
   );
 }

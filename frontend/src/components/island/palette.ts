@@ -10,7 +10,10 @@ const TOKENS = [
   'raised',
   'sunken',
   'muted',
+  'ink',
+  'danger',
   'sky',
+  'water',
   'sun',
   'moon',
   'line-strong',
@@ -30,7 +33,10 @@ export interface Palette {
   raised: Color;
   sunken: Color;
   muted: Color;
+  ink: Color;
+  danger: Color;
   sky: Color;
+  water: Color;
   sun: Color;
   moon: Color;
   /** The dark theme is active (forced, or following the OS). */
@@ -72,7 +78,10 @@ export function usePalette(): Palette {
       raised: color('raised'),
       sunken: color('sunken'),
       muted: color('muted'),
+      ink: color('ink'),
+      danger: color('danger'),
       sky: color('sky'),
+      water: color('water'),
       sun: color('sun'),
       moon: color('moon'),
       dark: values[TOKENS.length] === 'dark',

@@ -24,7 +24,7 @@ export default async function LandingPage() {
 
   return (
     <>
-      <Island topicSlugs={topics.map((topic) => topic.slug)} />
+      <Island />
 
       {/* Hero: what it is. The island shows whole. */}
       <IslandStop stop="hero" panel="narrow">

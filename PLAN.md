@@ -527,7 +527,7 @@ The user picked this direction out of three (the others: a deck of 3D flashcards
 - Libraries: plain `three` only (decided 2026-11-14 from the prototype's numbers):
   - no `@react-three/fiber`: it imports all of three, so nothing is tree-shaken. The scene chunk was 245 KB gzip with fiber and 136 KB without;
   - no scroll library: a passive `scroll` listener turns the positions of the `data-island-stop` sections into a progress value, and the camera eases towards it each frame;
-  - models will load with three's own `GLTFLoader` (no drei).
+  - kit models are baked offline into a small binary (`scripts/island-kit.mjs`, `kit.ts`) instead of loading `.glb` files with `GLTFLoader`: the loader would add its weight to the bundle, and baked colour roles keep the theme recolouring. A textured or AI-generated model would need `GLTFLoader` after all.
 - The camera follows a `CatmullRomCurve3` path keyed to scroll progress, with one waypoint per section.
 - The page's HTML sections stay as they are (SEO, accessibility, static shell/PPR). The canvas is `position: fixed` behind them and `aria-hidden`.
   - Don't use drei's `ScrollControls`: it takes over scrolling and moves the content into the canvas.
@@ -541,7 +541,7 @@ The user picked this direction out of three (the others: a deck of 3D flashcards
   - about 100 draw calls or fewer;
   - 60 fps on a mid-range phone; `dpr` capped at 1.5;
   - rendering stops when the tab is hidden or the canvas is scrolled out of view;
-  - JS for the scene (139 KB gzip with the scenery; keep it under 200 KB with the glTF loader) loads on the landing page only, in its own chunk, after the page is idle.
+  - JS for the scene (142 KB gzip with the scenery and the kit loader; keep it under 200 KB with the glTF loader) loads on the landing page only, in its own chunk, after the page is idle.
 - Mobile: a lighter model (LOD), no mouse tilt, touch drag only in the hero (vertical swipes must still scroll the page).
 
 **Assets**
@@ -550,7 +550,8 @@ The user picked this direction out of three (the others: a deck of 3D flashcards
 
 Steps:
 - [ ] **Art direction**: a moodboard and a map sketch of the island (districts, terraces, the SRS path, the camera path); choose which topics get a landmark.
-- [ ] **Assets**: model the island or pick a kit; one palette texture; compress and merge; check the budget.
+- [x] **Assets** (2026-11-14): CC0 kits by Kenney, City Kit (Suburban) for the 21 houses and Nature Kit for trees, rocks and plants ([docs/ASSETS.md](docs/ASSETS.md)). Baked by `npm run island:kit` into one 352 KB file (184 KB gzip) of positions + colour roles; the scene maps roles to the design tokens, so no texture and no glTF loader ship, and the models follow the theme (lit windows at night). The ground and the mountain terraces are still plain shapes.
+- [x] **Village** (requested 2026-11-14: fewer houses, water, "like a village"): 9 houses along a path, a lake with a canoe and water lilies, a waterfall down the mountain's terraces into the lake, a stream from the lake to the rim that falls off the island, a wooden bridge, a fenced field, a windmill with turning blades (Hexagon Kit), a camp. Foam runs down both waterfalls. This **replaces "one building per topic"**: the island no longer takes the topic list, so the planned hover / click on districts and landmarks per topic are dropped unless the idea comes back in another form.
 - [ ] **Prototype** at `/[locale]/lab/island` (`noindex`): the scene, the camera path and the scroll sync. Measure FPS and bundle size on a real phone (iOS Safari and Android Chrome) before going further.
   - Built 2026-11-14 (`frontend/src/components/island/`), with an island made of primitives in code: 1 merged mesh with vertex colours + the card = 2 draw calls, about 1,100 triangles; colours from the CSS tokens, live theme switch, reduced motion, phone layout. Checked in headless Chrome only (software rendering, so its FPS means nothing).
   - Still to do before ticking: FPS on real phones (the lab page shows fps / draw calls / triangles in the corner).

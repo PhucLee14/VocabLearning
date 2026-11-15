@@ -14,11 +14,11 @@ import { CEFR_LEVELS } from '@/lib/types';
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default async function IslandLabPage() {
-  const [{ topics, levels }, t] = await Promise.all([landingData(), getTranslations('Landing')]);
+  const [{ levels }, t] = await Promise.all([landingData(), getTranslations('Landing')]);
 
   return (
     <>
-      <Island topicSlugs={topics.map((topic) => topic.slug)} debug />
+      <Island debug />
 
       <IslandStop stop="hero">
         <h1 className="text-[32px] leading-[1.1] font-black tracking-tight">{t('title')}</h1>

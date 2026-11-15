@@ -42,7 +42,7 @@ function readProgress(): number {
  * mark themselves with `data-island-stop`; the canvas is fixed behind them,
  * hidden from assistive tech, and ignores the pointer.
  */
-export function Island({ topicSlugs, debug = false }: { topicSlugs: string[]; debug?: boolean }) {
+export function Island({ debug = false }: { debug?: boolean }) {
   const progress = useRef(0);
   const hud = useRef<HTMLOutputElement>(null);
   const [ready, setReady] = useState(false);
@@ -93,7 +93,6 @@ export function Island({ topicSlugs, debug = false }: { topicSlugs: string[]; de
         {ready && !lost && (
           <IslandScene
             progress={progress}
-            topicSlugs={topicSlugs}
             reducedMotion={reducedMotion}
             onStats={debug ? showStats : undefined}
             onContextLost={() => setLost(true)}

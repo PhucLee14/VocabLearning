@@ -1,10 +1,11 @@
 'use client';
 
-import { type RefObject, useEffect, useRef } from 'react';
+import { type RefObject, useEffect, useRef, useState } from 'react';
 import {
   AmbientLight,
   BoxGeometry,
   type BufferGeometry,
+  Color,
   DirectionalLight,
   Fog,
   Group,
@@ -18,9 +19,11 @@ import {
   WebGLRenderer,
 } from 'three';
 import { createSky, type Sky } from './celestial';
-import { buildIsland, STONES } from './geometry';
+import { buildBlades, buildIsland, STONES, WATER_STREAMS } from './geometry';
+import { type Kit, loadKit } from './kit';
 import { type Palette, usePalette } from './palette';
 import { createBirds, createClouds, createCloudSea } from './scenery';
+import { createFoam } from './water';
 
 /**
  * Plain three.js, no @react-three/fiber: the scene is a handful of meshes and
@@ -100,7 +103,6 @@ const islandSide = (stop: number) => (stop % 2 === 0 ? 1 : -1);
 export interface SceneProps {
   /** Scroll progress in stops (0 = hero … 5 = call to action), written by the page. */
   progress: RefObject<number>;
-  topicSlugs: string[];
   reducedMotion: boolean;
   /** Debug read-out (fps, draw calls, triangles) twice a second; lab page only. */
   onStats?: (text: string) => void;
@@ -109,7 +111,13 @@ export interface SceneProps {
 }
 
 interface Stage {
+  group: Group;
   island: Mesh<BufferGeometry, MeshLambertMaterial>;
+  /** The windmill's blades, spinning inside a hub that sits and faces like the mill. */
+  blades: Mesh<BufferGeometry, MeshLambertMaterial>;
+  bladesHub: Group;
+  /** Foam on the waterfalls. */
+  foam: MeshBasicMaterial;
   clouds: MeshLambertMaterial;
   sea: MeshLambertMaterial;
   birds: MeshBasicMaterial;
@@ -120,10 +128,22 @@ interface Stage {
   skyLight: DirectionalLight;
 }
 
-export default function IslandScene({ progress, topicSlugs, reducedMotion, onStats, onContextLost }: SceneProps) {
+export default function IslandScene({ progress, reducedMotion, onStats, onContextLost }: SceneProps) {
   const host = useRef<HTMLDivElement>(null);
   const stage = useRef<Stage | null>(null);
   const palette = usePalette();
+  // The kit of models: undefined while it loads, null when it could not be loaded (the island then uses plain shapes).
+  const [kit, setKit] = useState<Kit | null | undefined>(undefined);
+  useEffect(() => {
+    let current = true;
+    loadKit().then(
+      (loaded) => current && setKit(loaded),
+      () => current && setKit(null),
+    );
+    return () => {
+      current = false;
+    };
+  }, []);
 
   // Latest props for the render loop, so the renderer is created only once.
   const live = useRef({ palette, reducedMotion, onStats, onContextLost });
@@ -165,18 +185,26 @@ export default function IslandScene({ progress, topicSlugs, reducedMotion, onSta
     );
     const card = new Mesh(new BoxGeometry(1.1, 1.5, 0.1), new MeshLambertMaterial({ flatShading: true }));
     group.add(island, card);
+    const bladesHub = new Group();
+    const blades = new Mesh<BufferGeometry, MeshLambertMaterial>(undefined, island.material);
+    bladesHub.add(blades);
+    bladesHub.visible = false;
+    const foam = createFoam(WATER_STREAMS);
+    group.add(bladesHub, foam.mesh);
+    // Hidden until the island is built (the sky and the clouds show meanwhile).
+    group.visible = false;
     const clouds = createClouds();
     const sea = createCloudSea();
     const birds = createBirds();
     const sky = createSky();
     // Draw order: cloud sea (0), stars, sun / moon (see celestial.ts), clouds, then the island and the birds.
     clouds.renderOrder = 2;
-    island.renderOrder = card.renderOrder = birds.mesh.renderOrder = 3;
+    island.renderOrder = card.renderOrder = blades.renderOrder = foam.mesh.renderOrder = birds.mesh.renderOrder = 3;
 
     const camera = new PerspectiveCamera(FOV, 1, 0.5, 600);
     camera.add(sky.screen);
     scene.add(camera, group, clouds, sea.group, birds.mesh, sky.stars);
-    stage.current = { island, clouds: clouds.material, sea: sea.material, birds: birds.mesh.material, fog, sky, ambient, skyLight };
+    stage.current = { group, island, blades, bladesHub, foam: foam.mesh.material, clouds: clouds.material, sea: sea.material, birds: birds.mesh.material, fog, sky, ambient, skyLight };
     let width = 0;
     let height = 0;
     let wide = false;
@@ -229,7 +257,7 @@ export default function IslandScene({ progress, topicSlugs, reducedMotion, onSta
     // requestAnimationFrame stops by itself while the tab is hidden.
     const tick = (now: number) => {
       frame = requestAnimationFrame(tick);
-      if (!width || !height || !island.geometry.attributes.position) return;
+      if (!width || !height) return;
       const delta = Math.min((now - last) / 1000, 0.1);
       last = now;
       const { palette: colors, reducedMotion: still, onStats: report } = live.current;
@@ -308,6 +336,8 @@ export default function IslandScene({ progress, topicSlugs, reducedMotion, onSta
       group.position.y = Math.sin(clock * 0.9) * 0.2 * wideShot;
 
       placeCard(card, p, clock, colors, camera.position);
+      blades.rotation.x = clock * 1.1;
+      foam.update(clock);
       // Starts turned so that no cloud sits in front of the sun or moon on the first screen.
       clouds.rotation.y = 0.6 + clock * 0.008;
       sea.group.rotation.y = -clock * 0.004;
@@ -333,7 +363,8 @@ export default function IslandScene({ progress, topicSlugs, reducedMotion, onSta
       window.removeEventListener('pointermove', onPointerMove);
       canvas.removeEventListener('webglcontextlost', lost);
       stage.current = null;
-      for (const mesh of [island, card, clouds, birds.mesh]) {
+      blades.geometry.dispose();
+      for (const mesh of [island, card, clouds, birds.mesh, foam.mesh]) {
         mesh.geometry.dispose();
         mesh.material.dispose();
       }
@@ -348,8 +379,22 @@ export default function IslandScene({ progress, topicSlugs, reducedMotion, onSta
   useEffect(() => {
     const current = stage.current;
     if (!current) return;
-    current.island.geometry.dispose();
-    current.island.geometry = buildIsland(palette, topicSlugs);
+    if (kit !== undefined) {
+      current.island.geometry.dispose();
+      current.island.geometry = buildIsland(palette, kit);
+      const blades = buildBlades(palette, kit);
+      current.blades.geometry.dispose();
+      current.bladesHub.visible = blades !== null;
+      if (blades) {
+        current.blades.geometry = blades.geometry;
+        current.bladesHub.position.copy(blades.position);
+        current.bladesHub.rotation.y = blades.turn;
+        current.bladesHub.scale.setScalar(blades.scale);
+      }
+      current.group.visible = true;
+    }
+    // Foam is white by day; at night a pale, moonlit shade of the water.
+    current.foam.color.copy(palette.dark ? new Color().lerpColors(palette.water, palette.moon, 0.45) : palette.raised);
     current.clouds.color.copy(palette.raised);
     current.sea.color.copy(palette.raised);
     current.birds.color.copy(palette.muted);
@@ -360,7 +405,7 @@ export default function IslandScene({ progress, topicSlugs, reducedMotion, onSta
     current.skyLight.color.setScalar(1).lerp(palette.dark ? palette.moon : palette.sun, palette.dark ? 0.5 : 0.3);
     current.skyLight.intensity = palette.dark ? 2.6 : 2.2;
     current.ambient.intensity = palette.dark ? 1.5 : 1.75;
-  }, [palette, topicSlugs]);
+  }, [palette, kit]);
 
   return <div ref={host} className="h-full w-full" />;
 }

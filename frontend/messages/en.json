@@ -458,5 +458,22 @@
     "unverifiedResend": "Send link again",
     "tooMany": "Too many tries. Please wait a while and try again.",
     "error": "Something went wrong. Please try again."
+  },
+  "Island": {
+    "pos_noun": "Nouns",
+    "pos_verb": "Verbs",
+    "pos_adjective": "Adjectives",
+    "pos_adverb": "Adverbs",
+    "pos_pronoun": "Pronouns",
+    "pos_preposition": "Prepositions",
+    "pos_conjunction": "Conjunctions",
+    "pos_interjection": "Interjections",
+    "toNight": "Click to switch to night",
+    "toDay": "Click to switch to day",
+    "mushrooms": "{found} of {total} mushrooms found",
+    "mushroomsAll": "Sharp eyes: all {total} mushrooms! A memory like that learns words fast.",
+    "zoomIn": "Zoom in on the island",
+    "zoomOut": "Zoom out",
+    "dismiss": "Close"
   }
 }

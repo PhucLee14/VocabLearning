@@ -41,8 +41,8 @@
   --m3: #4fb488;
   --m4: #1d9266;
   --m5: #0c6847;
-  /* The sky behind the 3D island on the landing page. */
-  --sky: #e8f3f6;
+  /* The sky behind the 3D island on the landing page: a light sky blue by day. */
+  --sky: #d3e9f8;
   /* The island's lake, stream and waterfalls. */
   --water: #86cfe0;
   /* 3D scene only, same in both themes: the sun (light theme), the moon and stars (dark theme). */
@@ -175,6 +175,33 @@
   @media (min-width: 1280px) {
     html:has([data-island-stop]) {
       scroll-snap-type: y mandatory;
+    }
+  }
+
+  /*
+   * A theme change on the landing page eases in, like the island behind it:
+   * while the theme switcher keeps `theme-fading` on <html> (theme-switcher.tsx,
+   * which also sets --theme-fade), every colour takes that long to change.
+   * !important: it must win over the components' own, quicker transitions
+   * for that moment. Pages without the island still switch at once.
+   */
+  @media (prefers-reduced-motion: no-preference) {
+    html.theme-fading:has([data-island-stop]),
+    html.theme-fading:has([data-island-stop]) *,
+    html.theme-fading:has([data-island-stop]) *::before,
+    html.theme-fading:has([data-island-stop]) *::after {
+      /*
+       * Surfaces take the whole time. Text and icons wait, then change quickly
+       * in the middle: fading as slowly as the surface behind them, they would
+       * pass through its colour and be unreadable for a second.
+       */
+      transition:
+        background-color var(--theme-fade, 2.2s) ease-in-out,
+        border-color var(--theme-fade, 2.2s) ease-in-out,
+        outline-color var(--theme-fade, 2.2s) ease-in-out,
+        color calc(var(--theme-fade, 2.2s) * 0.25) ease-in-out calc(var(--theme-fade, 2.2s) * 0.38),
+        fill calc(var(--theme-fade, 2.2s) * 0.25) ease-in-out calc(var(--theme-fade, 2.2s) * 0.38),
+        stroke calc(var(--theme-fade, 2.2s) * 0.25) ease-in-out calc(var(--theme-fade, 2.2s) * 0.38) !important;
     }
   }
 

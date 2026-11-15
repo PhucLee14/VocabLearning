@@ -513,12 +513,11 @@ The user picked this direction out of three (the others: a deck of 3D flashcards
 | Call to action | The camera pulls back to the whole island | None |
 
 **Design rules carried over to 3D**
-- The house style (flat, no gradients, no resting shadows, no emoji):
-  - flat shading with one palette texture (low-poly colour atlas);
-  - lighting baked into vertex colours;
-  - no realtime shadows, no bloom, a plain sky colour (the `--sky` token; clouds and birds are flat-shaded meshes).
+- The house style, as far as it carries over:
+  - colours per vertex from the tokens, no textures, no emoji;
+  - since 2026-11-15 (the user's choice) the scene is round and lit rather than flat: smooth shading, one light that casts shadows, ambient occlusion baked per vertex. Still no bloom or other post-processing, and a plain sky colour (the `--sky` token).
 - Colours come from the CSS tokens (`--accent`, `--m0` … `--m5`, `--surface`, …), read at runtime.
-- Dark theme: the same island at night (darker palette, moon and stars; lit windows still to do), following `data-theme`.
+- Dark theme: the same island at night (darker palette, moon and stars, lit windows, fireflies), following `data-theme`.
 - Topics are data, not hard-coded scenery:
   - a config maps a topic slug to a landmark model;
   - any other topic, including ones added later by admins, gets a generic building automatically. There are 24 topics in the seed, too many for 24 landmarks.
@@ -552,6 +551,7 @@ Steps:
 - [ ] **Art direction**: a moodboard and a map sketch of the island (districts, terraces, the SRS path, the camera path); choose which topics get a landmark.
 - [x] **Assets** (2026-11-14): CC0 kits by Kenney, City Kit (Suburban) for the 21 houses and Nature Kit for trees, rocks and plants ([docs/ASSETS.md](docs/ASSETS.md)). Baked by `npm run island:kit` into one 352 KB file (184 KB gzip) of positions + colour roles; the scene maps roles to the design tokens, so no texture and no glTF loader ship, and the models follow the theme (lit windows at night). The ground and the mountain terraces are still plain shapes.
 - [x] **Village** (requested 2026-11-14: fewer houses, water, "like a village"): 9 houses along a path, a lake with a canoe and water lilies, a waterfall down the mountain's terraces into the lake, a stream from the lake to the rim that falls off the island, a wooden bridge, a fenced field, a windmill with turning blades (Hexagon Kit), a camp. Foam runs down both waterfalls. This **replaces "one building per topic"**: the island no longer takes the topic list, so the planned hover / click on districts and landmarks per topic are dropped unless the idea comes back in another form.
+- [x] **Mountain with stairs, houses as parts of speech** (requested 2026-11-15): the terraced mountain became a bigger rock (radius 4.8, 8.4 high) with 60 steps winding 2.4 times up to the summit; six flags along the stairs are the CEFR levels (A1 at the foot, C2 on top). Eight houses, one per part of speech (noun … interjection).
 - [ ] **Prototype** at `/[locale]/lab/island` (`noindex`): the scene, the camera path and the scroll sync. Measure FPS and bundle size on a real phone (iOS Safari and Android Chrome) before going further.
   - Built 2026-11-14 (`frontend/src/components/island/`), with an island made of primitives in code: 1 merged mesh with vertex colours + the card = 2 draw calls, about 1,100 triangles; colours from the CSS tokens, live theme switch, reduced motion, phone layout. Checked in headless Chrome only (software rendering, so its FPS means nothing).
   - Still to do before ticking: FPS on real phones (the lab page shows fps / draw calls / triangles in the corner).
@@ -565,7 +565,23 @@ Steps:
   - the island and the text swap sides from floor to floor (text left on even floors, right on odd ones). The camera orbits: every floor shows the whole island in the free half of the screen, turned so that floor's subject faces the viewer (close-ups were dropped the same day: the rest of the island sat under the text panel);
   - scenery: a sky colour (`--sky` token), a sea of clouds under the island that fades into the sky (scene fog), drifting low-poly clouds, two small flocks of birds, a slight mouse parallax. About 38,000 triangles (most of them the cloud sea);
   - day and night (2026-11-14): light theme = a sun with rays and warm sunlight; dark theme = a crescent moon, twinkling stars and cooler moonlight. The scene's one directional light shines from the side of the screen where the sun or moon is. Follows the theme live.
-- [ ] **Interactions**: drag in the hero; hover or tap on terraces and districts. Keyboard users already have the HTML links.
+- [x] **Interactions** (2026-11-15, the "playful" set the user picked):
+  - drag sideways to turn the island (any floor; up to 75° from the floor's view; a floor change turns it back);
+  - click the sun or the moon to switch the theme;
+  - click the windmill (spins up), the canoe (paddles a lap of the lake), the lake (a fish jumps), the campfire (flares), the birds (scatter);
+  - at night the pointer carries a lantern over the island; without a pointer the light rests at the campfire;
+  - five hidden mushrooms to find, with a count and, when all are found, an invitation to sign up;
+  - labels on hover (tap on touch screens): the part of speech of each house, the level and word count of each flag, what the sun / moon does.
+  - Known gap: keyboard and screen-reader users get none of this (the canvas is decoration). The level facts are also in the page's text; the parts of speech are not.
+- [x] **Mountain trail, craggy mountain, island details, zoom** (requested 2026-11-15):
+  - the way up is a trail: a ledge of earth cut into the rock, with a low bank and stones along its edge (the step slabs are gone);
+  - the mountain is an uneven rock: 8 rings of 12 corners pushed in and out at random, some jutting out as crags, the peak off-centre, every face its own shade, snow on top; a smooth gully holds the waterfall;
+  - the island's body: an uneven rim, the grass's edge, a band of soil, rough rock narrowing to a point, three hanging spikes, five small rocks floating nearby, patches of darker grass, stumps, a log, flowers by every door;
+  - level labels no longer show word counts;
+  - zoom: two buttons (bottom right; the wheel is taken by the floors) and a double click on any spot of the island; four steps up to 3.4x; a drag turns the view around the spot; a floor change zooms back out.
+- [x] **Bluer day sky, sun and moon swap** (requested 2026-11-15): the light theme's `--sky` is a light sky blue (`#d3e9f8`, was `#e8f3f6`); on a theme change the sun and the moon trade places with half a turn of a wheel instead of one replacing the other at once.
+- [x] **Theme change as a fade** (requested 2026-11-15): the wheel is twice as wide; over 2.2 s the scene's sky, fog, clouds, light and the island's own colours ease from one theme to the other, and on the landing page the header, buttons, panels and text ease with them (text flips in the middle so it stays readable). Other pages still switch at once.
+- [x] **Rounder, lit island** (requested 2026-11-15, "less blocky, more real"): shadows from the sun / moon, light from the sky, ambient occlusion baked into the kit; smooth normals with real edges kept, rounder tree tops, smooth outlines for the rim, the lake, the paths and the mountain (now a smooth, lumpy rock face instead of 12-sided rings), round clouds; water with ripples, shore foam and the sky's colour; trees, plants and pennants sway; at night the windows glow and there are fireflies; smoke over the campfire. Cost: scene chunk 150 → 157 KB gzip, kit 101 → 115 KB gzip, shadows about a tenth of the frame rate. Not done: tone mapping (see CLAUDE.md), post-processing, more detailed models.
 - [ ] **QA**:
   - Lighthouse: LCP, CLS and TBT no worse than the current landing page;
   - WebGL context loss;

@@ -38,12 +38,19 @@ export function IslandStop({
       data-island-stop={index}
       className={[
         'mx-auto flex max-w-[1100px] items-end px-4 pt-[36svh] pb-8 sm:px-6 xl:items-center xl:pt-8',
+        // The bare part of a floor is where the island is played with: a sideways
+        // drag turns it (so the browser only keeps vertical panning and pinch
+        // zoom there) and must not select text.
+        'touch-pan-y touch-pinch-zoom select-none',
         index % 2 === 1 ? 'xl:justify-end' : '',
         // The first floor shares the first screen with the 4rem site header, which is the snap point there.
         index === 0 ? 'min-h-[calc(100svh-4rem)]' : 'min-h-[100svh] snap-start snap-always',
       ].join(' ')}
     >
-      <div className={`w-full max-w-[520px] ${box}`}>{children}</div>
+      {/* data-island-ui: the island ignores the pointer while it is over the content (see overPage in scene.tsx). */}
+      <div data-island-ui className={`w-full max-w-[520px] select-text ${box}`}>
+        {children}
+      </div>
     </section>
   );
 }

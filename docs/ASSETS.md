@@ -6,15 +6,15 @@ The landing page's island (`frontend/src/components/island/`) uses 3D models fro
 
 | Kit | Version | Author | Licence | Used for |
 |-----|---------|--------|---------|----------|
-| [City Kit (Suburban)](https://kenney.nl/assets/city-kit-suburban) | 2.0 | Kenney (kenney.nl) | CC0 1.0 | 9 houses (`building-type-a`, `b`, `c`, `d`, `f`, `h`, `k`, `m`, `p`) |
-| [Nature Kit](https://kenney.nl/assets/nature-kit) | 2.1 | Kenney (kenney.nl) | CC0 1.0 | trees, rocks, stones, bushes, flowers, grass, reeds, water lilies, canoe, bridge, crops, fence, tent, campfire, logs, sign |
+| [City Kit (Suburban)](https://kenney.nl/assets/city-kit-suburban) | 2.0 | Kenney (kenney.nl) | CC0 1.0 | houses (9 types baked: `building-type-a`, `b`, `c`, `d`, `f`, `h`, `k`, `m`, `p`; 8 stand on the island) |
+| [Nature Kit](https://kenney.nl/assets/nature-kit) | 2.1 | Kenney (kenney.nl) | CC0 1.0 | trees, rocks, stones, bushes, flowers, grass, reeds, water lilies, canoe, bridge, crops, fence, tent, campfire, logs, stumps, sign, mushrooms |
 | [Hexagon Kit](https://kenney.nl/assets/hexagon-kit) | 2.0 | Kenney (kenney.nl) | CC0 1.0 | the windmill (`unit-mill`, baked as body + blades) |
 
 CC0 means public domain: no attribution is required, for personal or commercial use. Crediting Kenney is optional and appreciated; the licence text ships in each kit's `License.txt`.
 
 ## How the models get into the app
 
-The kits are **not** in the repository. One baked file is: `frontend/public/models/island-kit.bin` (about 200 KB, 58 models, about 17,000 triangles).
+The kits are **not** in the repository. One baked file is: `frontend/public/models/island-kit.bin` (about 205 KB, 65 models, about 17,600 triangles).
 
 To rebuild it (after changing the list of models or the colour roles in `frontend/scripts/island-kit.mjs`):
 
@@ -24,7 +24,7 @@ To rebuild it (after changing the list of models or the colour roles in `fronten
 
 What the bake does, and why:
 
-- It keeps only positions and triangles. Normals and UVs are dropped (the scene is flat-shaded) and equal vertices are welded.
+- It keeps positions, triangles and one ambient-occlusion value per vertex: how much of the sky the vertex cannot see because the model itself, or the ground it stands on, is in the way (48 rays per vertex; this is why the bake takes about half a minute). Normals and UVs are dropped (the scene works out its own normals, smooth or sharp) and equal vertices are welded.
 - Instead of colours, every vertex gets a **role** (wall, roof, trunk, leaf, glass, …). City Kit and Hexagon Kit models sample one palette texture each, so the role is the nearest reference colour under the vertex's UV; Nature Kit models have one named material per colour.
 - The scene maps roles to the design tokens (`roleColors` in `kit.ts`), so the models follow the light and dark themes. At night the `glass` role takes the sun colour: lit windows.
 - No glTF loader and no texture are shipped to the browser.

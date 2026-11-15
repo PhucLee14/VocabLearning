@@ -458,5 +458,22 @@
     "unverifiedResend": "Gửi lại link",
     "tooMany": "Bạn thử quá nhiều lần. Vui lòng đợi một lúc rồi thử lại.",
     "error": "Có lỗi xảy ra. Vui lòng thử lại."
+  },
+  "Island": {
+    "pos_noun": "Danh từ (noun)",
+    "pos_verb": "Động từ (verb)",
+    "pos_adjective": "Tính từ (adjective)",
+    "pos_adverb": "Trạng từ (adverb)",
+    "pos_pronoun": "Đại từ (pronoun)",
+    "pos_preposition": "Giới từ (preposition)",
+    "pos_conjunction": "Liên từ (conjunction)",
+    "pos_interjection": "Thán từ (interjection)",
+    "toNight": "Bấm để chuyển sang ban đêm",
+    "toDay": "Bấm để chuyển sang ban ngày",
+    "mushrooms": "Đã tìm thấy {found}/{total} cây nấm",
+    "mushroomsAll": "Bạn tinh mắt đấy: đủ cả {total} cây nấm! Trí nhớ thế này thì học từ nhanh lắm.",
+    "zoomIn": "Phóng to đảo",
+    "zoomOut": "Thu nhỏ đảo",
+    "dismiss": "Đóng"
   }
 }

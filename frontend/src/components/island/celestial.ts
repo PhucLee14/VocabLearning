@@ -5,12 +5,14 @@ import {
   Color,
   DoubleSide,
   Group,
+  MathUtils,
   Mesh,
   MeshBasicMaterial,
   Points,
   PointsMaterial,
 } from 'three';
 import type { Palette } from './palette';
+import { THEME_SECONDS } from './parts';
 
 /**
  * What hangs in the sky: a sun with rays in the light theme; a crescent moon
@@ -25,7 +27,16 @@ import type { Palette } from './palette';
  *   past as the camera turns, and set behind the cloud sea.
  * - Everything is flat colour (no blending, no bloom): the glow around the
  *   sun and the moon is one disc of the sky colour mixed with theirs.
+ * - Sun and moon sit at opposite ends of an unseen wheel. Whichever belongs to
+ *   the theme is at the top, at full size; the other is at the bottom, shrunk
+ *   to nothing. When the theme changes the wheel makes half a turn: one sets
+ *   towards the island while the other rises from the outer side.
  */
+
+const WHITE = new Color(1, 1, 1);
+
+/** The wheel's radius, in sun radii. Its half turn takes THEME_SECONDS. */
+const WHEEL = 8.4;
 
 /** Draw order (three's `renderOrder`); the cloud sea is 0, clouds 2, the island 3 (scene.tsx). */
 const ORDER = { stars: 0.5, glow: 1, rays: 1.1, body: 1.2 };
@@ -115,9 +126,17 @@ export interface Sky {
   screen: Group;
   /** Stars. Add to the scene. */
   stars: Group;
-  /** Follow the theme: which bodies show, and their colours. */
+  /** Follow the theme: which body is up (they swap with half a turn of their wheel), and the colours. */
   apply: (palette: Palette) => void;
-  update: (seconds: number) => void;
+  /**
+   * `seconds` is the scene's clock, `delta` the real time since the last frame.
+   * `outward` is the outer side of the screen, away from the island (1 =
+   * right, -1 = left): the bodies rise from there and set the other way.
+   * `still` (reduced motion) swaps them at once. `sky` is the sky's colour
+   * right now and `night` how far it is night (0 = day … 1 = night): both
+   * ease over after a theme change, and the glows and the stars follow them.
+   */
+  update: (seconds: number, delta: number, outward: number, still: boolean, sky: Color, night: number) => void;
   dispose: () => void;
 }
 
@@ -149,27 +168,69 @@ export function createSky(): Sky {
   });
   const stars = new Group().add(...starSets);
 
-  const skyColor = new Color();
   const starColor = new Color();
+
+  /**
+   * The wheel's angle: the sun is up at even multiples of π, the moon at odd
+   * ones. It only ever turns forwards, from `from` to `goal`; `swap` is how far
+   * through that turn it is (1 = at rest).
+   */
+  let turn = 0;
+  let from = 0;
+  let goal = 0;
+  let swap = 1;
+  let started = false;
+
+  /**
+   * Puts a body where the wheel has carried it: at the top it is full size and
+   * upright. The wheel turns so that a body sets inwards, towards the island
+   * (behind the mountain), and rises from the outer side of the screen. (The
+   * other way round was tried first: the sun slid off the screen's edge, which
+   * read as backwards.)
+   */
+  const carry = (body: Group, angle: number, outward: number) => {
+    const height = Math.cos(angle);
+    const size = MathUtils.smoothstep(height, -0.35, 0.8);
+    body.visible = size > 0.01;
+    body.position.set(-Math.sin(angle) * WHEEL * outward, (height - 1) * WHEEL, 0);
+    body.scale.setScalar(size);
+    body.rotation.z = angle * outward;
+  };
 
   return {
     screen,
     stars,
     apply(palette) {
-      sun.visible = !palette.dark;
-      moon.visible = palette.dark;
-      stars.visible = palette.dark;
-      skyColor.copy(palette.sky);
+      const up = palette.dark ? 1 : 0;
+      if (!started) {
+        // The first time there is nothing to swap: the right one is simply up.
+        started = true;
+        turn = from = goal = up * Math.PI;
+      } else if (Math.round(goal / Math.PI) % 2 !== up) {
+        from = turn;
+        goal += Math.PI;
+        swap = 0;
+      }
       starColor.copy(palette.moon);
       sunMaterial.color.copy(palette.sun);
-      sunGlow.color.lerpColors(palette.sky, palette.sun, 0.25);
       moonMaterial.color.copy(palette.moon);
-      moonGlow.color.lerpColors(palette.sky, palette.moon, 0.1);
     },
-    update(seconds) {
+    update(seconds, delta, outward, still, sky, night) {
+      if (swap < 1) {
+        swap = still ? 1 : Math.min(1, swap + delta / THEME_SECONDS);
+        turn = MathUtils.lerp(from, goal, MathUtils.smootherstep(swap, 0, 1));
+      }
+      carry(sun, turn, outward);
+      carry(moon, turn + Math.PI, outward);
       rays.rotation.z = seconds * 0.05;
+      // The glows are the sky's colour of the moment mixed with the body's. The
+      // sun's starts from a paler sky (mixed with plain sky blue it turns grey-green).
+      sunGlow.color.copy(sky).lerp(WHITE, 0.6).lerp(sunMaterial.color, 0.3);
+      moonGlow.color.lerpColors(sky, moonMaterial.color, 0.1);
+      // The stars come out as it gets dark, and twinkle.
+      stars.visible = night > 0.02;
       starSets.forEach((set, i) => {
-        set.material.color.lerpColors(skyColor, starColor, 0.6 + 0.4 * Math.sin(seconds * 1.1 + i * Math.PI));
+        set.material.color.lerpColors(sky, starColor, night * (0.6 + 0.4 * Math.sin(seconds * 1.1 + i * Math.PI)));
       });
     },
     dispose() {

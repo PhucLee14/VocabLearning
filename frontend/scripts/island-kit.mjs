@@ -13,14 +13,17 @@
  *   and a "role" (wall, roof, leaf, …). The scene turns roles into the
  *   theme's colours, so the models follow the light and dark themes like the
  *   rest of the UI;
- * - the scene draws flat-shaded (face normals come from the shader), so
- *   normals and UVs are dropped and equal vertices are welded: the file is a
- *   fraction of the source models' size.
+ * - normals and UVs are dropped and equal vertices are welded (the scene
+ *   works out its own normals, smooth or sharp, see mesh.ts): the file is a
+ *   fraction of the source models' size;
+ * - ambient occlusion is worked out here, once, per vertex (`occlusion`): how
+ *   much of the sky a vertex cannot see because the model itself, or the
+ *   ground it stands on, is in the way. The scene darkens those vertices.
  *
- * File layout: "GDK1", header length (uint32 LE), header JSON (padded to 4
+ * File layout: "GDK2", header length (uint32 LE), header JSON (padded to 4
  * bytes), then for each model: positions (uint16 x3 per vertex, spread over
- * the model's bounds), roles (uint8 per vertex, padded to 2 bytes), triangle
- * indices (uint16).
+ * the model's bounds), roles (uint8 per vertex), occlusion (uint8 per vertex,
+ * 0 = open … 255 = shut in), triangle indices (uint16).
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -77,6 +80,7 @@ const NATURE_MODELS = [
   'sign', 'log_stack', 'tent_detailedOpen', 'campfire_stones',
   'bridge_wood', 'canoe', 'lily_large', 'lily_small', 'plant_flatTall',
   'crops_dirtRow', 'crop_pumpkin', 'crops_cornStageC', 'fence_simple',
+  'mushroom_red', 'mushroom_tan', 'stump_round', 'stump_old', 'log', 'stone_smallA', 'stone_smallC',
 ].map((name) => [name, name]);
 
 /**
@@ -85,7 +89,8 @@ const NATURE_MODELS = [
  */
 const HEXAGON_MODELS = [
   ['unit-mill', 'windmill', { skip: 'rotate-x' }],
-  ['unit-mill', 'windmill-blades', { only: 'rotate-x' }],
+  // The blades hang in the air: no ground under them.
+  ['unit-mill', 'windmill-blades', { only: 'rotate-x', afloat: true }],
 ];
 
 // ── Arguments ──
@@ -334,6 +339,96 @@ function pack({ positions, roles, indices }) {
   return { min, max, positions: quantised, roles: packedRoles, indices: triangles };
 }
 
+/**
+ * Ambient occlusion per vertex of a packed model, 0 (sees the whole sky) … 1.
+ * From each vertex, rays go out over the half space its faces look into; a ray
+ * that meets the model, or the ground the model stands on (y = 0, unless
+ * `afloat`), within `reach` counts, the more the nearer it is met.
+ */
+const OCCLUSION_RAYS = 48;
+function occlusion({ min, max, positions, indices }, afloat) {
+  const count = positions.length / 3;
+  const at = new Float64Array(positions.length);
+  for (let i = 0; i < positions.length; i++) at[i] = min[i % 3] + (positions[i] / 65535) * (max[i % 3] - min[i % 3]);
+  const reach = Math.min(0.7, Math.max(0.15, (max[1] - min[1]) * 0.45));
+  const ground = !afloat && min[1] < 0.1 ? 0 : -Infinity;
+
+  // Per triangle: a corner and two edges (for the ray test); per vertex: the sum of its faces' normals, weighted by area.
+  const triangles = indices.length / 3;
+  const corner = new Float64Array(triangles * 3);
+  const edge1 = new Float64Array(triangles * 3);
+  const edge2 = new Float64Array(triangles * 3);
+  const normals = new Float64Array(positions.length);
+  for (let t = 0; t < triangles; t++) {
+    const [a, b, c] = [indices[t * 3] * 3, indices[t * 3 + 1] * 3, indices[t * 3 + 2] * 3];
+    for (let k = 0; k < 3; k++) {
+      corner[t * 3 + k] = at[a + k];
+      edge1[t * 3 + k] = at[b + k] - at[a + k];
+      edge2[t * 3 + k] = at[c + k] - at[a + k];
+    }
+    const nx = edge1[t * 3 + 1] * edge2[t * 3 + 2] - edge1[t * 3 + 2] * edge2[t * 3 + 1];
+    const ny = edge1[t * 3 + 2] * edge2[t * 3] - edge1[t * 3] * edge2[t * 3 + 2];
+    const nz = edge1[t * 3] * edge2[t * 3 + 1] - edge1[t * 3 + 1] * edge2[t * 3];
+    for (const v of [a, b, c]) {
+      normals[v] += nx;
+      normals[v + 1] += ny;
+      normals[v + 2] += nz;
+    }
+  }
+
+  const result = new Float64Array(count);
+  for (let v = 0; v < count; v++) {
+    let [nx, ny, nz] = [normals[v * 3], normals[v * 3 + 1], normals[v * 3 + 2]];
+    const length = Math.hypot(nx, ny, nz);
+    // Faces that cancel out (a thin, two-sided leaf): look up.
+    if (length < 1e-9) [nx, ny, nz] = [0, 1, 0];
+    else [nx, ny, nz] = [nx / length, ny / length, nz / length];
+    // Two directions across the normal.
+    let [tx, ty, tz] = Math.abs(ny) < 0.9 ? [nz, 0, -nx] : [0, -nz, ny];
+    const tangent = Math.hypot(tx, ty, tz);
+    [tx, ty, tz] = [tx / tangent, ty / tangent, tz / tangent];
+    const [bx, by, bz] = [ny * tz - nz * ty, nz * tx - nx * tz, nx * ty - ny * tx];
+
+    const ox = at[v * 3] + nx * 0.004;
+    const oy = Math.max(at[v * 3 + 1] + ny * 0.004, ground + 0.002);
+    const oz = at[v * 3 + 2] + nz * 0.004;
+    let shut = 0;
+    for (let ray = 0; ray < OCCLUSION_RAYS; ray++) {
+      // Spread like the light a matt surface takes in: more rays near the normal.
+      const share = (ray + 0.5) / OCCLUSION_RAYS;
+      const around = ray * 2.39996323;
+      const [sx, sz, sy] = [Math.sqrt(share) * Math.cos(around), Math.sqrt(share) * Math.sin(around), Math.sqrt(1 - share)];
+      const dx = tx * sx + nx * sy + bx * sz;
+      const dy = ty * sx + ny * sy + by * sz;
+      const dz = tz * sx + nz * sy + bz * sz;
+      let nearest = dy < -1e-6 ? (ground - oy) / dy : Infinity;
+      for (let t = 0; t < triangles; t++) {
+        if (indices[t * 3] === v || indices[t * 3 + 1] === v || indices[t * 3 + 2] === v) continue;
+        const k = t * 3;
+        // Möller–Trumbore.
+        const px = dy * edge2[k + 2] - dz * edge2[k + 1];
+        const py = dz * edge2[k] - dx * edge2[k + 2];
+        const pz = dx * edge2[k + 1] - dy * edge2[k];
+        const det = edge1[k] * px + edge1[k + 1] * py + edge1[k + 2] * pz;
+        if (Math.abs(det) < 1e-12) continue;
+        const [sxx, syy, szz] = [ox - corner[k], oy - corner[k + 1], oz - corner[k + 2]];
+        const u = (sxx * px + syy * py + szz * pz) / det;
+        if (u < 0 || u > 1) continue;
+        const qx = syy * edge1[k + 2] - szz * edge1[k + 1];
+        const qy = szz * edge1[k] - sxx * edge1[k + 2];
+        const qz = sxx * edge1[k + 1] - syy * edge1[k];
+        const w = (dx * qx + dy * qy + dz * qz) / det;
+        if (w < 0 || u + w > 1) continue;
+        const distance = (edge2[k] * qx + edge2[k + 1] * qy + edge2[k + 2] * qz) / det;
+        if (distance > 1e-4 && distance < nearest) nearest = distance;
+      }
+      if (nearest < reach) shut += 1 - nearest / reach;
+    }
+    result[v] = shut / OCCLUSION_RAYS;
+  }
+  return result;
+}
+
 const cityRoles = paletteRoles(readPng(join(cityDir, 'Textures', 'colormap.png')), CITY_COLORS);
 const hexagonRoles = paletteRoles(readPng(join(hexagonDir, 'Textures', 'colormap.png')), HEXAGON_COLORS);
 const sources = [
@@ -342,7 +437,7 @@ const sources = [
   ...HEXAGON_MODELS.map(([file, name, options]) => [name, join(hexagonDir, `${file}.glb`), hexagonRoles, options]),
 ];
 
-const header = { version: 1, roles: ROLES, models: [] };
+const header = { version: 2, roles: ROLES, models: [] };
 const chunks = [];
 let offset = 0;
 let triangles = 0;
@@ -351,8 +446,10 @@ for (const [name, file, roleOf, options] of sources) {
   const model = pack(source);
   const vertices = model.roles.length;
   const positions = Buffer.from(new Uint16Array(model.positions).buffer);
-  const roles = Buffer.alloc(vertices + (vertices % 2));
+  // Roles, then occlusion: one byte each per vertex.
+  const roles = Buffer.alloc(vertices * 2);
   roles.set(model.roles);
+  roles.set(Array.from(occlusion(model, options?.afloat), (shut) => Math.round(Math.min(1, shut) * 255)), vertices);
   const indices = Buffer.from(new Uint16Array(model.indices).buffer);
   header.models.push({
     name,
@@ -371,7 +468,7 @@ for (const [name, file, roleOf, options] of sources) {
 let json = JSON.stringify(header);
 json += ' '.repeat((4 - (Buffer.byteLength(json) % 4)) % 4);
 const prefix = Buffer.alloc(8);
-prefix.write('GDK1', 0, 'latin1');
+prefix.write('GDK2', 0, 'latin1');
 prefix.writeUInt32LE(Buffer.byteLength(json), 4);
 const output = Buffer.concat([prefix, Buffer.from(json), ...chunks]);
 

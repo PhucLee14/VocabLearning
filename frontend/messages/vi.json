@@ -474,6 +474,7 @@
     "mushroomsAll": "Bạn tinh mắt đấy: đủ cả {total} cây nấm! Trí nhớ thế này thì học từ nhanh lắm.",
     "zoomIn": "Phóng to đảo",
     "zoomOut": "Thu nhỏ đảo",
+    "zoomHint": "Giữ Ctrl và lăn chuột để phóng to",
     "dismiss": "Đóng"
   }
 }

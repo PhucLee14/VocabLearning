@@ -66,6 +66,7 @@ export function Island({ debug = false }: { debug?: boolean }) {
   const [lost, setLost] = useState(false);
   const [mushrooms, setMushrooms] = useState<{ found: number; total: number } | null>(null);
   const [zoomStep, setZoomStep] = useState(0);
+  const [zoomHint, setZoomHint] = useState(false);
   const reducedMotion = useSyncExternalStore(
     subscribeReducedMotion,
     () => window.matchMedia(REDUCED_MOTION).matches,
@@ -133,6 +134,17 @@ export function Island({ debug = false }: { debug?: boolean }) {
   const onMushroom = useCallback((found: number, total: number) => setMushrooms({ found, total }), []);
   const onToggleTheme = useCallback((toDark: boolean) => setTheme(toDark ? 'dark' : 'light'), []);
   const onContextLost = useCallback(() => setLost(true), []);
+  const onZoomHint = useCallback(() => setZoomHint(true), []);
+  const onZoom = useCallback((step: number) => {
+    setZoomStep(step);
+    if (step > 0) setZoomHint(false);
+  }, []);
+  // The hint goes away by itself, or for good as soon as the visitor has zoomed.
+  useEffect(() => {
+    if (!zoomHint) return;
+    const id = setTimeout(() => setZoomHint(false), 7000);
+    return () => clearTimeout(id);
+  }, [zoomHint]);
 
   return (
     <>
@@ -147,7 +159,8 @@ export function Island({ debug = false }: { debug?: boolean }) {
             onLabel={showLabel}
             onMushroom={onMushroom}
             onToggleTheme={onToggleTheme}
-            onZoom={setZoomStep}
+            onZoom={onZoom}
+            onZoomHint={onZoomHint}
             onStats={debug ? showStats : undefined}
             onContextLost={onContextLost}
           />
@@ -179,7 +192,14 @@ export function Island({ debug = false }: { debug?: boolean }) {
         </div>
       )}
 
-      {/* Zoom: the wheel is taken (it moves from floor to floor), so there are buttons; a double click on the island zooms too. */}
+      {/* Shown once, when a mouse first rests on the island: Ctrl + wheel zooms (the plain wheel moves from floor to floor). */}
+      {zoomHint && (
+        <p aria-hidden className="pill pointer-events-none fixed right-16 bottom-14 z-20">
+          {t('zoomHint')}
+        </p>
+      )}
+
+      {/* Zoom: buttons, a double click on the island, or Ctrl + wheel (a pinch on a trackpad) over it. */}
       {ready && !lost && (
         <div data-island-ui className="fixed right-4 bottom-4 z-20 flex flex-col gap-2">
           <button

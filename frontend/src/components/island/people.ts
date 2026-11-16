@@ -1,5 +1,5 @@
 import { BoxGeometry, Color, Group, InstancedMesh, MathUtils, Mesh, MeshLambertMaterial, Object3D, Quaternion, SphereGeometry, Vector3 } from 'three';
-import { BRIDGE_DECK, BRIDGES, CAMPFIRE, LAKE_CENTRE, PEOPLE_SPOTS, trailWalk, WALKS } from './geometry';
+import { BRIDGE_DECK, BRIDGE_END, BRIDGE_FLAT, BRIDGES, CAMPFIRE, LAKE_CENTRE, PEOPLE_SPOTS, trailWalk, WALKS } from './geometry';
 import type { Palette } from './palette';
 
 /**
@@ -49,9 +49,9 @@ const ARM = 0.15;
 
 /** Radians of a step per unit walked. */
 const STRIDE = 7;
-const WALK_SPEED = 0.42;
+const WALK_SPEED = 0.28;
 /** Seconds the hiker takes up the mountain and back down. */
-const HIKE_SECONDS = 190;
+const HIKE_SECONDS = 300;
 /** A greeting lasts this long. */
 const GREET_SECONDS = 1.6;
 
@@ -213,7 +213,11 @@ export function createPeople(): People {
   /** How high someone at that place stands: on the ground, or on a bridge's deck. */
   const footing = (at: Vector3) => {
     let height = 0;
-    for (const bridge of BRIDGES) height = Math.max(height, BRIDGE_DECK * MathUtils.smoothstep(Math.hypot(at.x - bridge.x, at.z - bridge.z), 0.95, 0.5));
+    for (const bridge of BRIDGES) {
+      // 1 on the deck, 0 from the bridge's end outwards. (three's smoothstep wants its smaller bound first.)
+      const onDeck = 1 - MathUtils.smoothstep(Math.hypot(at.x - bridge.x, at.z - bridge.z), BRIDGE_FLAT, BRIDGE_END);
+      height = Math.max(height, BRIDGE_DECK * onDeck);
+    }
     return height;
   };
 

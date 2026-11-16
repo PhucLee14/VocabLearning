@@ -592,8 +592,23 @@ const shore = (angle: number, distance: number): XZ => [LAKE[0] + Math.sin(deg(a
 /** The kit's nature models sit 0.05 below their own origin; things on the water are lifted by that much. */
 const AFLOAT = WATER_Y + 0.04;
 
-/** The middles of the two bridges: over the stream, and over the waterfall's run to the lake. */
-const BRIDGE_SPOTS: XZ[] = [[-6.8, 3.8], TRAIL_PATH[3]];
+/** The direction from one point to another, in the layout's degrees (0 = towards +z, 90 = towards +x). */
+function bearing(from: XZ, to: XZ): number {
+  return (Math.atan2(to[0] - from[0], to[1] - from[1]) * 180) / Math.PI;
+}
+
+/**
+ * The two bridges: where the village path crosses the stream, and where the
+ * path to the mountain crosses the waterfall's run to the lake. Each is turned
+ * to carry its path. The kit's bridge is walked along its own **x** axis: its
+ * rails are on its ±z sides, its deck is 0.15 above its origin, and its ends
+ * (beyond ±0.4) slope down to the ground. Big enough for those ends to stand
+ * clear of the water.
+ */
+const BRIDGE_SPOTS: { at: XZ; turn: number; scale: number }[] = [
+  { at: [-6.8, 3.8], turn: bearing(PATH[3], PATH[4]) - 90, scale: 1.65 },
+  { at: TRAIL_PATH[3], turn: bearing(TRAIL_PATH[2], TRAIL_PATH[4]) - 90, scale: 1.7 },
+];
 
 const PROPS: Prop[] = [
   // A camp near the front (its fire is an actor, see actors.ts).
@@ -613,9 +628,7 @@ const PROPS: Prop[] = [
   ...[20, 75, 160, 215, 260].map((angle, i) => prop('plant_flatTall', shore(angle, 2.75 + (i % 2) * 0.2), 1.9, angle)),
   prop('rock_smallA', shore(185, 3), 1.5, 40),
   prop('rock_smallC', shore(330, 3.05), 1.4),
-  // Bridges (they run along their own z axis): over the stream, and over the waterfall's run to the lake.
-  prop('bridge_wood', BRIDGE_SPOTS[0], 1.55, 33),
-  prop('bridge_wood', BRIDGE_SPOTS[1], 1.4, 35),
+  ...BRIDGE_SPOTS.map(({ at: spot, turn, scale }) => prop('bridge_wood', spot, scale, turn)),
   // Rocks, stumps and a log near the rim.
   prop('rock_largeC', at(30, 9.6), 1.5, 100),
   prop('rock_smallA', at(84, 9.6), 1.6),
@@ -642,9 +655,15 @@ const PROPS: Prop[] = [
 
 /** The routes the villagers walk, there and back: the village path, and the path to the foot of the mountain trail. */
 export const WALKS: Vector3[][] = [PATH_LINE, TRAIL_PATH_LINE].map((line) => line.map(([x, z]) => new Vector3(x, 0, z)));
-/** Someone crossing a bridge walks on its deck, this far above the ground. */
-export const BRIDGES: Vector3[] = BRIDGE_SPOTS.map(([x, z]) => new Vector3(x, 0, z));
-export const BRIDGE_DECK = 0.17;
+/**
+ * Someone crossing a bridge walks on its deck: this far above the ground
+ * within BRIDGE_FLAT of the bridge's middle, sloping down to the ground at
+ * BRIDGE_END (the model's 0.15, 0.4 and 0.52 at the bridges' scale).
+ */
+export const BRIDGES: Vector3[] = BRIDGE_SPOTS.map(({ at: [x, z] }) => new Vector3(x, 0, z));
+export const BRIDGE_DECK = 0.25;
+export const BRIDGE_FLAT = 0.67;
+export const BRIDGE_END = 0.9;
 
 /** A place to walk on the mountain trail, `along` = 0 at the foot … 1 at the top: nearer the rock than the edge, clear of the flags and the stones. */
 export function trailWalk(along: number): Vector3 {
@@ -674,8 +693,9 @@ function lakeside(angle: number, beyond: number): Vector3 {
 export const PEOPLE_SPOTS = {
   fisher: lakeside(90, 0.3),
   float: lakeside(90, -0.95).setY(WATER_Y + 0.03),
-  reader: polar(68, 4.85),
-  readerLooksAt: new Vector3(),
+  // The tree at 68°, on the side away from the mountain (the trail passes on the other side), back to its trunk.
+  reader: polar(68, 5.4).add(polar(68, 5.4).sub(MOUNTAIN).setLength(0.5)),
+  readerLooksAt: polar(68, 5.4).add(polar(68, 5.4).sub(MOUNTAIN).setLength(3)),
   camper: new Vector3(at(30, 4.4)[0], 0, at(30, 4.4)[1]),
   seat: 0.21,
   farmer: FIELD.at.clone().add(new Vector3(-0.75, 0, 0)),

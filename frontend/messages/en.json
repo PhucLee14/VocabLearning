@@ -474,6 +474,7 @@
     "mushroomsAll": "Sharp eyes: all {total} mushrooms! A memory like that learns words fast.",
     "zoomIn": "Zoom in on the island",
     "zoomOut": "Zoom out",
+    "zoomHint": "Hold Ctrl and scroll to zoom",
     "dismiss": "Close"
   }
 }

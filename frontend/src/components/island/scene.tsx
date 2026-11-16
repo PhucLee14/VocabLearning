@@ -99,8 +99,8 @@ const HALF_FOV_TAN = Math.tan(MathUtils.degToRad(FOV / 2));
  * back up, so it cannot flip to and fro.
  */
 const DPR_CAPS = [1.5, 1.25, 1, 0.8];
-const SLOW_FPS = 45;
-const SLOW_SECONDS = 3;
+const SLOW_FPS = 40;
+const SLOW_SECONDS = 4;
 /** From this width the text is a side column and the island sits beside it (Tailwind `xl`, see stop.tsx). */
 const WIDE_LAYOUT = 1280;
 /** Wide layout: the island's centre is this far from the screen centre, as a fraction of the width. */
@@ -150,6 +150,14 @@ const BLADE_BOOST = 9;
  * another: between the lake, the windmill and the mountain.
  */
 const ZOOM_FOCUS = new Vector3(-1, 0.8, 1);
+/**
+ * Ctrl + wheel over the island zooms, one step per this much wheel (a mouse's
+ * notch is about 100). A pinch on a trackpad arrives as the same event, in
+ * many small pieces. The plain wheel is not used: it moves from floor to
+ * floor (floor-scroll.ts), and an island that swallowed it would trap
+ * everyone who scrolls with the pointer resting on it.
+ */
+const WHEEL_PER_ZOOM_STEP = 60;
 /** A double click zooms in to this step (and back out from it). */
 const DOUBLE_CLICK_ZOOM = 2;
 /** On a touch screen there is no hover: a tapped label stays this long. */
@@ -212,6 +220,8 @@ export interface SceneProps {
   onToggleTheme: (toDark: boolean) => void;
   /** The zoom changed: which step of ZOOM_STEPS it is on now. */
   onZoom: (step: number) => void;
+  /** A mouse is over the bare island for the first time: a good moment to say how to zoom. */
+  onZoomHint: () => void;
   /** Debug read-out (fps, draw calls, triangles) twice a second; lab page only. */
   onStats?: (text: string) => void;
   /** No WebGL, or the context was lost: the page should show its fallback. */
@@ -494,6 +504,12 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
     let click: { x: number; y: number; touch: boolean } | null = null;
     /** Likewise a double click, which zooms in on that spot. */
     let doubleClick: { x: number; y: number } | null = null;
+    /** Likewise a step of zoom asked for with Ctrl + wheel, in (1) or out (-1), with the pointer at that place. */
+    let wheelZoom: { x: number; y: number; step: 1 | -1 } | null = null;
+    /** How much wheel has piled up towards the next step, and when the last of it came. */
+    let wheelSum = 0;
+    let wheelAt = 0;
+    let hinted = false;
     /** Zoom: the step asked for, how far in the camera is right now, and the spot it looks at (island space). */
     let zoomStep = 0;
     let zoom = 1;
@@ -542,12 +558,28 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
     const onDoubleClick = (event: MouseEvent) => {
       if (!overPage(event.target)) doubleClick = { x: event.clientX, y: event.clientY };
     };
+    const onWheel = (event: WheelEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || overPage(event.target)) return;
+      // Ours: the browser must not zoom the whole page with it.
+      event.preventDefault();
+      const now = performance.now();
+      // After a pause it is a new gesture: what was left of the last one does not count.
+      if (now - wheelAt > 400) wheelSum = 0;
+      wheelAt = now;
+      // Wheel away from the user (negative) zooms in. Some browsers count in lines, not pixels.
+      wheelSum -= event.deltaY * (event.deltaMode === 1 ? 33 : 1);
+      if (Math.abs(wheelSum) < WHEEL_PER_ZOOM_STEP) return;
+      wheelZoom = { x: event.clientX, y: event.clientY, step: wheelSum > 0 ? 1 : -1 };
+      wheelSum = 0;
+    };
     const onZoomRequest = (event: Event) => zoomTo(zoomStep + (event as CustomEvent<number>).detail);
     window.addEventListener('pointermove', onPointerMove, { passive: true });
     window.addEventListener('pointerdown', onPointerDown, { passive: true });
     window.addEventListener('pointerup', onPointerUp, { passive: true });
     window.addEventListener('pointercancel', onPointerCancel, { passive: true });
     window.addEventListener('dblclick', onDoubleClick);
+    // Not passive: the handler cancels the browser's own zoom.
+    window.addEventListener('wheel', onWheel, { passive: false });
     window.addEventListener(ZOOM_EVENT, onZoomRequest);
 
     // ── Picking: what is under a point of the screen ──
@@ -767,6 +799,16 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
           zoomTo(DOUBLE_CLICK_ZOOM);
         }
       }
+      if (wheelZoom) {
+        const { x, y, step } = wheelZoom;
+        wheelZoom = null;
+        // Zooming in goes towards what the pointer is on.
+        if (step > 0 && zoomStep < ZOOM_STEPS.length - 1) {
+          const hit = pick(x, y);
+          if (hit && hit.kind !== 'sky' && hit.kind !== 'birds') focusGoal.copy(hitPoint);
+        }
+        zoomTo(zoomStep + step);
+      }
       if (click) {
         const hit = pick(click.x, click.y);
         const { x, y, touch } = click;
@@ -804,6 +846,10 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
       }
       if (pointer.moved) {
         pointer.moved = false;
+        if (!hinted && pointer.mouse && pointer.free) {
+          hinted = true;
+          live.current.onZoomHint();
+        }
         const hit = pointer.mouse && pointer.free && !press?.dragged ? pick(pointer.x, pointer.y) : null;
         const text = labelFor(hit);
         if (pointer.mouse && (text !== label || text)) {
@@ -890,6 +936,7 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
       window.removeEventListener('pointerup', onPointerUp);
       window.removeEventListener('pointercancel', onPointerCancel);
       window.removeEventListener('dblclick', onDoubleClick);
+      window.removeEventListener('wheel', onWheel);
       window.removeEventListener(ZOOM_EVENT, onZoomRequest);
       document.documentElement.style.cursor = '';
       delete lab.__islandTargets;

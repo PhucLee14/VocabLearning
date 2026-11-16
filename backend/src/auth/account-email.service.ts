@@ -3,7 +3,11 @@ import { ConfigService } from '@nestjs/config';
 import { hash } from '@node-rs/argon2';
 import { MailerService } from '../mail/mailer.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { HOUR, MINUTE, RateLimitService } from '../rate-limit/rate-limit.service.js';
+import {
+  HOUR,
+  MINUTE,
+  RateLimitService,
+} from '../rate-limit/rate-limit.service.js';
 import {
   hashLinkToken,
   type LinkKind,
@@ -17,13 +21,13 @@ import { publicOrigin } from './google.js';
 
 const INVALID_LINK = 'This link is invalid or has expired';
 
-/**
- * Site-wide cap on verification emails per day. Mail goes through one Gmail
- * account (about 500 recipients a day), and anyone can sign up with any
- * address, so sign-ups alone must not use up the quota that password resets
- * and confirmation codes need. Over the cap, sign-up still works; the user can
- * ask for the link again later from Settings.
- */
+/*
+ Site-wide cap on verification emails per day. Mail goes through one Gmail
+ account (about 500 recipients a day), and anyone can sign up with any
+ address, so sign-ups alone must not use up the quota that password resets
+ and confirmation codes need. Over the cap, sign-up still works; the user can
+ ask for the link again later from Settings.
+*/
 export const VERIFY_MAILS_PER_DAY = 200;
 
 /** Email verification and password reset (one-time links, see email-links.ts). */
@@ -39,28 +43,41 @@ export class AccountEmailService {
   ) {}
 
   private origin() {
-    return publicOrigin(this.config.get<string>('FRONTEND_URL', 'http://localhost:3300'));
+    return publicOrigin(
+      this.config.get<string>('FRONTEND_URL', 'http://localhost:3300'),
+    );
   }
 
   /** Creates a link token (replacing unused ones of the same kind) and emails it. */
-  private async sendLink(user: { id: string; email: string; locale: 'vi' | 'en' }, kind: LinkKind) {
+  private async sendLink(
+    user: { id: string; email: string; locale: 'vi' | 'en' },
+    kind: LinkKind,
+  ) {
     const type = kind === 'verify' ? 'EMAIL_VERIFY' : 'PASSWORD_RESET';
     const token = newLinkToken();
     const [, created] = await this.prisma.$transaction([
-      this.prisma.authToken.updateMany({ where: { userId: user.id, type, usedAt: null }, data: { usedAt: new Date() } }),
+      this.prisma.authToken.updateMany({
+        where: { userId: user.id, type, usedAt: null },
+        data: { usedAt: new Date() },
+      }),
       this.prisma.authToken.create({
         data: {
           userId: user.id,
           type,
           tokenHash: hashLinkToken(token),
-          expiresAt: new Date(Date.now() + (kind === 'verify' ? VERIFY_TTL_MS : RESET_TTL_MS)),
+          expiresAt: new Date(
+            Date.now() + (kind === 'verify' ? VERIFY_TTL_MS : RESET_TTL_MS),
+          ),
         },
         select: { id: true },
       }),
     ]);
     try {
       const url = linkUrl(this.origin(), user.locale, kind, token);
-      await this.mailer.send({ to: user.email, ...linkMail(user.locale, kind, url) });
+      await this.mailer.send({
+        to: user.email,
+        ...linkMail(user.locale, kind, url),
+      });
     } catch (error) {
       await this.prisma.authToken.delete({ where: { id: created.id } });
       throw error;
@@ -82,7 +99,12 @@ export class AccountEmailService {
       { bucket: 'verify-send:hour', id: userId, limit: 5, windowMs: HOUR },
     );
     // Separate call so requests refused per user above don't count site-wide.
-    await this.limits.consume({ bucket: 'verify-send:site', id: 'all', limit: VERIFY_MAILS_PER_DAY, windowMs: 24 * HOUR });
+    await this.limits.consume({
+      bucket: 'verify-send:site',
+      id: 'all',
+      limit: VERIFY_MAILS_PER_DAY,
+      windowMs: 24 * HOUR,
+    });
     await this.sendLink(user, 'verify');
   }
 
@@ -91,7 +113,9 @@ export class AccountEmailService {
     try {
       await this.sendVerification(userId);
     } catch (error) {
-      this.logger.warn(`Verification email not sent: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.warn(
+        `Verification email not sent: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -111,7 +135,12 @@ export class AccountEmailService {
    */
   async requestPasswordReset(emailInput: string) {
     const email = emailInput.trim().toLowerCase();
-    const perEmail = await this.limits.hit({ bucket: 'reset-send', id: email, limit: 3, windowMs: HOUR });
+    const perEmail = await this.limits.hit({
+      bucket: 'reset-send',
+      id: email,
+      limit: 3,
+      windowMs: HOUR,
+    });
     if (!perEmail.allowed) return;
     const user = await this.prisma.user.findUnique({
       where: { email },
@@ -122,7 +151,9 @@ export class AccountEmailService {
       await this.sendLink(user, 'reset');
     } catch (error) {
       // Same answer as for an unknown email; the failure is in the log.
-      this.logger.error(`Reset email not sent: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(
+        `Reset email not sent: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -135,9 +166,18 @@ export class AccountEmailService {
     const row = await this.useToken(token, 'PASSWORD_RESET');
     const now = new Date();
     await this.prisma.$transaction([
-      this.prisma.user.update({ where: { id: row.userId }, data: { passwordHash } }),
-      this.prisma.user.updateMany({ where: { id: row.userId, emailVerifiedAt: null }, data: { emailVerifiedAt: now } }),
-      this.prisma.session.updateMany({ where: { userId: row.userId, revokedAt: null }, data: { revokedAt: now } }),
+      this.prisma.user.update({
+        where: { id: row.userId },
+        data: { passwordHash },
+      }),
+      this.prisma.user.updateMany({
+        where: { id: row.userId, emailVerifiedAt: null },
+        data: { emailVerifiedAt: now },
+      }),
+      this.prisma.session.updateMany({
+        where: { userId: row.userId, revokedAt: null },
+        data: { revokedAt: now },
+      }),
       this.prisma.authToken.updateMany({
         where: { userId: row.userId, type: 'PASSWORD_RESET', usedAt: null },
         data: { usedAt: now },
@@ -146,12 +186,26 @@ export class AccountEmailService {
   }
 
   /** Consumes a valid, unused link token once (a concurrent second use fails). */
-  private async useToken(token: string, type: 'EMAIL_VERIFY' | 'PASSWORD_RESET') {
+  private async useToken(
+    token: string,
+    type: 'EMAIL_VERIFY' | 'PASSWORD_RESET',
+  ) {
     const row = await this.prisma.authToken.findUnique({
       where: { tokenHash: hashLinkToken(token) },
-      select: { id: true, userId: true, type: true, usedAt: true, expiresAt: true },
+      select: {
+        id: true,
+        userId: true,
+        type: true,
+        usedAt: true,
+        expiresAt: true,
+      },
     });
-    if (!row || row.type !== type || row.usedAt || row.expiresAt.getTime() <= Date.now()) {
+    if (
+      !row ||
+      row.type !== type ||
+      row.usedAt ||
+      row.expiresAt.getTime() <= Date.now()
+    ) {
       throw new BadRequestException(INVALID_LINK);
     }
     const used = await this.prisma.authToken.updateMany({

@@ -10,7 +10,10 @@ export const ISLAND_STOPS = { hero: 0, try: 1, how: 2, levels: 3, topics: 4, clo
  *
  * The content sits in a narrow column so the island stays visible:
  * - from 1280px: beside the island, alternating sides from floor to floor
- *   (text left on even floors, right on odd ones; the island is opposite);
+ *   (text left on the 1st, 3rd, … floor on the page, right on the 2nd, 4th,
+ *   …; the island is opposite). By order on the page, not by stop number: a
+ *   floor that is left out (no data for it) must not leave two floors in a
+ *   row on the same side. island.tsx tells the scene the same order;
  * - below that: at the bottom of the screen, under a gap of about a third of
  *   the screen where the island shows.
  *
@@ -42,7 +45,8 @@ export function IslandStop({
         // drag turns it (so the browser only keeps vertical panning and pinch
         // zoom there) and must not select text.
         'touch-pan-y touch-pinch-zoom select-none',
-        index % 2 === 1 ? 'xl:justify-end' : '',
+        // Every second floor on the page (the floors are the only sections in <main>).
+        'xl:[&:nth-of-type(even)]:justify-end',
         // The first floor shares the first screen with the 4rem site header, which is the snap point there.
         index === 0 ? 'min-h-[calc(100svh-4rem)]' : 'min-h-[100svh] snap-start snap-always',
       ].join(' ')}

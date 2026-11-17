@@ -9,7 +9,6 @@ import type { TopicNode, WordDetail, WordList } from '@/lib/types';
  */
 export async function landingData() {
   'use cache';
-  cacheLife('hours');
   try {
     const [topics, levels, list] = await Promise.all([
       apiGet<TopicNode[]>('/topics'),
@@ -22,8 +21,12 @@ export async function landingData() {
     const chosen = picks.filter((_, i) => i % step === 0).slice(0, 6);
     const details = await Promise.all(chosen.map((w) => apiGet<WordDetail>(`/words/${w.slug}`).catch(() => null)));
     const demo = chosen.map((w, i) => ({ ...w, example: details[i]?.examples[0]?.sentence ?? null }));
+    cacheLife('hours');
     return { topics, levels, demo };
   } catch {
+    // Kept only briefly: a page built while the API was down would otherwise
+    // go without the demo card and the topics (two whole floors) for hours.
+    cacheLife('minutes');
     return { topics: [] as TopicNode[], levels: {} as Record<string, number>, demo: [] };
   }
 }

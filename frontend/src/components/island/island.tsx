@@ -28,6 +28,20 @@ function subscribeReducedMotion(onChange: () => void) {
  * and moves evenly to the next section's number in between. A page may leave a
  * stop out (e.g. no topics when the API is down).
  */
+/**
+ * Which side the island is on at each stop, for wide screens (1 = right, -1 =
+ * left): opposite the text, which alternates by the floors' order on the page
+ * (stop.tsx). A stop whose floor is not on the page takes the side of the
+ * next floor that is, so the island only moves once on the way past it.
+ */
+function readSides(sides: number[]) {
+  const floors = [...document.querySelectorAll<HTMLElement>('[data-island-stop]')].map((section) => Number(section.dataset.islandStop));
+  for (let stop = sides.length - 1; stop >= 0; stop--) {
+    const order = floors.indexOf(stop);
+    sides[stop] = order === -1 ? (sides[stop + 1] ?? 1) : order % 2 === 0 ? 1 : -1;
+  }
+}
+
 function readProgress(): number {
   const middle = window.innerHeight / 2;
   let previous: { centre: number; stop: number } | null = null;
@@ -61,6 +75,7 @@ export function Island({ debug = false }: { debug?: boolean }) {
   const landing = useTranslations('Landing');
   const locale = useLocale();
   const progress = useRef(0);
+  const sides = useRef([1, -1, 1, -1, 1, -1]);
   const hud = useRef<HTMLOutputElement>(null);
   const tip = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
@@ -103,6 +118,7 @@ export function Island({ debug = false }: { debug?: boolean }) {
       // Lab aid: `#p=2.5` pins the progress (used for still screenshots).
       const pinned = /^#p=([\d.]+)$/.exec(window.location.hash);
       progress.current = pinned ? Number(pinned[1]) : readProgress();
+      readSides(sides.current);
     };
     update();
     window.addEventListener('scroll', update, { passive: true });
@@ -157,6 +173,7 @@ export function Island({ debug = false }: { debug?: boolean }) {
         {ready && !lost && (
           <IslandScene
             progress={progress}
+            sides={sides}
             reducedMotion={reducedMotion}
             labels={labels}
             onLabel={showLabel}

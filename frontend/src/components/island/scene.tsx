@@ -44,7 +44,7 @@ import {
 import { type Kit, loadKit } from './kit';
 import { type Palette, usePalette } from './palette';
 import { createPeople, type People } from './people';
-import { createWords, type Words } from './words';
+import { createWords } from './words';
 import { PARTS_OF_SPEECH, PARTS_OF_SPEECH_VI, PEOPLE_WORDS, THEME_SECONDS, WORDS, ZOOM_EVENT, ZOOM_STEPS } from './parts';
 import { cloudColor, createBirds, createClouds, createCloudSea } from './scenery';
 import { createWater } from './water';
@@ -139,8 +139,6 @@ const LIGHT_DISTANCE = 60;
 const LIGHT_FROM_VIEWER = 0.2;
 const SHADOW_REACH = 16.5;
 
-/** Wide layout: the island is on the right on even floors and on the left on odd ones (the text is opposite). */
-const islandSide = (stop: number) => (stop % 2 === 0 ? 1 : -1);
 
 // ── Interaction ──
 
@@ -244,6 +242,12 @@ export interface SceneLabels {
 export interface SceneProps {
   /** Scroll progress in stops (0 = hero … 5 = call to action), written by the page. */
   progress: RefObject<number>;
+  /**
+   * Wide layout: which side the island is on at each stop (1 = right, -1 =
+   * left), opposite the text. Written by the page (island.tsx): the floors
+   * alternate by their order on the page, and a floor can be left out.
+   */
+  sides: RefObject<number[]>;
   reducedMotion: boolean;
   labels: SceneLabels;
   /** A label to show at that place of the screen, or null to hide it. */
@@ -290,15 +294,13 @@ interface Stage {
   bladesHub: Group;
   actors: Actors;
   people: People;
-  words: Words;
-  skyWords: Words;
   sky: Sky;
   /** The fireflies' colour (they only show at night). */
   fireflies: Color;
 }
 
 export default function IslandScene(props: SceneProps) {
-  const { progress } = props;
+  const { progress, sides } = props;
   const host = useRef<HTMLDivElement>(null);
   const stage = useRef<Stage | null>(null);
   const palette = usePalette();
@@ -423,11 +425,16 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
     const fireflyColor = new Color();
     const fireflies = createFireflies(fireflyColor);
     const actors = createActors(island.material);
-    const words = createWords();
-    // The sun's and the moon's words float in the camera's space, like the sun and the moon themselves.
-    const skyWords = createWords();
+    // The floating words are HTML on a layer over the canvas (see words.ts).
+    const wordLayer = document.createElement('div');
+    wordLayer.style.cssText = 'position:absolute;inset:0;overflow:hidden;pointer-events:none';
+    container.appendChild(wordLayer);
+    const words = createWords(wordLayer, (point) => group.localToWorld(point));
+    // The sun's and the moon's words are given in the camera's space, like the sun and the moon themselves:
+    // in the island's space the camera's lean towards the pointer would slide them away.
+    const skyWords = createWords(wordLayer, (point) => camera.localToWorld(point));
     const people = createPeople();
-    group.add(island, water.mesh, card, bladesHub, actors.group, people.group, spray.points, smoke.points, fireflies.points, words.group);
+    group.add(island, water.mesh, card, bladesHub, actors.group, people.group, spray.points, smoke.points, fireflies.points);
     // Hidden until the island is built (the sky and the clouds show meanwhile).
     group.visible = false;
     const clouds = createClouds();
@@ -443,7 +450,7 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
     });
 
     const camera = new PerspectiveCamera(FOV, 1, 0.5, 600);
-    camera.add(sky.screen, skyWords.group);
+    camera.add(sky.screen);
     scene.add(camera, group, clouds, sea.group, birds.mesh, sky.stars);
     const tone = (color: Color) => ({ color, from: color.clone(), to: color.clone() });
     const level = (set: (value: number) => void) => ({ set, now: 1, from: 1, to: 1 });
@@ -481,8 +488,6 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
       bladesHub,
       actors,
       people,
-      words,
-      skyWords,
       sky,
       fireflies: fireflyColor,
     };
@@ -789,6 +794,7 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
       const b = STOPS[floor + 1];
 
       // The island changes sides from one floor to the next.
+      const islandSide = (stop: number) => sides.current[stop] ?? (stop % 2 === 0 ? 1 : -1);
       const side = MathUtils.lerp(islandSide(floor), islandSide(floor + 1), MathUtils.smoothstep(between, 0, 1));
       camera.setViewOffset(
         width,
@@ -979,8 +985,8 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
       clouds.rotation.y = 0.6 + clock * 0.008;
       sea.group.rotation.y = -clock * 0.004;
       birds.update(clock, scatter);
-      words.update(delta, still, height, HALF_FOV_TAN);
-      skyWords.update(delta, still, height, HALF_FOV_TAN);
+      words.update(delta, still, camera, width, height);
+      skyWords.update(delta, still, camera, width, height);
       renderer.render(scene, camera);
 
       // Quality: count the frames of each second. A much longer "second" means the tab
@@ -1034,12 +1040,13 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
       people.dispose();
       words.dispose();
       skyWords.dispose();
+      wordLayer.remove();
       sea.dispose();
       sky.dispose();
       renderer.dispose();
       canvas.remove();
     };
-  }, [progress]);
+  }, [progress, sides]);
 
   // Colours follow the theme: the island is rebuilt, the scenery is recoloured.
   useEffect(() => {
@@ -1065,9 +1072,6 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
     }
     current.sky.apply(palette);
     current.people.apply(palette);
-    const wordColors = { back: palette.ink, word: palette.raised, gloss: new Color().lerpColors(palette.raised, palette.ink, 0.35) };
-    current.words.apply(wordColors);
-    current.skyWords.apply(wordColors);
     current.fireflies.lerpColors(palette.sun, palette.accent, 0.3);
 
     // Light from the sky: by day the sky's own blue, much paler; at night a cool grey.

@@ -4,11 +4,14 @@ import { Logo } from '@/components/logo';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import { Link } from '@/i18n/navigation';
 
-/** Header of the public pages (landing, sign in, sign up). */
+/**
+ * Header of the public pages (landing, sign in, sign up).
+ * `snap-start` / `snap-end` on the header and footer only matter on the landing page, which snaps from floor to floor.
+ */
 export function SiteHeader() {
   const t = useTranslations('Nav');
   return (
-    <header className="border-b border-line bg-canvas">
+    <header className="snap-start border-b border-line bg-canvas">
       <div className="mx-auto flex h-16 max-w-[1100px] items-center justify-between gap-3 px-4 sm:px-6">
         <Logo />
         <nav className="flex items-center gap-2">
@@ -34,7 +37,7 @@ export function SiteHeader() {
 export function SiteFooter() {
   const t = useTranslations('Footer');
   return (
-    <footer className="border-t border-line">
+    <footer className="snap-end border-t border-line bg-canvas">
       <div className="mx-auto flex max-w-[1100px] flex-wrap items-center justify-between gap-4 px-4 py-8 text-sm text-muted sm:px-6">
         <p>{t('note')}</p>
         <div className="flex items-center gap-2 md:hidden">

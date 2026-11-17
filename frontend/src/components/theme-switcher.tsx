@@ -3,7 +3,7 @@
 import { Monitor, Moon, Sun } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useLayoutEffect, useSyncExternalStore } from 'react';
-import { THEME_STORAGE_KEY, THEMES, type Theme } from '@/lib/theme';
+import { THEME_FADE_SECONDS, THEME_STORAGE_KEY, THEMES, type Theme } from '@/lib/theme';
 
 // --- Tiny external store over localStorage, shared by every switcher instance ---
 
@@ -24,13 +24,32 @@ function applyTheme(theme: Theme) {
   else root.setAttribute('data-theme', theme);
 }
 
-function setTheme(theme: Theme) {
+let fading: ReturnType<typeof setTimeout> | undefined;
+
+/**
+ * Lets the page's colours ease into the theme about to be applied instead of
+ * cutting: while <html> has `theme-fading`, colour properties get a long
+ * transition (globals.css, which only does so on the landing page and when
+ * motion is not reduced). The class comes off again so hover and focus keep
+ * their own quick transitions.
+ */
+function fadeTheme() {
+  const root = document.documentElement;
+  root.style.setProperty('--theme-fade', `${THEME_FADE_SECONDS}s`);
+  root.classList.add('theme-fading');
+  clearTimeout(fading);
+  fading = setTimeout(() => root.classList.remove('theme-fading'), THEME_FADE_SECONDS * 1000 + 100);
+}
+
+/** Also used by the landing page's island: a click on its sun or moon switches the theme. */
+export function setTheme(theme: Theme) {
   try {
     if (theme === 'system') localStorage.removeItem(THEME_STORAGE_KEY);
     else localStorage.setItem(THEME_STORAGE_KEY, theme);
   } catch {
     // Not persisted, but still applied for this page view.
   }
+  fadeTheme();
   applyTheme(theme);
   listeners.forEach((notify) => notify());
 }

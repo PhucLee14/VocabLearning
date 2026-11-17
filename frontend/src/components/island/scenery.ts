@@ -7,6 +7,7 @@ import {
   DynamicDrawUsage,
   Group,
   InstancedMesh,
+  MathUtils,
   type Matrix4,
   Mesh,
   MeshBasicMaterial,
@@ -225,13 +226,34 @@ const BIRDS: Bird[] = [
   }),
 ];
 
-const WING_SPAN = 0.45;
-const BODY_LENGTH = 0.32;
+/** A bird's shape (island units): body from beak to tail, half its width, and the two parts of each wing. */
+const NOSE = 0.2;
+const TAIL = -0.22;
+const BODY_HALF = 0.045;
+const WING_INNER = 0.2;
+const WING_OUTER = 0.25;
+/** Per bird: the body (2 triangles) and each wing, an inner quad and an outer triangle (3 each). */
+const VERTICES_PER_BIRD = 24;
+/**
+ * How light each corner is (times the material's colour): the wing tips and
+ * the tail darker, so a bird reads as a shape and not a flat cut-out. In the
+ * order the corners are written in `update`.
+ */
+const SHADES = [
+  // Body: beak, one shoulder, tail; beak, tail, other shoulder.
+  0.86, 0.9, 0.72, 0.86, 0.72, 0.9,
+  // A wing: root front, root back, elbow back; root front, elbow back, elbow front; elbow front, elbow back, tip.
+  ...[1, 1, 0.94, 1, 0.94, 0.94, 0.94, 0.94, 0.7],
+  ...[1, 1, 0.94, 1, 0.94, 0.94, 0.94, 0.94, 0.7],
+];
 
 const centre = new Vector3();
 const heading = new Vector3();
 const side = new Vector3();
+const across = new Vector3();
+const lift = new Vector3();
 const point = new Vector3();
+const UP = new Vector3(0, 1, 0);
 
 export interface Birds {
   mesh: Mesh<BufferGeometry, MeshBasicMaterial>;
@@ -246,13 +268,19 @@ export interface Birds {
 }
 
 /**
- * All birds share one geometry, rewritten every frame: each bird is two
- * triangles (wings) hinged on its body line.
+ * All birds share one geometry, rewritten every frame. Each wing bends at the
+ * elbow, and its outer half follows the inner one a moment late, so a beat
+ * is a wave along the wing rather than a hinge flipping (user feedback
+ * 2026-11-16: the birds looked stiff). A bird flaps for a while and then
+ * glides with its wings held a little up, bobbing against its own beats, and
+ * leans into the circle it flies.
  */
 export function createBirds(): Birds {
-  const positions = new BufferAttribute(new Float32Array(BIRDS.length * 6 * 3), 3).setUsage(DynamicDrawUsage);
-  const geometry = new BufferGeometry().setAttribute('position', positions);
-  const mesh = new Mesh(geometry, new MeshBasicMaterial({ side: DoubleSide }));
+  const positions = new BufferAttribute(new Float32Array(BIRDS.length * VERTICES_PER_BIRD * 3), 3).setUsage(DynamicDrawUsage);
+  const shades = new Float32Array(BIRDS.length * VERTICES_PER_BIRD * 3);
+  for (let i = 0; i < BIRDS.length * VERTICES_PER_BIRD; i++) shades.fill(SHADES[i % VERTICES_PER_BIRD], i * 3, i * 3 + 3);
+  const geometry = new BufferGeometry().setAttribute('position', positions).setAttribute('color', new BufferAttribute(shades, 3));
+  const mesh = new Mesh(geometry, new MeshBasicMaterial({ side: DoubleSide, vertexColors: true }));
   mesh.frustumCulled = false;
 
   const place = (bird: Bird, seconds: number, target: Vector3) => {
@@ -266,6 +294,7 @@ export function createBirds(): Birds {
       const direction = Math.sign(bird.speed);
       place(bird, seconds, centre);
       heading.set(Math.cos(angle) * direction, 0, -Math.sin(angle) * direction);
+      // Outwards, away from the island's axis.
       side.set(Math.sin(angle), 0, Math.cos(angle));
       if (scatter > 0) {
         // Each bird's own way out: sideways, up and along, from its place in the list.
@@ -274,22 +303,48 @@ export function createBirds(): Birds {
           .addScaledVector(heading, Math.cos(i * 1.7) * 2.5 * scatter);
         centre.y += (1.5 + (i % 3)) * scatter;
       }
-      const flap = Math.sin(seconds * (7 + 9 * scatter) + bird.flapOffset) * 0.6;
-      const reach = Math.cos(flap) * WING_SPAN;
-      const lift = Math.sin(flap) * WING_SPAN;
 
-      let vertex = i * 6;
-      const put = (along: number, across: number, up: number) => {
-        point.copy(centre).addScaledVector(heading, along).addScaledVector(side, across);
-        positions.setXYZ(vertex++, point.x, point.y + up, point.z);
+      // Flapping (1) or gliding (0), in spells of a few seconds; a fright makes every bird flap hard.
+      const flapping = Math.max(scatter, MathUtils.smoothstep(Math.sin(seconds * 0.42 + bird.flapOffset * 1.7), -0.35, 0.35));
+      const beat = seconds * (6.2 + 8 * scatter) + bird.flapOffset;
+      const glide = (1 - flapping) * 0.05 * Math.sin(seconds * 1.3 + bird.flapOffset);
+      const inner = 0.16 + flapping * 0.6 * Math.sin(beat) + glide;
+      const outer = inner + flapping * 0.5 * Math.sin(beat - 0.9) - (1 - flapping) * 0.1;
+      // The body dips as the wings go up, and rises on the downstroke.
+      centre.y -= flapping * 0.045 * Math.sin(beat);
+
+      // Leaning into the turn: the wing on the inside of the circle lower.
+      const roll = 0.26 + 0.08 * Math.sin(seconds * 0.7 + bird.flapOffset) + scatter * 0.35 * Math.sin(i * 1.9);
+      across.copy(side).multiplyScalar(Math.cos(roll)).addScaledVector(UP, Math.sin(roll));
+      lift.copy(UP).multiplyScalar(Math.cos(roll)).addScaledVector(side, -Math.sin(roll));
+
+      let vertex = i * VERTICES_PER_BIRD;
+      const put = (along: number, out: number, up: number) => {
+        point.copy(centre).addScaledVector(heading, along).addScaledVector(across, out).addScaledVector(lift, up);
+        positions.setXYZ(vertex++, point.x, point.y, point.z);
       };
-      // Left wing, then right wing: nose, tail, wing tip.
-      put(BODY_LENGTH, 0, 0);
-      put(-BODY_LENGTH * 0.6, 0, 0);
-      put(-0.1, reach, lift);
-      put(BODY_LENGTH, 0, 0);
-      put(-0.1, -reach, lift);
-      put(-BODY_LENGTH * 0.6, 0, 0);
+      put(NOSE, 0, 0);
+      put(0.02, BODY_HALF, 0);
+      put(TAIL, 0, 0.01);
+      put(NOSE, 0, 0);
+      put(TAIL, 0, 0.01);
+      put(0.02, -BODY_HALF, 0);
+      for (const sign of [1, -1]) {
+        const elbowOut = sign * (BODY_HALF + WING_INNER * Math.cos(inner));
+        const elbowUp = WING_INNER * Math.sin(inner);
+        const tipOut = elbowOut + sign * WING_OUTER * Math.cos(outer);
+        const tipUp = elbowUp + WING_OUTER * Math.sin(outer);
+        put(0.08, sign * BODY_HALF, 0);
+        put(-0.09, sign * BODY_HALF, 0);
+        put(-0.11, elbowOut, elbowUp);
+        put(0.08, sign * BODY_HALF, 0);
+        put(-0.11, elbowOut, elbowUp);
+        put(0.05, elbowOut, elbowUp);
+        put(0.05, elbowOut, elbowUp);
+        put(-0.11, elbowOut, elbowUp);
+        // The tip sweeps back.
+        put(-0.17, tipOut, tipUp);
+      }
     });
     positions.needsUpdate = true;
   };

@@ -30,3 +30,47 @@ export function requestZoom(step: 1 | -1) {
  * messages).
  */
 export const PARTS_OF_SPEECH = ['noun', 'verb', 'adjective', 'adverb', 'pronoun', 'preposition', 'conjunction', 'interjection'] as const;
+
+/**
+ * What floats up from a thing on the island when it is clicked (words.ts): its
+ * English word, and the Vietnamese meaning, which only the Vietnamese page
+ * shows. Vocabulary, not UI text: the English is the same on every page.
+ */
+type Entry = readonly [english: string, vietnamese: string];
+export const WORDS = {
+  tree: ['tree', 'cái cây'],
+  tent: ['tent', 'cái lều'],
+  bridge: ['bridge', 'cây cầu'],
+  field: ['field', 'cánh đồng'],
+  stone: ['stone', 'hòn đá'],
+  waterfall: ['waterfall', 'thác nước'],
+  lake: ['lake', 'hồ nước'],
+  mountain: ['mountain', 'ngọn núi'],
+  grass: ['grass', 'bãi cỏ'],
+  stream: ['stream', 'dòng suối'],
+  path: ['path', 'lối đi'],
+  flag: ['flag', 'lá cờ'],
+  windmill: ['windmill', 'cối xay gió'],
+  campfire: ['campfire', 'lửa trại'],
+  canoe: ['canoe', 'chiếc xuồng'],
+  mushroom: ['mushroom', 'cây nấm'],
+  birds: ['birds', 'đàn chim'],
+  sun: ['sun', 'mặt trời'],
+  moon: ['moon', 'mặt trăng'],
+} as const satisfies Record<string, Entry>;
+export type WordKey = keyof typeof WORDS;
+
+/** A house floats up its part of speech, in the order of PARTS_OF_SPEECH. */
+export const PARTS_OF_SPEECH_VI: readonly string[] = ['danh từ', 'động từ', 'tính từ', 'trạng từ', 'đại từ', 'giới từ', 'liên từ', 'thán từ'];
+
+/** A person floats up what they are doing, in the order of the people in people.ts. */
+export const PEOPLE_WORDS: readonly Entry[] = [
+  ['fishing', 'câu cá'],
+  ['walking', 'đi dạo'],
+  ['walking', 'đi dạo'],
+  ['hiking', 'leo núi'],
+  ['reading', 'đọc sách'],
+  ['warming up', 'sưởi ấm'],
+  ['farming', 'làm ruộng'],
+  ['rowing', 'chèo thuyền'],
+];

@@ -2,7 +2,7 @@
 
 import { X, ZoomIn, ZoomOut } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { setTheme } from '@/components/theme-switcher';
 import { Link } from '@/i18n/navigation';
@@ -59,6 +59,7 @@ function readProgress(): number {
 export function Island({ debug = false }: { debug?: boolean }) {
   const t = useTranslations('Island');
   const landing = useTranslations('Landing');
+  const locale = useLocale();
   const progress = useRef(0);
   const hud = useRef<HTMLOutputElement>(null);
   const tip = useRef<HTMLDivElement>(null);
@@ -81,8 +82,10 @@ export function Island({ debug = false }: { debug?: boolean }) {
       levels: CEFR_LEVELS.map((level) => `${level} · ${landing(`level_${level}`)}`),
       toNight: t('toNight'),
       toDay: t('toDay'),
+      // The floating words show their Vietnamese meaning on the Vietnamese page.
+      glosses: locale === 'vi',
     }),
-    [t, landing],
+    [t, landing, locale],
   );
 
   // Load the scene once the page is idle, so it never competes with first paint.

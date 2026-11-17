@@ -31,14 +31,21 @@ import {
   LAKE_OPEN_RADIUS,
   LEVEL_FLAGS,
   MOUNTAIN,
+  BRIDGES,
+  FIELD_SPOT,
+  groundAt,
   MUSHROOMS,
   STONES,
+  TENT_SPOT,
+  TREE_SPOTS,
+  WATERFALL,
   WINDMILL,
 } from './geometry';
 import { type Kit, loadKit } from './kit';
 import { type Palette, usePalette } from './palette';
 import { createPeople, type People } from './people';
-import { THEME_SECONDS, ZOOM_EVENT, ZOOM_STEPS } from './parts';
+import { createWords, type Words } from './words';
+import { PARTS_OF_SPEECH, PARTS_OF_SPEECH_VI, PEOPLE_WORDS, THEME_SECONDS, WORDS, ZOOM_EVENT, ZOOM_STEPS } from './parts';
 import { cloudColor, createBirds, createClouds, createCloudSea } from './scenery';
 import { createWater } from './water';
 
@@ -169,7 +176,25 @@ const TAP_LABEL_MS = 2600;
  * the mountain's bulk: it stops clicks from reaching what is behind it, and
  * like the ground it can be double-clicked to zoom in on it.
  */
-type Kind = 'house' | 'level' | 'windmill' | 'campfire' | 'canoe' | 'mushroom' | 'person' | 'birds' | 'lake' | 'ground' | 'sky' | 'rock';
+type Kind =
+  | 'house'
+  | 'level'
+  | 'windmill'
+  | 'campfire'
+  | 'canoe'
+  | 'mushroom'
+  | 'person'
+  | 'birds'
+  | 'tree'
+  | 'tent'
+  | 'bridge'
+  | 'field'
+  | 'stone'
+  | 'waterfall'
+  | 'lake'
+  | 'ground'
+  | 'sky'
+  | 'rock';
 interface Target {
   kind: Kind;
   index: number;
@@ -187,9 +212,16 @@ const FIXED_TARGETS: Target[] = [
   ...LEVEL_FLAGS.map((centre, index): Target => ({ kind: 'level', index, centre, radius: 0.6 })),
   { kind: 'windmill', index: 0, centre: new Vector3(WINDMILL.at.x, 1.5, WINDMILL.at.z), radius: 1.5 },
   { kind: 'campfire', index: 0, centre: new Vector3(CAMPFIRE.x, 0.3, CAMPFIRE.z), radius: 0.65 },
+  // Things that only float up their word.
+  ...TREE_SPOTS.map((spot, index): Target => ({ kind: 'tree', index, centre: spot.clone().setY(1.05), radius: 0.6 })),
+  { kind: 'tent', index: 0, centre: TENT_SPOT.clone().setY(0.35), radius: 0.55 },
+  ...BRIDGES.map((spot, index): Target => ({ kind: 'bridge', index, centre: spot.clone().setY(0.25), radius: 0.7 })),
+  { kind: 'field', index: 0, centre: FIELD_SPOT.clone().setY(0.3), radius: 0.9 },
+  ...STONES.map((stone, index): Target => ({ kind: 'stone', index, centre: stone.clone().setY(0.15), radius: 0.7 })),
+  ...WATERFALL.map((point, index): Target => ({ kind: 'waterfall', index, centre: point, radius: 0.45 })),
 ];
 /** These react to a click (the pointer shows a hand over them); houses and flags only have a label. */
-const CLICKABLE: Kind[] = ['windmill', 'campfire', 'canoe', 'mushroom', 'person', 'birds', 'lake', 'sky'];
+const CLICKABLE: Kind[] = ['house', 'level', 'windmill', 'campfire', 'canoe', 'mushroom', 'person', 'birds', 'tree', 'tent', 'bridge', 'field', 'stone', 'waterfall', 'lake', 'sky'];
 
 /** Anything in front of the island that the pointer is really on: the island must not react through it. */
 function overPage(target: EventTarget | null): boolean {
@@ -205,6 +237,8 @@ export interface SceneLabels {
   /** On the sun and on the moon: what a click does. */
   toNight: string;
   toDay: string;
+  /** The words that float up from a clicked thing also show their Vietnamese meaning (the Vietnamese page). */
+  glosses: boolean;
 }
 
 export interface SceneProps {
@@ -256,6 +290,8 @@ interface Stage {
   bladesHub: Group;
   actors: Actors;
   people: People;
+  words: Words;
+  skyWords: Words;
   sky: Sky;
   /** The fireflies' colour (they only show at night). */
   fireflies: Color;
@@ -387,14 +423,18 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
     const fireflyColor = new Color();
     const fireflies = createFireflies(fireflyColor);
     const actors = createActors(island.material);
+    const words = createWords();
+    // The sun's and the moon's words float in the camera's space, like the sun and the moon themselves.
+    const skyWords = createWords();
     const people = createPeople();
-    group.add(island, water.mesh, card, bladesHub, actors.group, people.group, spray.points, smoke.points, fireflies.points);
+    group.add(island, water.mesh, card, bladesHub, actors.group, people.group, spray.points, smoke.points, fireflies.points, words.group);
     // Hidden until the island is built (the sky and the clouds show meanwhile).
     group.visible = false;
     const clouds = createClouds();
     const sea = createCloudSea();
     const birds = createBirds();
-    const sky = createSky();
+    // The sun's and the moon's halos fade into the sky's colour: the fog's colour object, like the sky itself.
+    const sky = createSky(fog.color);
     // Draw order: cloud sea (0), stars, sun / moon (see celestial.ts), clouds, then the island and everything on it.
     clouds.renderOrder = 2;
     birds.mesh.renderOrder = 3;
@@ -403,7 +443,7 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
     });
 
     const camera = new PerspectiveCamera(FOV, 1, 0.5, 600);
-    camera.add(sky.screen);
+    camera.add(sky.screen, skyWords.group);
     scene.add(camera, group, clouds, sea.group, birds.mesh, sky.stars);
     const tone = (color: Color) => ({ color, from: color.clone(), to: color.clone() });
     const level = (set: (value: number) => void) => ({ set, now: 1, from: 1, to: 1 });
@@ -441,6 +481,8 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
       bladesHub,
       actors,
       people,
+      words,
+      skyWords,
       sky,
       fireflies: fireflyColor,
     };
@@ -615,7 +657,7 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
     };
 
     /** What is under that point of the screen; `hitPoint` is then where on the island (island space). */
-    const pick = (clientX: number, clientY: number): { kind: Kind; index: number } | null => {
+    const pick = (clientX: number, clientY: number): { kind: Kind; index: number; centre?: Vector3; radius?: number } | null => {
       const x = (clientX / width) * 2 - 1;
       const y = -(clientY / height) * 2 + 1;
 
@@ -657,6 +699,33 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
         ];
       };
     }
+
+    /** Floats up the word of what was clicked, from where it is. */
+    const wordAt = new Vector3();
+    const floatWord = (hit: { kind: Kind; index: number; centre?: Vector3; radius?: number }, night: boolean) => {
+      let entry: readonly [string, string];
+      if (hit.kind === 'house') entry = [PARTS_OF_SPEECH[hit.index], PARTS_OF_SPEECH_VI[hit.index]];
+      else if (hit.kind === 'person') entry = PEOPLE_WORDS[hit.index];
+      else if (hit.kind === 'level') entry = WORDS.flag;
+      else if (hit.kind === 'rock') entry = WORDS.mountain;
+      else if (hit.kind === 'ground') entry = WORDS[groundAt(hitPoint)];
+      else if (hit.kind === 'sky') entry = night ? WORDS.moon : WORDS.sun;
+      else entry = WORDS[hit.kind];
+      // From the top of the thing; from the point itself on the ground and the water. From under the sun or
+      // the moon, rising only a little: they are much nearer the camera than the island, so the same rise
+      // would carry the word off the top of the screen.
+      const [english, vietnamese] = entry;
+      const gloss = live.current.labels.glosses ? vietnamese : '';
+      if (hit.kind === 'sky') {
+        wordAt.copy(sky.screen.position);
+        wordAt.y -= sky.screen.scale.y * 1.6;
+        skyWords.show('sky', english, gloss, wordAt, 0.12);
+        return;
+      }
+      if (hit.centre && hit.radius && hit.kind !== 'rock') wordAt.copy(hit.centre).setY(hit.centre.y + hit.radius * 0.6);
+      else wordAt.copy(hitPoint);
+      words.show(`${hit.kind}:${hit.index}`, english, gloss, wordAt);
+    };
 
     const labelFor = (hit: { kind: Kind; index: number } | null): string | null => {
       const { labels, palette: colors } = live.current;
@@ -768,7 +837,7 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
       const settled = MathUtils.smoothstep(theme.progress, 0, 1);
       /** 0 by day … 1 at night; in between while the theme changes. */
       const dusk = theme.dark ? settled : 1 - settled;
-      sky.update(clock, delta, bodySide, still, fog.color, dusk);
+      sky.update(clock, delta, bodySide, still, dusk, renderer.getPixelRatio());
       // Its light comes from that side, from above and only a little from the
       // viewer's side: shadows then fall across the ground, where they can be
       // seen, not behind the things that cast them. It always shines at the
@@ -824,9 +893,20 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
           found[hit.index] = true;
           live.current.onMushroom(found.filter(Boolean).length, found.length);
         }
-        // No hover on a touch screen: a tap on a house or a flag shows its label for a moment.
-        // (Not on the sun or moon: the tap has just changed what their label would say.)
-        const text = touch && hit?.kind !== 'sky' ? labelFor(hit) : null;
+        // Whatever was clicked floats up its word. (`colors.dark` is still the theme from before a click on the sun or moon.)
+        // The pointer's label makes way for it until the pointer moves on.
+        if (hit) {
+          floatWord(hit, colors.dark);
+          if (label && !labelUntil) {
+            label = null;
+            live.current.onLabel(null, 0, 0);
+          }
+          // A move that came with the click (same frame) must not bring the label straight back.
+          pointer.moved = false;
+        }
+        // No hover on a touch screen: a tap on a flag shows its label for a moment. (Not on a house:
+        // its word says the same. Not on the sun or moon: the tap has just changed what their label would say.)
+        const text = touch && hit?.kind !== 'sky' && hit?.kind !== 'house' ? labelFor(hit) : null;
         if (text) {
           label = text;
           labelUntil = now + TAP_LABEL_MS;
@@ -840,9 +920,10 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
       }
       // The theme changed, perhaps by a click on the sun with the pointer still on it:
       // its label says something else now, so look again at what the pointer is over.
+      // (Only while a label is up: right after a click the label has made way for the clicked thing's word.)
       if (colors.dark !== night) {
         night = colors.dark;
-        pointer.moved = true;
+        if (label) pointer.moved = true;
       }
       if (pointer.moved) {
         pointer.moved = false;
@@ -898,6 +979,8 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
       clouds.rotation.y = 0.6 + clock * 0.008;
       sea.group.rotation.y = -clock * 0.004;
       birds.update(clock, scatter);
+      words.update(delta, still, height, HALF_FOV_TAN);
+      skyWords.update(delta, still, height, HALF_FOV_TAN);
       renderer.render(scene, camera);
 
       // Quality: count the frames of each second. A much longer "second" means the tab
@@ -949,6 +1032,8 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
       }
       actors.dispose();
       people.dispose();
+      words.dispose();
+      skyWords.dispose();
       sea.dispose();
       sky.dispose();
       renderer.dispose();
@@ -980,6 +1065,9 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
     }
     current.sky.apply(palette);
     current.people.apply(palette);
+    const wordColors = { back: palette.ink, word: palette.raised, gloss: new Color().lerpColors(palette.raised, palette.ink, 0.35) };
+    current.words.apply(wordColors);
+    current.skyWords.apply(wordColors);
     current.fireflies.lerpColors(palette.sun, palette.accent, 0.3);
 
     // Light from the sky: by day the sky's own blue, much paler; at night a cool grey.

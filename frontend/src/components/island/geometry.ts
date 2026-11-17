@@ -482,8 +482,8 @@ const STREAM_ACROSS = (() => {
   return new Vector3((bz - az) / length, 0, -(bx - ax) / length);
 })();
 
-/** The stream's fall off the rim: it leaves the edge at this speed and drops in an arc, in this many pieces. */
-const RIM_FALL = { speed: 1.2, gravity: 8, pieces: 14 };
+/** The stream's fall off the rim: it leaves the edge at this speed and drops in an arc, in this many pieces; `depth` is how far the column's front and back stand off its middle. */
+const RIM_FALL = { speed: 1.2, gravity: 8, pieces: 14, depth: 0.2 };
 /** The middle of that fall, from the rim down to where it has thinned out into spray; and the direction it leaves in. */
 const RIM_FALL_OUT = new Vector3(-STREAM_ACROSS.z, 0, STREAM_ACROSS.x);
 const RIM_FALL_LINE: Vector3[] = Array.from({ length: RIM_FALL.pieces + 1 }, (_, i) => {
@@ -650,6 +650,34 @@ const PROPS: Prop[] = [
     ([angle, radius], i) => prop('grass_large', at(angle, radius), 1.5, i * 70),
   ),
 ];
+
+// ── Things to click that are part of the island's mesh (scene.tsx picks them) ──
+
+/** Where the trees stand. */
+export const TREE_SPOTS: Vector3[] = TREES.map(([angle, radius]) => polar(angle, radius));
+export const TENT_SPOT = new Vector3(at(10, 4.6)[0], 0, at(10, 4.6)[1]);
+export const FIELD_SPOT = FIELD.at;
+/** Points down the middle of the waterfall, from the spring to the foot. */
+export const WATERFALL: Vector3[] = cascade(0).filter((_, i, all) => i % 3 === 0 && i < all.length - 1);
+
+/** Distance from a point on the ground to a line through `line`'s points. */
+function distanceToLine(line: XZ[], x: number, z: number): number {
+  let nearest = Infinity;
+  for (let i = 0; i < line.length - 1; i++) {
+    const [ax, az] = line[i];
+    const [bx, bz] = line[i + 1];
+    const t = Math.max(0, Math.min(1, ((x - ax) * (bx - ax) + (z - az) * (bz - az)) / ((bx - ax) ** 2 + (bz - az) ** 2 || 1)));
+    nearest = Math.min(nearest, Math.hypot(ax + (bx - ax) * t - x, az + (bz - az) * t - z));
+  }
+  return nearest;
+}
+
+/** What a point on the ground is: the stream, a path, or grass. */
+export function groundAt(point: Vector3): 'stream' | 'path' | 'grass' {
+  if (distanceToLine(STREAM_LINE, point.x, point.z) < STREAM_WIDTH * 0.65) return 'stream';
+  if (Math.min(distanceToLine(PATH_LINE, point.x, point.z), distanceToLine(TRAIL_PATH_LINE, point.x, point.z)) < 0.4) return 'path';
+  return 'grass';
+}
 
 // ── People (people.ts moves them) ──
 
@@ -1226,26 +1254,31 @@ export function buildWater(): BufferGeometry {
     1.3,
   );
 
-  // Its fall off the rim: an arc that narrows, and thins out into spray towards the bottom.
+  // Its fall off the rim: an arc that narrows a little, and breaks up into spray only near its end.
+  // A column of water, not a sheet: a front and a back, so it has the same body from every side
+  // (the back starts flat at the rim, where the water still lies on the ground).
   const last = RIM_FALL_LINE.length - 1;
-  run(
-    sides.map((side) =>
-      RIM_FALL_LINE.map((point, i) => {
-        const after = RIM_FALL_LINE[Math.min(last, i + 1)];
-        const before = RIM_FALL_LINE[Math.max(0, i - 1)];
-        // Off the sheet's face: across the way it is going and across its width (straight up where it leaves the rim).
-        const outward = new Vector3().subVectors(after, before).normalize().cross(STREAM_ACROSS);
-        const narrowing = lerp(1, 0.55, i / last);
-        return point
-          .clone()
-          .addScaledVector(STREAM_ACROSS, (side * narrowing * STREAM_WIDTH) / 2)
-          .addScaledVector(outward, (i === 0 ? STREAM_SWELL : FALL_SWELL * narrowing) * (1 - side * side));
-      }),
-    ),
-    5,
-    end,
-    (i) => smoothstep(i / last, 0.3, 1),
-  );
+  for (const face of [1, -1]) {
+    run(
+      sides.map((side) =>
+        RIM_FALL_LINE.map((point, i) => {
+          const after = RIM_FALL_LINE[Math.min(last, i + 1)];
+          const before = RIM_FALL_LINE[Math.max(0, i - 1)];
+          // Off the column's face: across the way it is going and across its width (straight up where it leaves the rim).
+          const outward = new Vector3().subVectors(after, before).normalize().cross(STREAM_ACROSS);
+          const narrowing = lerp(1, 0.7, i / last);
+          const swell = face === 1 ? lerp(STREAM_SWELL, RIM_FALL.depth, smoothstep(i, 0, 2)) : -RIM_FALL.depth * smoothstep(i, 0, 3);
+          return point
+            .clone()
+            .addScaledVector(STREAM_ACROSS, (side * narrowing * STREAM_WIDTH) / 2)
+            .addScaledVector(outward, swell * narrowing * (1 - side * side));
+        }),
+      ),
+      5,
+      end,
+      (i) => 0.85 * smoothstep(i / last, 0.62, 1),
+    );
+  }
 
   const points = new Float32Array(positions);
   const geometry = new BufferGeometry();

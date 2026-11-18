@@ -971,7 +971,7 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
       blades.rotation.x = bladeAngle;
       scatter = MathUtils.damp(scatter, 0, 0.9, delta);
       actors.update(clock, delta, !still);
-      people.update(clock, delta, blend.value, actors.canoe, actors.canoeHeading());
+      people.update(clock, delta, blend.value, actors.canoe, actors.canoeHeading(), actors.canoePace());
       // The clock stands still while motion is reduced: no wind, no ripples, the smoke hangs.
       wind.value = clock;
       water.time.value = clock;

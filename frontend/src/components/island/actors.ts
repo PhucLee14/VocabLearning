@@ -30,6 +30,8 @@ const CANOE_ORBIT = 1.05;
 const CANOE_SCALE = 1.6;
 /** Seconds for one lap of the lake. */
 const CANOE_LAP = 9;
+/** Between laps the canoe still moves round the lake, this many radians per second (about two minutes a lap). */
+const CANOE_DRIFT = 0.05;
 /** The kit's nature models sit 0.05 below their own origin. */
 const SUNK = 0.05;
 
@@ -66,6 +68,8 @@ export interface Actors {
   /** Where the canoe is (island space), for clicking on it; and which way its bow points (radians around y). */
   canoe: Vector3;
   canoeHeading: () => number;
+  /** How hard the canoe is being paddled: 0 drifting round the lake, 1 on a lap. */
+  canoePace: () => number;
   dispose: () => void;
 }
 
@@ -153,6 +157,7 @@ export function createActors(shared: Material): Actors {
     group,
     canoe: canoe.position,
     canoeHeading: () => canoe.rotation.y,
+    canoePace: () => (lap < 1 ? Math.sin(Math.PI * lap) ** 0.5 : 0),
 
     apply(palette, kit) {
       // Built anew in the theme's colours, each one fading from what it was (see fadeFrom).
@@ -182,12 +187,12 @@ export function createActors(shared: Material): Actors {
     },
 
     update(seconds, delta, lively) {
-      // Canoe: at rest it only rocks; on a lap it eases in and out.
+      // Canoe: it drifts slowly round the lake (someone is paddling it, people.ts); on a lap it eases in and out.
       if (lap < 1) {
         const before = MathUtils.smootherstep(lap, 0, 1);
         lap = Math.min(1, lap + delta / CANOE_LAP);
         canoeAngle += (MathUtils.smootherstep(lap, 0, 1) - before) * Math.PI * 2;
-      }
+      } else if (lively) canoeAngle += delta * CANOE_DRIFT;
       placeCanoe(seconds);
 
       // Fish: now and then one jumps by itself, somewhere new each time.

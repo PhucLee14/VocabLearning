@@ -715,8 +715,8 @@ function lakeside(angle: number, beyond: number): Vector3 {
 /**
  * Where the people who stay in one place are, and what they look at: fishing
  * on the lake's bank (the float is out on the water), reading under a tree,
- * sitting on the stump by the campfire (`seat` is the stump's height), and
- * hoeing between the field's two rows.
+ * sitting on the ground by the campfire (between the stump and the fire,
+ * facing the fire), and hoeing between the field's two rows.
  */
 export const PEOPLE_SPOTS = {
   fisher: lakeside(90, 0.3),
@@ -724,8 +724,7 @@ export const PEOPLE_SPOTS = {
   // The tree at 68°, on the side away from the mountain (the trail passes on the other side), back to its trunk.
   reader: polar(68, 5.4).add(polar(68, 5.4).sub(MOUNTAIN).setLength(0.5)),
   readerLooksAt: polar(68, 5.4).add(polar(68, 5.4).sub(MOUNTAIN).setLength(3)),
-  camper: new Vector3(at(30, 4.4)[0], 0, at(30, 4.4)[1]),
-  seat: 0.21,
+  camper: new Vector3(at(30, 4.4)[0], 0, at(30, 4.4)[1]).lerp(new Vector3(CAMPFIRE.x, 0, CAMPFIRE.z), 0.3),
   farmer: FIELD.at.clone().add(new Vector3(-0.75, 0, 0)),
   farmerLooksAt: FIELD.at,
 };

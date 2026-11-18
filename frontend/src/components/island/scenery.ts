@@ -1,30 +1,29 @@
 import {
+  BackSide,
   BufferAttribute,
   BufferGeometry,
-  CircleGeometry,
   Color,
   DoubleSide,
   DynamicDrawUsage,
   Group,
   InstancedMesh,
   MathUtils,
-  type Matrix4,
   Mesh,
   MeshBasicMaterial,
   Object3D,
+  PlaneGeometry,
   ShaderMaterial,
   SphereGeometry,
   UniformsLib,
   UniformsUtils,
   Vector3,
 } from 'three';
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 /**
- * The scenery around the island: a sea of clouds below it, clouds in the
- * distance and two small flocks of birds. The scene draws the sky in its
- * fog's colour (scene.tsx), so distant scenery fades into it. Clouds are round
- * puffs, shaded smooth.
+ * The scenery around the island: the sky (a dome, pale at the horizon and
+ * deep blue overhead), a sea of clouds below the island, soft clouds in the
+ * distance and two small flocks of birds. The horizon is the fog's colour, so
+ * distant scenery melts into it.
  */
 
 const deg = (d: number) => (d * Math.PI) / 180;
@@ -38,159 +37,297 @@ function seeded(seed: number): () => number {
   };
 }
 
+/** Soft value noise and a few octaves of it, shared by the sky's shaders. */
+const NOISE = `
+  float skyHash(vec2 p) {
+    vec3 q = fract(vec3(p.xyx) * 0.1031);
+    q += dot(q, q.yzx + 33.33);
+    return fract((q.x + q.y) * q.z);
+  }
+  float skyNoise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(mix(skyHash(i), skyHash(i + vec2(1.0, 0.0)), f.x), mix(skyHash(i + vec2(0.0, 1.0)), skyHash(i + vec2(1.0, 1.0)), f.x), f.y);
+  }
+  float skyFbm(vec2 p) {
+    float sum = 0.0;
+    float weight = 0.5;
+    for (int i = 0; i < 4; i++) {
+      sum += weight * skyNoise(p);
+      p = p * 2.03 + vec2(17.1, 9.2);
+      weight *= 0.5;
+    }
+    return sum;
+  }`;
+
+/** The colour of a cloud or cloud-sea material (its `diffuse` uniform; the scene sets and fades it). */
+export const cloudColor = (material: ShaderMaterial) => material.uniforms.diffuse.value as Color;
+
 /**
- * The clouds' material. Matt and lit by the scene's lights like the stock
- * one, but the light is worked out at the corners and blended across each
- * triangle, not worked out again for every pixel. On round, smooth puffs the
- * two look the same, and the clouds cover most of the screen. Measured
- * 2026-11-15 on an integrated GPU at 1920×1080 ×1.5: about a tenth more
- * frames per second, together with the coarser far puffs of the cloud sea.
- * (Most of what the clouds cost is filling the screen at all, which no
- * material changes: without the cloud sea the same scene ran twice as fast.)
- * The colour is the `diffuse` uniform: see `cloudColor`.
+ * The sky: a dome around the camera, from the horizon's colour (the fog's,
+ * so the far cloud sea melts into it) up to a deep, clear blue overhead (dark
+ * navy at night), like a sky over a sea of clouds on a fine day (the user's
+ * reference photo, 2026-11-18). Drawn first, behind everything.
+ * `zenith` is the colour overhead; the scene sets and fades it.
  */
-function cloudMaterial(): ShaderMaterial {
-  return new ShaderMaterial({
-    uniforms: UniformsUtils.merge([UniformsLib.lights, UniformsLib.fog, { diffuse: { value: new Color() } }]),
+export function createSkyDome(horizon: Color): { mesh: Mesh<SphereGeometry, ShaderMaterial>; zenith: Color } {
+  const zenith = new Color();
+  const material = new ShaderMaterial({
+    uniforms: { horizon: { value: horizon }, zenith: { value: zenith } },
+    side: BackSide,
+    depthTest: false,
+    depthWrite: false,
+    fog: false,
+    vertexShader: `
+      varying vec3 vDirection;
+      void main() {
+        vDirection = (modelMatrix * vec4(position, 1.0)).xyz - cameraPosition;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }`,
+    fragmentShader: `
+      uniform vec3 horizon;
+      uniform vec3 zenith;
+      varying vec3 vDirection;
+      void main() {
+        float up = normalize(vDirection).y;
+        // A thin pale band along the horizon, then the deep blue within a few degrees: the camera
+        // only ever looks a few degrees above the horizon (at the top of the screen, about 5°).
+        float t = pow(smoothstep(-0.005, 0.08, up), 0.6);
+        gl_FragColor = vec4(mix(horizon, zenith, t), 1.0);
+        #include <colorspace_fragment>
+      }`,
+  });
+  // Inside the camera's far plane (600) wherever the camera is: the scene keeps it centred on the camera.
+  const mesh = new Mesh(new SphereGeometry(520, 32, 16), material);
+  mesh.renderOrder = -1;
+  mesh.frustumCulled = false;
+  return { mesh, zenith };
+}
+
+/** The puffs of one cloud: [along, up, across, diameter], in the cloud's own units. */
+const CLOUD_PUFFS: [number, number, number, number][] = [
+  [0, 0.35, 0, 3.6],
+  [1.9, 0.1, 0.2, 2.8],
+  [-1.8, 0.05, -0.1, 2.7],
+  [0.9, 1.0, -0.3, 2.5],
+  [-0.8, 0.9, 0.2, 2.3],
+  [3.3, -0.15, 0, 2],
+  [-3.2, -0.2, 0.1, 1.9],
+];
+const CLOUDS = 14;
+
+/**
+ * Clouds drift slowly around the island. They must never pass between the
+ * camera and the island, so they sit in a wide ring far behind it, above the
+ * cloud sea.
+ *
+ * Each cloud is a handful of soft puffs: quads that always face the camera,
+ * each a round blot with a ragged, see-through edge (noise) and a lit top and
+ * shaded underside, so a cloud reads as a soft heap (user feedback
+ * 2026-11-18: the clouds made of solid spheres looked hard). One instanced draw
+ * call, drawn with the see-through things after the island.
+ * The colour is the `diffuse` uniform (`cloudColor`), the drift `time`.
+ */
+export function createClouds(): InstancedMesh<PlaneGeometry, ShaderMaterial> {
+  const random = seeded(7);
+  const material = new ShaderMaterial({
+    uniforms: UniformsUtils.merge([UniformsLib.lights, UniformsLib.fog, { diffuse: { value: new Color() }, time: { value: 0 } }]),
     lights: true,
     fog: true,
+    transparent: true,
+    depthWrite: false,
     vertexShader: `
       #include <common>
       #include <lights_pars_begin>
       #include <fog_pars_vertex>
       uniform vec3 diffuse;
-      varying vec3 vLit;
-      void main() {
-        vec3 turned = normal;
-        vec4 mvPosition = vec4(position, 1.0);
-        #ifdef USE_INSTANCING
-          // A stretched puff's normals lean the other way: undo the scale.
-          mat3 instance = mat3(instanceMatrix);
-          turned /= vec3(dot(instance[0], instance[0]), dot(instance[1], instance[1]), dot(instance[2], instance[2]));
-          turned = instance * turned;
-          mvPosition = instanceMatrix * mvPosition;
-        #endif
-        turned = normalize(normalMatrix * turned);
-        mvPosition = modelViewMatrix * mvPosition;
+      varying vec2 vUv;
+      varying float vSeed;
+      varying vec3 vTop;
+      varying vec3 vBottom;
+      /** The light a surface facing that way (view space) gets. */
+      vec3 lightFrom(vec3 normal) {
         vec3 light = ambientLightColor;
         #if NUM_HEMI_LIGHTS > 0
-          light += getHemisphereLightIrradiance(hemisphereLights[0], turned);
+          light += getHemisphereLightIrradiance(hemisphereLights[0], normal);
         #endif
         #if NUM_DIR_LIGHTS > 0
-          light += max(dot(turned, directionalLights[0].direction), 0.0) * directionalLights[0].color;
+          float wrap = dot(normal, directionalLights[0].direction) * 0.5 + 0.5;
+          light += wrap * wrap * directionalLights[0].color;
         #endif
-        vLit = light * RECIPROCAL_PI * diffuse;
+        return light * RECIPROCAL_PI * diffuse;
+      }
+      void main() {
+        vec4 centre = modelViewMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+        float size = length(instanceMatrix[0].xyz) * length(modelMatrix[0].xyz);
+        vec4 mvPosition = centre + vec4(position.xy * size, 0.0, 0.0);
+        vUv = uv;
+        vSeed = fract(dot(instanceMatrix[3].xyz, vec3(0.131, 0.719, 0.377)));
+        vec3 up = normalize(mat3(viewMatrix) * vec3(0.0, 1.0, 0.0));
+        vTop = lightFrom(up);
+        vBottom = lightFrom(normalize(-up * 0.6 + vec3(0.0, 0.0, 0.8)));
         gl_Position = projectionMatrix * mvPosition;
         #include <fog_vertex>
       }`,
     fragmentShader: `
       #include <common>
       #include <fog_pars_fragment>
-      varying vec3 vLit;
+      uniform float time;
+      varying vec2 vUv;
+      varying float vSeed;
+      varying vec3 vTop;
+      varying vec3 vBottom;
+      ${NOISE}
       void main() {
-        gl_FragColor = vec4(vLit, 1.0);
-        #include <fog_fragment>
+        float noise = skyFbm(vUv * 2.6 + vSeed * 37.0 + vec2(time * 0.012, 0.0));
+        float r = length(vUv - 0.5) * 2.0;
+        // A soft but definite, ragged edge; a flatter underside.
+        float alpha = smoothstep(1.0, 0.55, r + (noise - 0.5) * 0.5) * smoothstep(0.0, 0.22, vUv.y + (noise - 0.5) * 0.2);
+        if (alpha < 0.01) discard;
+        // Bright white on top, only a little greyer underneath.
+        float up = clamp(vUv.y * 1.2 + (noise - 0.5) * 0.4, 0.0, 1.0);
+        gl_FragColor = vec4(mix(mix(vBottom, vTop, 0.6), vTop, up) * 1.06, alpha);
+        // Fog after the colour space, as three's own materials do: it hands the fog's colour over in the output's colour space.
         #include <colorspace_fragment>
+        #include <fog_fragment>
       }`,
   });
-}
 
-/** The colour of a material made by `cloudMaterial` (the scene sets and fades it). */
-export const cloudColor = (material: ShaderMaterial) => material.uniforms.diffuse.value as Color;
-
-/** One cloud: a few flattened round puffs. */
-function cloudGeometry(): BufferGeometry {
-  const puffs: [x: number, y: number, z: number, radius: number][] = [
-    [0, 0, 0, 1.6],
-    [1.7, -0.2, 0.3, 1.2],
-    [-1.6, -0.25, -0.2, 1.1],
-    [0.5, 0.55, -0.6, 1],
-  ];
-  const parts = puffs.map(([x, y, z, radius]) => new SphereGeometry(radius, 14, 9).translate(x, y, z));
-  const merged = mergeGeometries(parts, false).scale(1, 0.6, 1);
-  for (const part of parts) part.dispose();
-  return merged;
-}
-
-/**
- * Clouds drift slowly around the island. They must never pass between the
- * camera and the island, so they sit in a wide ring far behind it, above the
- * cloud sea.
- */
-export function createClouds(): InstancedMesh<BufferGeometry, ShaderMaterial> {
-  const random = seeded(7);
-  const placements: { angle: number; radius: number; y: number; scale: number }[] = [];
-  for (let i = 0; i < 14; i++) {
-    placements.push({ angle: i * (360 / 14) + random() * 14, radius: 60 + random() * 30, y: -6 + random() * 34, scale: 3.2 + random() * 3.2 });
-  }
-
-  const clouds = new InstancedMesh(cloudGeometry(), cloudMaterial(), placements.length);
+  const clouds = new InstancedMesh(new PlaneGeometry(1, 1), material, CLOUDS * CLOUD_PUFFS.length);
   const dummy = new Object3D();
-  placements.forEach(({ angle, radius, y, scale }, i) => {
-    dummy.position.set(Math.sin(deg(angle)) * radius, y, Math.cos(deg(angle)) * radius);
-    dummy.rotation.y = random() * Math.PI * 2;
-    dummy.scale.setScalar(scale);
-    dummy.updateMatrix();
-    clouds.setMatrixAt(i, dummy.matrix);
-  });
+  let index = 0;
+  for (let i = 0; i < CLOUDS; i++) {
+    const angle = deg(i * (360 / CLOUDS) + random() * 14);
+    const radius = 60 + random() * 30;
+    const y = -6 + random() * 34;
+    const scale = 3.2 + random() * 3.2;
+    const turn = random() * Math.PI * 2;
+    for (const [along, up, across, size] of CLOUD_PUFFS) {
+      const x = along * Math.cos(turn) + across * Math.sin(turn);
+      const z = -along * Math.sin(turn) + across * Math.cos(turn);
+      dummy.position.set(Math.sin(angle) * radius + x * scale, y + up * scale * 0.6, Math.cos(angle) * radius + z * scale);
+      dummy.scale.setScalar(size * scale * (0.9 + random() * 0.2));
+      dummy.updateMatrix();
+      clouds.setMatrixAt(index++, dummy.matrix);
+    }
+  }
   clouds.instanceMatrix.needsUpdate = true;
-  // The instances span the whole sky: culling by the geometry's own bounds would hide them.
+  // The instances span the whole sky: culling by one quad's bounds would hide them.
   clouds.frustumCulled = false;
   return clouds;
 }
 
-/** Height of the cloud sea's surface; the island's rock tip ends at about -10. */
-const SEA_LEVEL = -24;
-const SEA_RADIUS = 240;
-const SEA_PUFFS = 460;
-/** Puffs nearer the island's axis than this are drawn round; the rest, small on screen, with a quarter of the triangles. */
-const SEA_NEAR = 80;
+/** Height of the cloud sea's surface (the tops of its billows rise a few units above it); the island's rock tip ends at about -10. */
+const SEA_LEVEL = -26;
+const SEA_RADIUS = 320;
+/** How high the billows rise, and the width of the big ones (world units). */
+const BILLOW_HEIGHT = 7;
+const BILLOW_SIZE = 30;
+
+/** The cloud sea's surface: rings around the middle, closer together near the island, where it is seen up close. */
+function seaGeometry(): BufferGeometry {
+  const rings = 96;
+  const around = 160;
+  const positions: number[] = [0, 0, 0];
+  const indices: number[] = [];
+  for (let ring = 1; ring <= rings; ring++) {
+    const radius = SEA_RADIUS * (ring / rings) ** 1.8;
+    for (let k = 0; k < around; k++) {
+      const angle = (k / around) * Math.PI * 2;
+      positions.push(Math.sin(angle) * radius, 0, Math.cos(angle) * radius);
+    }
+  }
+  const at = (ring: number, k: number) => (ring === 0 ? 0 : 1 + (ring - 1) * around + (k % around));
+  for (let ring = 0; ring < rings; ring++) {
+    for (let k = 0; k < around; k++) {
+      if (ring === 0) indices.push(0, at(1, k), at(1, k + 1));
+      else indices.push(at(ring, k), at(ring + 1, k), at(ring + 1, k + 1), at(ring, k), at(ring + 1, k + 1), at(ring, k + 1));
+    }
+  }
+  const geometry = new BufferGeometry().setAttribute('position', new BufferAttribute(new Float32Array(positions), 3));
+  geometry.setIndex(indices);
+  return geometry;
+}
 
 /**
- * A sea of clouds under the island, out to where the fog hides it: hundreds of
- * big flattened puffs over a flat disc of the same colour that closes the gaps
- * between them. It turns very slowly as a whole.
- *
- * Two instanced draw calls: the puffs near the island, which are big on
- * screen, are finer spheres than the many far ones, which are a few pixels
- * across and need no more.
+ * A sea of clouds under the island, out to where the fog hides it: one
+ * smooth surface that rolls in big, soft billows (a few octaves of noise lift
+ * it, rounded on top, flat in the hollows), lit softly, with fine wisps
+ * drifting over it. The billows and the wisps drift slowly. (It used to be
+ * hundreds of flattened spheres: lumpy, and many of them drawn over each
+ * other; user feedback 2026-11-18.) One draw call.
+ * The colour is the `diffuse` uniform (`cloudColor`), the drift `time`.
  */
 export function createCloudSea(): { group: Group; material: ShaderMaterial; dispose: () => void } {
-  const random = seeded(23);
-  const material = cloudMaterial();
-  const near: Matrix4[] = [];
-  const far: Matrix4[] = [];
-  const dummy = new Object3D();
-  for (let i = 0; i < SEA_PUFFS; i++) {
-    // Denser near the island, sparser towards the fog.
-    const radius = SEA_RADIUS * random() ** 0.7;
-    const angle = random() * Math.PI * 2;
-    const size = 7 + random() * 9;
-    dummy.position.set(Math.sin(angle) * radius, SEA_LEVEL - size * 0.2 + random() * 2.5, Math.cos(angle) * radius);
-    dummy.rotation.set(random() * 0.5, random() * Math.PI * 2, random() * 0.5);
-    dummy.scale.set(size, size * (0.32 + random() * 0.14), size);
-    dummy.updateMatrix();
-    (radius < SEA_NEAR ? near : far).push(dummy.matrix.clone());
-  }
-  const puffs = [
-    { matrices: near, sphere: new SphereGeometry(1, 16, 10) },
-    { matrices: far, sphere: new SphereGeometry(1, 8, 6) },
-  ].map(({ matrices, sphere }) => {
-    const mesh = new InstancedMesh(sphere, material, matrices.length);
-    matrices.forEach((matrix, i) => mesh.setMatrixAt(i, matrix));
-    mesh.instanceMatrix.needsUpdate = true;
-    // The instances span the whole sea: culling by the sphere's own bounds would hide them.
-    mesh.frustumCulled = false;
-    return mesh;
+  const material = new ShaderMaterial({
+    uniforms: UniformsUtils.merge([UniformsLib.lights, UniformsLib.fog, { diffuse: { value: new Color() }, time: { value: 0 } }]),
+    lights: true,
+    fog: true,
+    vertexShader: `
+      #include <common>
+      #include <fog_pars_vertex>
+      uniform float time;
+      varying vec3 vNormal;
+      varying vec2 vPlace;
+      varying float vHeight;
+      ${NOISE}
+      float billow(vec2 place) {
+        float n = skyFbm(place / ${BILLOW_SIZE.toFixed(1)} + vec2(time * 0.008, time * 0.005));
+        return pow(smoothstep(0.22, 0.85, n), 1.5);
+      }
+      void main() {
+        vec4 world = modelMatrix * vec4(position, 1.0);
+        // The surface's slope from its height a step either way: its normal.
+        float step = 1.5;
+        float height = billow(world.xz);
+        float east = billow(world.xz + vec2(step, 0.0));
+        float north = billow(world.xz + vec2(0.0, step));
+        vec3 normal = normalize(vec3((height - east) * ${BILLOW_HEIGHT.toFixed(1)}, step, (height - north) * ${BILLOW_HEIGHT.toFixed(1)}));
+        world.y += height * ${BILLOW_HEIGHT.toFixed(1)};
+        vNormal = normalize(mat3(viewMatrix) * normal);
+        vPlace = world.xz;
+        vHeight = height;
+        vec4 mvPosition = viewMatrix * world;
+        gl_Position = projectionMatrix * mvPosition;
+        #include <fog_vertex>
+      }`,
+    fragmentShader: `
+      #include <common>
+      #include <lights_pars_begin>
+      #include <fog_pars_fragment>
+      uniform vec3 diffuse;
+      uniform float time;
+      varying vec3 vNormal;
+      varying vec2 vPlace;
+      varying float vHeight;
+      ${NOISE}
+      void main() {
+        vec3 normal = normalize(vNormal);
+        vec3 light = ambientLightColor;
+        #if NUM_HEMI_LIGHTS > 0
+          light += getHemisphereLightIrradiance(hemisphereLights[0], normal);
+        #endif
+        #if NUM_DIR_LIGHTS > 0
+          // Wrapped: light reaches round the billows, so there is no hard line where it ends.
+          float wrap = dot(normal, directionalLights[0].direction) * 0.5 + 0.5;
+          light += wrap * wrap * directionalLights[0].color;
+        #endif
+        // Fine wisps drifting over the surface, and the hollows a little greyer than the tops.
+        float wisp = skyFbm(vPlace * 0.11 + vec2(time * 0.03, -time * 0.02));
+        float shade = 0.9 + 0.16 * (wisp - 0.5) + 0.1 * vHeight;
+        gl_FragColor = vec4(diffuse * light * RECIPROCAL_PI * shade, 1.0);
+        // Fog after the colour space, as three's own materials do: it hands the fog's colour over in the output's colour space.
+        #include <colorspace_fragment>
+        #include <fog_fragment>
+      }`,
   });
-
-  const floor = new Mesh(new CircleGeometry(SEA_RADIUS + 60, 24).rotateX(-Math.PI / 2), material);
-  floor.position.y = SEA_LEVEL - 2;
-
-  const group = new Group().add(...puffs, floor);
+  const surface = new Mesh(seaGeometry(), material);
+  surface.position.y = SEA_LEVEL;
+  surface.frustumCulled = false;
+  const group = new Group().add(surface);
   const dispose = () => {
-    for (const mesh of puffs) mesh.geometry.dispose();
-    floor.geometry.dispose();
+    surface.geometry.dispose();
     material.dispose();
   };
   return { group, material, dispose };

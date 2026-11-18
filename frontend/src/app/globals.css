@@ -41,8 +41,10 @@
   --m3: #4fb488;
   --m4: #1d9266;
   --m5: #0c6847;
-  /* The sky behind the 3D island on the landing page: a light sky blue by day. */
-  --sky: #d3e9f8;
+  /* The sky behind the 3D island on the landing page: pale at the horizon (also the
+     colour distant scenery fades into), a clear deep blue overhead. */
+  --sky: #c2def5;
+  --sky-top: #1f72dc;
   /* The island's lake, stream and waterfalls. */
   --water: #86cfe0;
   /* 3D scene only, same in both themes: the sun (light theme), the moon and stars (dark theme). */
@@ -80,6 +82,7 @@
     --m4: #46b384;
     --m5: #86dfb6;
     --sky: #0b1418;
+    --sky-top: #03070f;
     --water: #1f6a80;
     color-scheme: dark;
   }
@@ -113,6 +116,7 @@
   --m4: #46b384;
   --m5: #86dfb6;
   --sky: #0b1418;
+  --sky-top: #03070f;
   --water: #1f6a80;
   color-scheme: dark;
 }

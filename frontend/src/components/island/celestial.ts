@@ -202,13 +202,19 @@ export function createSky(sky: Color): Sky {
   const moon = new Group().add(moonDisc);
   const screen = new Group().add(sun, moon);
 
-  // Round dots that brighten and dim, each to its own beat. Not blended (the moon is drawn over them): dim = nearer the sky's colour.
+  // Round dots that brighten and dim, each to its own beat, blended over the sky behind them (it is not one colour).
+  // Drawn in their turn before the moon, which then covers the ones behind it.
   const starUniforms = { sky: { value: sky }, star: { value: new Color() }, time, night: { value: 0 }, pixelRatio: { value: 1 } };
   const stars = new Points(
     starGeometry(),
     new ShaderMaterial({
       uniforms: starUniforms,
       fog: false,
+      blending: CustomBlending,
+      blendSrc: SrcAlphaFactor,
+      blendDst: OneMinusSrcAlphaFactor,
+      blendSrcAlpha: ZeroFactor,
+      blendDstAlpha: OneFactor,
       vertexShader: `
         attribute vec3 beat;
         uniform float time;
@@ -227,7 +233,7 @@ export function createSky(sky: Color): Sky {
         void main() {
           float away = length(gl_PointCoord - 0.5) * 2.0;
           if (away > 1.0) discard;
-          gl_FragColor = vec4(mix(sky, star, vShine * smoothstep(1.0, 0.35, away)), 1.0);
+          gl_FragColor = vec4(star, vShine * smoothstep(1.0, 0.35, away));
           #include <colorspace_fragment>
         }`,
     }),

@@ -46,7 +46,7 @@ import { type Palette, usePalette } from './palette';
 import { createPeople, type People } from './people';
 import { createWords } from './words';
 import { PARTS_OF_SPEECH, PARTS_OF_SPEECH_VI, PEOPLE_WORDS, THEME_SECONDS, WORDS, ZOOM_EVENT, ZOOM_STEPS } from './parts';
-import { cloudColor, createBirds, createClouds, createCloudSea } from './scenery';
+import { cloudColor, createBirds, createClouds, createCloudSea, createSkyDome } from './scenery';
 import { createWater } from './water';
 
 /**
@@ -277,7 +277,7 @@ interface ThemeFade {
   progress: number;
   /** The same, eased: a uniform of the island's material. */
   blend: { value: number };
-  /** In this order: fog, clouds, cloud sea, birds, foam, the sun's / moon's light, the sky's light from above and from below, water, smoke, the lake's bed. */
+  /** In this order: fog, clouds, cloud sea, birds, foam, the sun's / moon's light, the sky's light from above and from below, water, smoke, the lake's bed, the sky overhead. */
   colors: { color: Color; from: Color; to: Color }[];
   /** In this order: the sun's / moon's light, the sky's light. */
   levels: { set: (value: number) => void; now: number; from: number; to: number }[];
@@ -348,6 +348,9 @@ export default function IslandScene(props: SceneProps) {
     // The sky is drawn by the scene, in the fog's colour: when the theme changes the two
     // fade as one. (The page's own sky colour, behind the canvas, only shows until the scene has loaded.)
     scene.background = fog.color;
+    // The sky itself: a dome from the horizon (the fog's colour) up to a deep blue overhead.
+    const dome = createSkyDome(fog.color);
+    scene.add(dome.mesh);
     // Light from the whole sky (one colour from above, a dimmer one from the
     // ground below), plus one directional light that shines from wherever the
     // sun or the moon is on screen and casts the shadows; colours and
@@ -469,6 +472,7 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
         water.mesh.material.color,
         smokeColor,
         bedColor,
+        dome.zenith,
       ].map(tone),
       levels: [
         level((value) => {
@@ -983,7 +987,9 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
       fireflies.update(clock, dusk, pixels);
       // Starts turned so that no cloud sits in front of the sun or moon on the first screen.
       clouds.rotation.y = 0.6 + clock * 0.008;
-      sea.group.rotation.y = -clock * 0.004;
+      clouds.material.uniforms.time.value = clock;
+      sea.material.uniforms.time.value = clock;
+      dome.mesh.position.copy(camera.position);
       birds.update(clock, scatter);
       words.update(delta, still, camera, width, height);
       skyWords.update(delta, still, camera, width, height);
@@ -1042,6 +1048,8 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
       skyWords.dispose();
       wordLayer.remove();
       sea.dispose();
+      dome.mesh.geometry.dispose();
+      dome.mesh.material.dispose();
       sky.dispose();
       renderer.dispose();
       canvas.remove();
@@ -1096,6 +1104,8 @@ transformed.z += extra.x * cos(gust * 0.8 + 0.6) * 0.03;`,
       new Color().lerpColors(palette.muted, palette.raised, palette.dark ? 0.15 : 0.55),
       // The bed of the lake and the stream: the banks' earth, seen through a little water.
       new Color().lerpColors(palette.lineStrong, palette.streak, 0.22).lerp(palette.water, 0.3),
+      // The sky overhead.
+      palette.skyTop,
     ];
     const levels = [palette.dark ? 2.8 : 2.9, palette.dark ? 1.1 : 1.25];
     const { theme } = current;

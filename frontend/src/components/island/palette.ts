@@ -13,6 +13,7 @@ const TOKENS = [
   'ink',
   'danger',
   'sky',
+  'sky-top',
   'water',
   'sun',
   'moon',
@@ -35,7 +36,10 @@ export interface Palette {
   muted: Color;
   ink: Color;
   danger: Color;
+  /** The sky at the horizon (the fog's colour too). */
   sky: Color;
+  /** The sky overhead. */
+  skyTop: Color;
   water: Color;
   sun: Color;
   moon: Color;
@@ -81,6 +85,7 @@ export function usePalette(): Palette {
       ink: color('ink'),
       danger: color('danger'),
       sky: color('sky'),
+      skyTop: color('sky-top'),
       water: color('water'),
       sun: color('sun'),
       moon: color('moon'),

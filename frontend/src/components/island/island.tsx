@@ -1,6 +1,6 @@
 'use client';
 
-import { X, ZoomIn, ZoomOut } from 'lucide-react';
+import { ArrowUp, X, ZoomIn, ZoomOut } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useLocale, useTranslations } from 'next-intl';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
@@ -83,6 +83,8 @@ export function Island({ debug = false }: { debug?: boolean }) {
   const [mushrooms, setMushrooms] = useState<{ found: number; total: number } | null>(null);
   const [zoomStep, setZoomStep] = useState(0);
   const [zoomHint, setZoomHint] = useState(false);
+  /** Past the first floor: the "back to top" button shows. */
+  const [scrolled, setScrolled] = useState(false);
   const reducedMotion = useSyncExternalStore(
     subscribeReducedMotion,
     () => window.matchMedia(REDUCED_MOTION).matches,
@@ -119,6 +121,7 @@ export function Island({ debug = false }: { debug?: boolean }) {
       const pinned = /^#p=([\d.]+)$/.exec(window.location.hash);
       progress.current = pinned ? Number(pinned[1]) : readProgress();
       readSides(sides.current);
+      setScrolled(window.scrollY > window.innerHeight / 2);
     };
     update();
     window.addEventListener('scroll', update, { passive: true });
@@ -219,29 +222,45 @@ export function Island({ debug = false }: { debug?: boolean }) {
         </p>
       )}
 
-      {/* Zoom: buttons, a double click on the island, or Ctrl + wheel (a pinch on a trackpad) over it. */}
-      {ready && !lost && (
+      {/* Back to top (from the second floor on, with or without the island), then zoom: buttons, a double click on the island, or Ctrl + wheel (a pinch on a trackpad) over it. */}
+      {(scrolled || (ready && !lost)) && (
         <div data-island-ui className="fixed right-4 bottom-4 z-20 flex flex-col gap-2">
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm px-2.5"
-            aria-label={t('zoomIn')}
-            title={t('zoomIn')}
-            disabled={zoomStep >= ZOOM_STEPS.length - 1}
-            onClick={() => requestZoom(1)}
-          >
-            <ZoomIn size={18} strokeWidth={2.25} aria-hidden />
-          </button>
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm px-2.5"
-            aria-label={t('zoomOut')}
-            title={t('zoomOut')}
-            disabled={zoomStep === 0}
-            onClick={() => requestZoom(-1)}
-          >
-            <ZoomOut size={18} strokeWidth={2.25} aria-hidden />
-          </button>
+          {scrolled && (
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm mb-2 px-2.5"
+              aria-label={t('toTop')}
+              title={t('toTop')}
+              // When the button goes away at the top, focus falls back to the page's start: the next Tab is the first link.
+              onClick={() => window.scrollTo({ top: 0, behavior: reducedMotion ? 'instant' : 'smooth' })}
+            >
+              <ArrowUp size={18} strokeWidth={2.25} aria-hidden />
+            </button>
+          )}
+          {ready && !lost && (
+            <>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm px-2.5"
+                aria-label={t('zoomIn')}
+                title={t('zoomIn')}
+                disabled={zoomStep >= ZOOM_STEPS.length - 1}
+                onClick={() => requestZoom(1)}
+              >
+                <ZoomIn size={18} strokeWidth={2.25} aria-hidden />
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm px-2.5"
+                aria-label={t('zoomOut')}
+                title={t('zoomOut')}
+                disabled={zoomStep === 0}
+                onClick={() => requestZoom(-1)}
+              >
+                <ZoomOut size={18} strokeWidth={2.25} aria-hidden />
+              </button>
+            </>
+          )}
         </div>
       )}
 

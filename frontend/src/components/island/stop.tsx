@@ -48,7 +48,9 @@ export function IslandStop({
         // Every second floor on the page (the floors are the only sections in <main>).
         'xl:[&:nth-of-type(even)]:justify-end',
         // The first floor shares the first screen with the 4rem site header, which is the snap point there.
-        index === 0 ? 'min-h-[calc(100svh-4rem)]' : 'min-h-[100svh] snap-start snap-always',
+        // Its end is one too: the same place while it fits, its end where it is taller (narrow screens),
+        // or snapping pulls a scroll to that end back to the top (floor-scroll.ts rests there).
+        index === 0 ? 'min-h-[calc(100svh-4rem)] snap-end' : 'min-h-[100svh] snap-start snap-always',
       ].join(' ')}
     >
       {/* data-island-ui: the island ignores the pointer while it is over the content (see overPage in scene.tsx). */}

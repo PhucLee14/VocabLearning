@@ -40,7 +40,8 @@ export function IslandStop({
     <section
       data-island-stop={index}
       className={[
-        'mx-auto flex max-w-[1100px] items-end px-4 pt-[36svh] pb-8 sm:px-6 xl:items-center xl:pt-8',
+        // pb-16 below 640px: room under the panel for the island's row of buttons (island.tsx).
+        'mx-auto flex max-w-[1100px] items-end px-4 pt-[36svh] pb-16 sm:px-6 sm:pb-8 xl:items-center xl:pt-8',
         // The bare part of a floor is where the island is played with: a sideways
         // drag turns it (so the browser only keeps vertical panning and pinch
         // zoom there) and must not select text.

@@ -197,8 +197,13 @@ export function Island({ debug = false }: { debug?: boolean }) {
         className="pointer-events-none fixed top-0 left-0 z-20 hidden rounded-full bg-ink px-3 py-1.5 text-[13px] font-extrabold whitespace-nowrap text-canvas"
       />
 
+      {/* Below 640px bottom left, beside the row of buttons (12rem: the row and the gutters); from 640px centred. */}
       {mushrooms && (
-        <div role="status" data-island-ui className="fixed bottom-4 left-1/2 z-20 w-max max-w-[calc(100vw-2rem)] -translate-x-1/2">
+        <div
+          role="status"
+          data-island-ui
+          className="fixed bottom-4 left-4 z-20 w-max max-w-[calc(100vw-12rem)] sm:left-1/2 sm:max-w-[calc(100vw-2rem)] sm:-translate-x-1/2"
+        >
           {mushrooms.found < mushrooms.total ? (
             <p className="pill pill-accent">{t('mushrooms', mushrooms)}</p>
           ) : (
@@ -223,12 +228,13 @@ export function Island({ debug = false }: { debug?: boolean }) {
       )}
 
       {/* Back to top (from the second floor on, with or without the island), then zoom: buttons, a double click on the island, or Ctrl + wheel (a pinch on a trackpad) over it. */}
+      {/* Below 640px a row under the floor's panel (the floors leave room for it, stop.tsx); from 640px a column (the panel is narrower than the screen). */}
       {(scrolled || (ready && !lost)) && (
-        <div data-island-ui className="fixed right-4 bottom-4 z-20 flex flex-col gap-2">
+        <div data-island-ui className="fixed right-4 bottom-4 z-20 flex gap-2 sm:flex-col">
           {scrolled && (
             <button
               type="button"
-              className="btn btn-secondary btn-sm mb-2 px-2.5"
+              className="btn btn-secondary btn-sm mr-2 px-2.5 sm:mr-0 sm:mb-2"
               aria-label={t('toTop')}
               title={t('toTop')}
               // When the button goes away at the top, focus falls back to the page's start: the next Tab is the first link.

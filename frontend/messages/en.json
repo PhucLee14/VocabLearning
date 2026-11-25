@@ -477,5 +477,14 @@
     "toTop": "Back to top",
     "zoomHint": "Hold Ctrl and scroll to zoom",
     "dismiss": "Close"
+  },
+  "Errors": {
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "This page may have moved, or the link has a typo.",
+    "home": "Back to the home page",
+    "errorTitle": "Something went wrong",
+    "errorBody": "This page could not be shown. Try again, and if it keeps happening, reload the page in a minute.",
+    "retry": "Try again",
+    "code": "Error code: {digest}"
   }
 }

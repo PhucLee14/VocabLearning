@@ -477,5 +477,14 @@
     "toTop": "Lên đầu trang",
     "zoomHint": "Giữ Ctrl và lăn chuột để phóng to",
     "dismiss": "Đóng"
+  },
+  "Errors": {
+    "notFoundTitle": "Không tìm thấy trang",
+    "notFoundBody": "Trang này có thể đã đổi địa chỉ, hoặc đường dẫn bị gõ sai.",
+    "home": "Về trang chủ",
+    "errorTitle": "Đã có lỗi xảy ra",
+    "errorBody": "Không hiển thị được trang này. Hãy thử lại; nếu vẫn lỗi, bạn tải lại trang sau ít phút nhé.",
+    "retry": "Thử lại",
+    "code": "Mã lỗi: {digest}"
   }
 }

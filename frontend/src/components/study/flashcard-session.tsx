@@ -3,6 +3,7 @@
 import { ArrowLeftRight, X } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { FeedbackDialog } from '@/components/feedback/feedback-dialog';
 import { Link, useRouter } from '@/i18n/navigation';
 import { ApiError, api } from '@/lib/client-api';
 import { formatInterval } from '@/lib/format';
@@ -87,6 +88,8 @@ export function FlashcardSession({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (finished || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      // The report dialog is open: its keys are not ratings.
+      if ((e.target as HTMLElement).closest('dialog')) return;
       if (e.key === ' ' || e.key === 'Enter') {
         if ((e.target as HTMLElement).closest('button, a')) return; // let focused controls act
         e.preventDefault();
@@ -227,6 +230,9 @@ export function FlashcardSession({
             ))}
           </div>
           {mode === 'PRACTICE' && <p className="mt-3 text-center text-[13px] text-muted">{t('practiceNote')}</p>}
+          <div className="mt-2 flex justify-center">
+            <FeedbackDialog word={{ slug: current.word.slug, headword: current.word.headword }} />
+          </div>
         </div>
       ) : (
         <button type="button" className="btn btn-primary btn-lg w-full" onClick={() => setFlipped(true)}>

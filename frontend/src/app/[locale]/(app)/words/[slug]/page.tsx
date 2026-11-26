@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Suspense } from 'react';
+import { FeedbackDialog } from '@/components/feedback/feedback-dialog';
 import { Page } from '@/components/shell/app-shell';
 import { highlight } from '@/lib/highlight';
 import { AudioButton } from '@/components/word/audio-button';
@@ -162,6 +163,11 @@ async function Word({ params }: { params: Promise<{ slug: string }> }) {
           <p className="mt-8 text-[13px] text-muted">
             {t('source')}: {word.source}
           </p>
+        )}
+        {viewer && (
+          <div className="mt-4 -ml-2.5">
+            <FeedbackDialog word={{ slug: word.slug, headword: word.headword }} />
+          </div>
         )}
       </article>
 

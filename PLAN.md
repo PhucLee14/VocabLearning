@@ -2,7 +2,7 @@
 
 > App name: **Godee** (repo and folders: `Vocab`). Production frontend: https://godee.vercel.app
 
-> Status: v4 (2026-11-02). Decisions in section 2 are final. Phase 0 is mostly done (see section 9). The database runs in Singapore, and the app is ready to deploy for free on Vercel.
+> Status (reviewed 2026-11-25): decisions in section 2 are final. Phases 0, 1 (except the import UI) and 1.5 are done, Phase 2 is half done, the 3D landing page (3d) is live; see section 9. The app runs for free on Vercel (`sin1`) with Neon in Singapore.
 > Work log: [.claude/worklog/](.claude/worklog/). Deployment guide: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ---
@@ -74,7 +74,7 @@ Each entry has:
 - **Front**: word + IPA + play button. Reverse mode: the English definition on the front, guess the word.
 - **Back**: English definition, part of speech, examples, Vietnamese meaning, the learner's note, level, topics.
 - **Rating** after flipping: `Again` · `Hard` · `Good` · `Easy` (shown in Vietnamese as Quên / Khó / Nhớ / Dễ). Each button shows the next interval, e.g. "3 days".
-- **Shortcuts**: `Space` flips, `1–4` rates, `N` opens the note. Swipe on mobile.
+- **Shortcuts**: `Space` (or `Enter`) flips, `1–4` rates. *(Not built yet: `N` opens the note; swipe on mobile.)*
 - **Two modes**:
   - *Review*: only due words; ratings **update** the schedule.
   - *Practice*: any topic/level; ratings **do not touch** the schedule.
@@ -141,7 +141,7 @@ How it works:
   - The backend runs as a serverless Vercel Function, so there is no in-process cron. The hourly job is the endpoint `/api/cron/reminders` (protected by `CRON_SECRET`), called every hour by **Upstash QStash** (free tier). Vercel Hobby's own cron runs only once a day.
   - Do not use GitHub Actions schedules: runs can be delayed or dropped when GitHub is under load.
   - The job must be **idempotent**: `reminder_logs` has a unique key on (user, channel, day), so a late or duplicate run never sends twice.
-  - Resend's Free plan allows **100 emails/day** and requires a **verified custom domain**. Web Push (free) is therefore the main channel, and email is opt-in.
+  - Web Push (free) is the main channel, and email is opt-in. **Open:** send email reminders through the Gmail SMTP mailer that already sends verification and reset mail (quota ~500/day, of which up to 200 are reserved for verification mail), or wait for Resend (Free: 100 emails/day, needs a verified custom domain).
   - On iPhone, Web Push only works after the user taps "Add to Home Screen" (iOS 16.4+).
 
 ### 3.11 Progress page
@@ -169,20 +169,21 @@ How it works:
 | Area | Choice | Notes |
 |------|--------|-------|
 | Frontend | **Next.js 16 (App Router) + TypeScript** | `frontend/`. Cache Components and Partial Prerendering enabled (Next 16.4 defaults). |
-| UI | **Tailwind CSS 4** (add shadcn/ui when components are needed) | Dark mode follows the OS setting |
+| UI | **Tailwind CSS 4** with the app's own component classes (`globals.css`); no component library | Light / Dark / System theme switch |
 | i18n | **next-intl 4** | Routes `/vi/...`, `/en/...`. Messages in `frontend/messages/`. |
 | Backend | **NestJS 12 + TypeScript (ESM)** | `backend/`, REST API under `/api` |
 | ORM | **Prisma 7** + `pg` driver adapter | Schema in `backend/prisma/schema.prisma` |
 | Database | **PostgreSQL 18 on Neon**, region **Singapore** (`aws-ap-southeast-1`) | The app uses the pooled URL; migrate/seed use the direct URL |
-| Auth | Built in NestJS: email + password (argon2id via `@node-rs/argon2`) and a **database-backed session**: a random token in the httpOnly `vocab_session` cookie (SameSite=Lax, 30 days, sliding), only its SHA-256 hash stored in `sessions`. Google sign-in: server-side OAuth code flow with PKCE (`backend/src/auth/google.ts`). | Changed from JWT + refresh token on 2026-11-03: Server Components cannot set cookies, so an expired access token could not be refreshed while rendering; a session lookup is one indexed query and can be revoked at once. Email verification and password reset via Resend later. |
+| Auth | Built in NestJS: email + password (argon2id via `@node-rs/argon2`) and a **database-backed session**: a random token in the httpOnly `vocab_session` cookie (SameSite=Lax, 30 days, sliding), only its SHA-256 hash stored in `sessions`. Google sign-in: server-side OAuth code flow with PKCE (`backend/src/auth/google.ts`). | Changed from JWT + refresh token on 2026-11-03: Server Components cannot set cookies, so an expired access token could not be refreshed while rendering; a session lookup is one indexed query and can be revoked at once. Email verification, password reset and confirmation codes are built (see Email). |
 | Browser → API | ✔ Next.js rewrite `/api/*` → backend (`frontend/next.config.ts`) | Frontend and API share one domain, so the auth cookie is first-party. Safari/Chrome block third-party cookies. |
 | Hosting | **Vercel Hobby** for both apps, region `sin1` (`vercel.json`), Node 24 | Free. Non-commercial use only. See section 12. |
 | SRS | **ts-fsrs** (runs in the backend) | |
 | Scheduling | **Upstash QStash** calls `/api/cron/reminders` hourly | The backend is serverless, so no in-process cron. See 3.10. |
-| Email | **Resend** | |
-| Push | Web Push (VAPID, `web-push` library) + Service Worker | |
-| Pronunciation | Web Speech API (MVP) → audio files later | Free, available today |
-| Charts | **Recharts** | |
+| Email | **Gmail SMTP** (App Password) via Nodemailer, behind `MailerService` | Can switch to Resend + a custom domain by changing env |
+| Push | Web Push (VAPID, `web-push` library) + Service Worker | Not built yet |
+| Pronunciation | Web Speech API (every word, since the dictionary audio links were dropped on 2026-11-13) → generated audio later (Phase 3c) | Free, available today |
+| Charts | Hand-written SVG components (`components/charts/`) | No chart library |
+| 3D landing | Plain `three` (no fiber / drei) | See Phase 3d |
 
 ---
 
@@ -194,7 +195,9 @@ How it works:
 User              id, email, passwordHash, name, gender?, birthDate?, bio?, targetLevel?,
                   role (USER|ADMIN), locale (vi|en), timezone, emailVerifiedAt, googleId
 Session           id, userId, tokenHash, userAgent, expiresAt, lastUsedAt, revokedAt
-AuthToken         id, userId, type (EMAIL_VERIFY|PASSWORD_RESET), tokenHash, expiresAt, usedAt
+AuthToken         id, userId, type (EMAIL_VERIFY|PASSWORD_RESET|ACTION_CONFIRM), tokenHash,
+                  action?, attempts, expiresAt, usedAt
+RateLimit         key (<bucket>:<sha256 of the id>), count, resetAt        -- fixed windows
 UserSettings      userId, dailyNewWords=10, dailyGoalMinutes=15, dailyGoalCards=10,
                   desiredRetention=0.9, showVietnamese=true,
                   reminderEnabled, reminderTime="20:00", reminderChannels[email|push]
@@ -242,7 +245,9 @@ Built on 2026-11-03 (✔) and still planned. Signed-in pages are guarded by `fro
 | Route | Page | Main content |
 |-------|------|--------------|
 | ✔ `/` | Landing | What it is, a live flashcard with real words, how it works, CEFR levels, topics. Signed-in visitors go to `/dashboard`. |
-| ✔ `/login`, `/register` | Sign in / Sign up | Email + password, `?next=` (same-site paths only). Google and email verification later. |
+| ✔ `/login`, `/register` | Sign in / Sign up | Email + password or Google, `?next=` (same-site paths only) |
+| ✔ `/forgot-password`, `/reset-password`, `/verify-email` | Account email links | Token in the URL fragment, POSTed on a click |
+| ✔ 404 and error pages | | In the visitor's language, inside the site header or the app shell |
 | ✔ `/dashboard` | **Home** | Greeting with today's one fact, *Review N words* / *Learn new words*, today's goal ring, streak with the last 7 days, due count, learned count, 7-day forecast, mastery, recent words, topic progress, levels |
 | ✔ `/learn` | Learn new words | Pick topic / level / count → intro cards → quiz → summary (3.3) |
 | ✔ `/flashcards` | Flashcards | Review (due words, schedule updates) and Practice (`?mode=practice`, any topic/level, schedule untouched) (3.4) |
@@ -253,7 +258,8 @@ Built on 2026-11-03 (✔) and still planned. Signed-in pages are guarded by `fro
 | ✔ `/profile` | Profile | Name, gender, date of birth, target level, bio, timezone; study record |
 | ✔ `/settings` | Settings | Daily goal, new words/session, retention, show Vietnamese, reminders (saved, not sent yet), theme, language, password, sign out, delete account |
 | `/notes` | Notebook | All notes, search, tags |
-| `/admin/words`, `/admin/topics`, `/admin/import` | Admin | Manage words, topics, file import |
+| `/admin/...` | Admin | Users, words, topics, file import, feedback inbox (Phase 3a) |
+| ✔ `/lab/island` | 3D lab | `noindex`, not linked; fps / draw-call read-out |
 
 **A typical study day**
 
@@ -309,14 +315,6 @@ bank,noun,2,/bæŋk/,B1,"the land along the side of a river",bờ sông,"We had 
 
 See [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md): sources, licences, attribution rules, and the `words:enrich` → review → `words:import` workflow.
 
---------|----------|-------|
-| Oxford 3000 / 5000 | Word lists with CEFR levels | Copyrighted; read the terms carefully |
-| CEFR-J Wordlist | Word lists with CEFR levels | Check the terms of use |
-| English Vocabulary Profile (Cambridge) | CEFR level per word sense | Lookup only; no bulk copying |
-| WordNet (Princeton) | English definitions, synonyms | Permissive licence |
-| Free Dictionary API / Wiktionary | IPA, definitions (its audio links are blocked since 2026-11-13) | CC BY-SA; attribution required |
-| Tatoeba | Example sentences with translations | CC BY; attribution required |
-
 ---
 
 ## 8. Initial topic framework (seed)
@@ -359,7 +357,7 @@ A starting point; editable from the admin pages or via import. Seed data: [backe
 - [x] PostgreSQL (Neon) + Prisma 7, full schema, `init` migration
 - [x] Seed the topic framework: 24 top-level topics, 71 including subtopics
 - [x] First endpoints: `GET /api/health`, `GET /api/health/db`, `GET /api/topics`
-- [x] Bilingual vi/en UI (next-intl), layout, Light / Dark / System theme switch. "Reference manual" design (Be Vietnam Pro + JetBrains Mono, one teal accent). The home page lists topics from the API.
+- [x] Bilingual vi/en UI (next-intl), layout, Light / Dark / System theme switch. The first "reference manual" design (Be Vietnam Pro + JetBrains Mono) was replaced on 2026-11-03 by the friendly learning-app look (Nunito; tokens in `globals.css`, see CLAUDE.md). The home page lists topics from the API.
 - [x] Move Neon to Singapore (`aws-ap-southeast-1`)
 - [x] Next.js rewrite `/api/*` → backend, so the auth cookie is first-party
 - [x] Deployment config: `vercel.json` (`sin1`) for both apps, Node 24.x. Verified with a local `vercel build`.
@@ -372,8 +370,8 @@ A starting point; editable from the admin pages or via import. Seed data: [backe
 - [x] ~50 sample words for testing: 53 words imported on 2026-11-02 (`backend/prisma/seed/words-sample*.{csv,json}`; hand-assigned CEFR levels, verify against CEFR-J later)
 - [x] CSV/JSON import CLI (`npm run words:import`, with `--dry-run`) + enrichment from free sources (`npm run words:enrich`), see [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md)
 - [x] **Word bank: 9,704 words, A1–C2** (CEFR-J + Octanove levels, enriched from open sources, every word reviewed by AI agents; imported 2026-11-03/04). See [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md) §3 and §5
-- [ ] `/admin/import` UI with a preview step
-- [x] Topic and word detail pages (recorded audio, Web Speech API fallback). Levels are filters on the word list, topics and learn/practice pages rather than their own route.
+- [ ] `/admin/import` UI with a preview step (built 2026-11-25 with Phase 3a; tick after the end-to-end check)
+- [x] Topic and word detail pages (pronunciation by the Web Speech API; the recorded dictionary audio was dropped on 2026-11-13 because its host blocks us). Levels are filters on the word list, topics and learn/practice pages rather than their own route.
 - [x] **Learn new words** session (3.3): intro cards, "I already know this", end-of-session quiz
 - [x] **Flashcards + SRS** with ts-fsrs 5.4, Review & Practice modes, reverse mode, keyboard shortcuts (Space, 1–4)
 - [x] **Mastery** computation, shown on words, topics and levels
@@ -383,7 +381,7 @@ A starting point; editable from the admin pages or via import. Seed data: [backe
 
 ### Phase 1.5: Fixes from the code review (2026-11-04)
 
-No critical or high issues were found. Fix these before adding more features. Details are in `.claude/worklog/2026-11-04.md` (Session 4). Done on 2026-11-05 (except rate limiting): see `.claude/worklog/2026-11-05.md`.
+No critical or high issues were found. Fix these before adding more features. Details are in `.claude/worklog/2026-11-04.md` (Session 4). Done on 2026-11-05 (rate limiting on 2026-11-11): see `.claude/worklog/2026-11-05.md`.
 
 Security:
 - [x] Rate limiting on login/register/password checks and on every endpoint that sends email (2026-11-11): fixed windows in a Postgres table (`rate_limits`). The IP seen behind the frontend rewrite is the visitor's own (checked 2026-11-14 with `/api/health/db`), so per-IP limits are per visitor.
@@ -401,17 +399,31 @@ Correctness:
 - [x] `page` has no upper bound (`page=1e300` → 500); paging needs a unique tiebreaker (`id`); practice and quiz-distractor picks are not random (use `ORDER BY random()`); notes need `@@unique([userId, wordId])` + upsert; `POST /study/cards` race → use upsert.
 - [x] `/study/progress` loads 8 weeks of review logs into memory: aggregate the weekly recall in SQL.
 
+### Phase 1.6: Leftovers and hardening (collected in the plan review of 2026-11-25)
+
+- [x] Error and 404 pages in both languages (2026-11-24)
+- [ ] LOW items of the 2026-11-14 security audit (`security/AUDIT_SUMMARY.md`):
+  - a least-privilege database role for the runtime instead of `neondb_owner`;
+  - `nosniff` / HSTS on static files, `Secure` on the `NEXT_LOCALE` cookie;
+  - `npm audit fix` in the backend (dev-only advisories);
+  - sign-up's 409 tells whether an email has an account (accept, or answer the same way for both).
+- [ ] A separate Neon branch for development: dev and prod share one database today, so local tests and migrations touch real users' data.
+- [ ] Flashcard extras from 3.4: `N` opens the note, swipe to rate on phones.
+- [ ] Personal data export (progress + notes), from section 11.
+
 ### Phase 2: Habits and progress
 - [ ] **Study time tracking**: `DailyStat` is filled from each card's time (capped at 60 s); the heartbeat / `StudySession` part is not built yet
 - [x] **Streaks** + daily goal in settings
 - [x] **Progress** page: heatmap, charts, 7-day forecast
 - [ ] PWA (manifest + service worker) + **Web Push**
 - [ ] `/api/cron/reminders` endpoint + hourly Upstash QStash schedule
-- [ ] **Email reminders** (Resend; needs a custom domain)
+- [ ] **Email reminders** (Gmail SMTP or Resend: open, see 3.10)
 - [ ] Notebook (tags, search)
 - [x] Auto-enrich IPA/audio/definitions/Vietnamese/examples from free sources (offline, at import time: `words:enrich`)
 
 ### Phase 3a: Admin site and feedback (requested 2026-11-04)
+
+> **Status 2026-11-25: built, not yet verified end to end.** Code: `backend/src/admin/`, `backend/src/feedback/`, `frontend/src/app/[locale]/admin/`, `frontend/src/components/admin/`, `components/feedback/`. Migration `20261125160555_admin_and_feedback` (adds `users.disabledAt`, `audit_logs`, `feedback`, `import_jobs.contentHash`) is **not applied yet**: apply it before deploying the backend, which reads `disabledAt` on every signed-in request. First admin: `npm run admin:role -- <email>`. Everything listed below is built; on phones "Send feedback" lives on the My feedback page (reached from "More"), since a dialog opened inside the More sheet would close with it. Details: `.claude/worklog/2026-11-25.md`.
 
 - [ ] **Admin role checks**: `role = ADMIN` on `users`, a `RolesGuard` on every `/api/admin/*` route, and an audit log (who changed what).
 - [ ] **Admin site** at `/[locale]/admin` (in its own layout, hidden from learners):
@@ -502,6 +514,8 @@ Features:
 
 The user picked this direction out of three (the others: a deck of 3D flashcards that rearranges itself on scroll; physics letters that assemble into words).
 
+> **Note (2026-11-25):** the concept, design rules and technical approach below are the **original brief** of 2026-11-12. Several parts were replaced while building it; the steps further down record what was built. In short: the island is a village (houses = parts of speech, a mountain trail with six level flags), not topic districts; the camera orbits the island from one stop per floor instead of following a Catmull-Rom path; models are baked from CC0 kits into one binary file, no glTF/Draco/KTX2; dragging turns the island on every floor. The code-level notes are in `.claude/CLAUDE.md` ("3D island").
+
 **Concept.** A small low-poly island floats in the hero. Scrolling down the landing page flies the camera around it, and each stop illustrates the HTML section next to it:
 
 | Section | What the island shows | Interaction |
@@ -548,7 +562,7 @@ The user picked this direction out of three (the others: a deck of 3D flashcards
 - Check every asset's licence (Poly Pizza mixes CC0 and CC-BY) and record sources and attribution, as `docs/DATA_SOURCES.md` does for word data.
 
 Steps:
-- [ ] **Art direction**: a moodboard and a map sketch of the island (districts, terraces, the SRS path, the camera path); choose which topics get a landmark.
+- [x] ~~**Art direction**: a moodboard and a map sketch of the island (districts, terraces, the SRS path, the camera path); choose which topics get a landmark.~~ Superseded: the layout was settled step by step with the user (village, 2026-11-14) and reference images (sky, 2026-11-18).
 - [x] **Assets** (2026-11-14): CC0 kits by Kenney, City Kit (Suburban) for the 21 houses and Nature Kit for trees, rocks and plants ([docs/ASSETS.md](docs/ASSETS.md)). Baked by `npm run island:kit` into one 352 KB file (184 KB gzip) of positions + colour roles; the scene maps roles to the design tokens, so no texture and no glTF loader ship, and the models follow the theme (lit windows at night). The ground and the mountain terraces are still plain shapes.
 - [x] **Village** (requested 2026-11-14: fewer houses, water, "like a village"): 9 houses along a path, a lake with a canoe and water lilies, a waterfall down the mountain's terraces into the lake, a stream from the lake to the rim that falls off the island, a wooden bridge, a fenced field, a windmill with turning blades (Hexagon Kit), a camp. Foam runs down both waterfalls. This **replaces "one building per topic"**: the island no longer takes the topic list, so the planned hover / click on districts and landmarks per topic are dropped unless the idea comes back in another form.
 - [x] **Mountain with stairs, houses as parts of speech** (requested 2026-11-15): the terraced mountain became a bigger rock (radius 4.8, 8.4 high) with 60 steps winding 2.4 times up to the summit; six flags along the stairs are the CEFR levels (A1 at the foot, C2 on top). Eight houses, one per part of speech (noun … interjection).
@@ -562,7 +576,7 @@ Steps:
   - [x] reduced motion and the dark theme.
 - [x] **Floors and scenery** (requested 2026-11-14, modelled on a "one scroll gesture = one camera stage" brief the user shared):
   - six screen-high floors: hero, try a card, how it works, levels, topics, call to action. One wheel gesture moves one floor (CSS scroll snap, plus a wheel handler on wide screens because a single wheel notch is too short for CSS snap); trackpad momentum can't skip floors; touch and keyboard use native snapping;
-  - the island and the text swap sides from floor to floor (text left on even floors, right on odd ones). The camera orbits: every floor shows the whole island in the free half of the screen, turned so that floor's subject faces the viewer (close-ups were dropped the same day: the rest of the island sat under the text panel);
+  - the island and the text swap sides from floor to floor (since 2026-11-17 by the floors' order on the page, so a floor left out when the API returns nothing doesn't put two in a row on one side). The camera orbits: every floor shows the whole island in the free half of the screen, turned so that floor's subject faces the viewer (close-ups were dropped the same day: the rest of the island sat under the text panel);
   - scenery: a sky colour (`--sky` token), a sea of clouds under the island that fades into the sky (scene fog), drifting low-poly clouds, two small flocks of birds, a slight mouse parallax. About 38,000 triangles (most of them the cloud sea);
   - day and night (2026-11-14): light theme = a sun with rays and warm sunlight; dark theme = a crescent moon, twinkling stars and cooler moonlight. The scene's one directional light shines from the side of the screen where the sun or moon is. Follows the theme live.
 - [x] **Interactions** (2026-11-15, the "playful" set the user picked):
@@ -583,6 +597,12 @@ Steps:
 - [x] **Theme change as a fade** (requested 2026-11-15): the wheel is twice as wide; over 2.2 s the scene's sky, fog, clouds, light and the island's own colours ease from one theme to the other, and on the landing page the header, buttons, panels and text ease with them (text flips in the middle so it stays readable). Other pages still switch at once.
 - [x] **Rounder, lit island** (requested 2026-11-15, "less blocky, more real"): shadows from the sun / moon, light from the sky, ambient occlusion baked into the kit; smooth normals with real edges kept, rounder tree tops, smooth outlines for the rim, the lake, the paths and the mountain (now a smooth, lumpy rock face instead of 12-sided rings), round clouds; water with ripples, shore foam and the sky's colour; trees, plants and pennants sway; at night the windows glow and there are fireflies; smoke over the campfire. Cost: scene chunk 150 → 157 KB gzip, kit 101 → 115 KB gzip, shadows about a tenth of the frame rate. Not done: tone mapping (see CLAUDE.md), post-processing, more detailed models.
 - [x] **Water with body, people, quality guard** (requested 2026-11-16): the waterfall and the stream are wider, arched sheets with two layers of moving streaks and spray where they land; the fall off the rim is an arc that breaks up; the lake shows a bed with caustics under deepening water. Eight villagers (fishing, two walking the paths, hiking the trail, reading, by the campfire, hoeing, in the canoe); a click makes them wave. The scene lowers its own resolution, then drops shadows, when it keeps running slowly. Ctrl + wheel (or a pinch) over the island zooms towards the pointer; the plain wheel still moves from floor to floor. Bridges turned to carry their paths. A softer sun and moon, livelier birds, and a click on anything floats up its English word (with the Vietnamese meaning on the Vietnamese page).
+- [x] **Polish, 2026-11-17 to 2026-11-25**:
+  - floating words drawn as sharp HTML labels (2026-11-17);
+  - people with more detail and loops you can read: a whole catch, hoeing with rests, page turns, paddling (2026-11-18);
+  - a deep blue sky dome over a smooth, billowing sea of clouds and soft distant clouds, after a reference photo from the user (2026-11-18);
+  - the wheel moves between "resting places", so a floor taller than the screen no longer traps it (2026-11-19);
+  - a "back to top" button; on phones the bottom-right controls sit in a row below the floor panels (2026-11-19, 2026-11-25).
 - [ ] **QA**:
   - Lighthouse: LCP, CLS and TBT no worse than the current landing page;
   - WebGL context loss;
@@ -595,7 +615,7 @@ Open:
 
 ### Phase 3: Extensions
 - [ ] More exercise types: multiple choice, spelling, listen → type, fill in the blank from example sentences
-- [ ] Starred words (personal decks: see Phase 3b)
+- [ ] Starred words (`UserCard.isStarred` exists, no UI yet; personal decks: see Phase 3b)
 - [ ] Streak freeze, achievement badges
 - [ ] Placement test
 - [ ] Anki import/export
@@ -608,58 +628,57 @@ Open:
 
 ## 10. Project structure
 
-`✔` = exists; everything else is planned.
+As of 2026-11-25. Planned parts are marked *(planned)*.
 
 ```text
 Vocab/
-├── PLAN.md                          ✔ this plan
-├── README.md                        ✔ how to run the project
-├── docs/DEPLOYMENT.md               ✔ hosting research & deployment guide
+├── PLAN.md                          this plan
+├── README.md                        how to run the project
+├── docs/                            DEPLOYMENT.md, DATA_SOURCES.md, ASSETS.md
+├── security/                        audit summary, reports, fix plans
 ├── .claude/
-│   ├── CLAUDE.md                    ✔ project notes for Claude Code
-│   └── worklog/YYYY-MM-DD.md        ✔ daily work log
+│   ├── CLAUDE.md                    project notes for Claude Code
+│   └── worklog/YYYY-MM-DD.md        daily work log
 │
-├── backend/                         NestJS 12 – REST API (port 4300)
-│   ├── prisma/
-│   │   ├── schema.prisma            ✔ all tables (section 5)
-│   │   ├── migrations/              ✔ SQL migrations
-│   │   ├── seed.ts                  ✔ topic seed
-│   │   └── seed/topics.json         ✔ topic framework (section 8)
-│   ├── prisma7.config.ts            ✔ Prisma CLI config (direct URL, seed command)
-│   ├── vercel.json                  ✔ Vercel config (region sin1)
-│   ├── scripts/import-words.ts      CSV/JSON import from the command line
+├── backend/                         NestJS 12 (ESM) – REST API under /api (port 4300)
+│   ├── prisma/                      schema.prisma, migrations/, seed.ts, seed/ (topics, sample words)
+│   ├── prisma7.config.ts            Prisma CLI config (direct URL, seed command)
+│   ├── vercel.json                  region sin1
+│   ├── scripts/words/               words:cefrj, words:enrich, words:import, words:clear-audio
 │   └── src/
-│       ├── main.ts                  ✔ /api prefix, CORS, ValidationPipe
-│       ├── app.module.ts            ✔
-│       ├── prisma/                  ✔ PrismaService (pg adapter, pooled URL)
-│       ├── health/                  ✔ GET /api/health, /api/health/db
-│       ├── topics/                  ✔ GET /api/topics
-│       ├── auth/                    sign up, sign in, JWT, refresh, email verification
-│       ├── users/                   profile, settings
-│       ├── words/                   lookup, filter by topic/level
-│       ├── study/                   learn, review (ts-fsrs), mastery
-│       ├── notes/
-│       ├── stats/                   time heartbeat, DailyStat, streaks, progress
-│       ├── reminders/               hourly cron, email (Resend), Web Push
-│       ├── admin/import/            upload, preview, commit
+│       ├── main.ts, app.module.ts
+│       ├── common/                  CSRF + security headers, client IP, validation, Prisma error filter
+│       ├── prisma/                  PrismaService (pg adapter, pooled URL)
+│       ├── mail/                    MailerService (Nodemailer / Gmail SMTP)
+│       ├── rate-limit/              fixed-window limits in Postgres
+│       ├── health/                  /health, /health/db
+│       ├── auth/                    sessions, Google OAuth, email links, confirmation codes
+│       ├── users/                   /me, profile, settings, delete account
+│       ├── topics/, words/          topics, word lists and detail, word notes
+│       ├── study/                   learn, review (ts-fsrs), practice, mastery, streaks, progress
+│       ├── admin/, feedback/        (planned, Phase 3a)
+│       ├── reminders/               (planned, Phase 2: cron endpoint, Web Push, email)
 │       └── generated/prisma/        Prisma Client (generated, not committed)
 │
 └── frontend/                        Next.js 16 – UI (port 3300)
-    ├── messages/vi.json, en.json    ✔ UI text in both languages
-    ├── next.config.ts               ✔ next-intl plugin, /api rewrite to the backend
-    ├── vercel.json                  ✔ Vercel config (region sin1)
+    ├── messages/vi.json, en.json    UI text in both languages
+    ├── next.config.ts               next-intl, /api rewrite, CSP and security headers
+    ├── vercel.json                  region sin1
+    ├── scripts/island-kit.mjs       bakes the 3D kit into public/models/island-kit.bin
     └── src/
-        ├── proxy.ts                 ✔ locale detection, redirects / → /vi
-        ├── i18n/                    ✔ routing, navigation, request config
-        ├── lib/api.ts, types.ts     ✔ backend client
-        ├── components/              ✔ SiteHeader, LocaleSwitcher, TopicGrid
-        │                              (Flashcard, MasteryBadge, StreakFlame, Heatmap…)
-        └── app/[locale]/
-            ├── layout.tsx, page.tsx ✔
-            ├── (auth)/login, register
-            ├── (app)/dashboard, learn, review, practice, topics, levels,
-            │        words, notes, progress, settings
-            └── admin/words, topics, import
+        ├── proxy.ts                 locale detection, signed-in guard
+        ├── i18n/                    routing, navigation, request config
+        ├── lib/                     API clients (server / client), session, theme, landing data, types
+        ├── components/              shell/, forms/, study/, word/, charts/, island/ (3D landing)
+        └── app/
+            ├── global-error.tsx
+            └── [locale]/
+                ├── (site)/          landing, login, register, forgot/reset-password, verify-email, lab/island
+                ├── (app)/           dashboard, learn, flashcards, words, topics, progress, profile, settings;
+                │                    notes (planned)
+                ├── admin/           (planned, Phase 3a)
+                ├── [...rest]/       unknown addresses → 404
+                └── error.tsx, not-found.tsx
 ```
 
 ---

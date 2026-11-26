@@ -11,7 +11,7 @@ const intl = createMiddleware(routing);
  * stale cookie ends on the sign-in page via lib/server-api.ts.
  * Word pages (/words/<slug>) and topics stay public.
  */
-const PROTECTED = /^\/(dashboard|learn|flashcards|progress|settings|profile)(\/|$)|^\/words\/?$/;
+const PROTECTED = /^\/(dashboard|learn|flashcards|progress|settings|profile|feedback|admin)(\/|$)|^\/words\/?$/;
 
 export default function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;

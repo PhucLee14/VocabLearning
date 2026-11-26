@@ -43,16 +43,21 @@ export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
   async profile(userId: string) {
-    const { passwordHash, googleId, ...user } = await this.prisma.user.findUniqueOrThrow({
-      where: { id: userId },
-      select: { ...PROFILE_SELECT, passwordHash: true, googleId: true },
-    });
+    const [{ passwordHash, googleId, ...user }, unreadReplies] = await Promise.all([
+      this.prisma.user.findUniqueOrThrow({
+        where: { id: userId },
+        select: { ...PROFILE_SELECT, passwordHash: true, googleId: true },
+      }),
+      // Replies to the user's feedback they haven't opened yet (a dot in the app shell).
+      this.prisma.feedback.count({ where: { userId, reply: { not: null }, replySeenAt: null } }),
+    ]);
     return {
       ...user,
       birthDate: user.birthDate?.toISOString().slice(0, 10) ?? null,
       // How this account can sign in (the hash and the Google id themselves never leave the server).
       hasPassword: passwordHash !== null,
       hasGoogle: googleId !== null,
+      unreadReplies,
     };
   }
 

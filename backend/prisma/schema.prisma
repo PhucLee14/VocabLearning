@@ -73,6 +73,23 @@ enum ImportStatus {
   FAILED
 }
 
+/// GENERAL / BUG / IDEA come from the feedback button; the WORD_* types are reports on one word.
+enum FeedbackType {
+  GENERAL
+  BUG
+  IDEA
+  WORD_MEANING
+  WORD_EXAMPLE
+  WORD_OTHER
+}
+
+enum FeedbackStatus {
+  OPEN
+  IN_PROGRESS
+  DONE
+  WONT_FIX
+}
+
 // ──────────────────────── Users & authentication ────────────────────────
 
 model User {
@@ -92,6 +109,8 @@ model User {
   timezone        String     @default("Asia/Ho_Chi_Minh")
   emailVerifiedAt DateTime?
   googleId        String?    @unique
+  /// Set by an admin: the account can't sign in and its sessions are revoked
+  disabledAt      DateTime?
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 
@@ -107,6 +126,9 @@ model User {
   pushSubscriptions PushSubscription[]
   reminderLogs      ReminderLog[]
   importJobs        ImportJob[]
+  feedback          Feedback[]         @relation("FeedbackAuthor")
+  feedbackReplies   Feedback[]         @relation("FeedbackReplier")
+  auditLogs         AuditLog[]
 
   @@map("users")
 }
@@ -216,6 +238,7 @@ model Word {
   cards      UserCard[]
   reviewLogs ReviewLog[]
   notes      Note[]
+  feedback   Feedback[]
 
   @@unique([headword, pos, senseNo])
   @@index([cefrLevel])
@@ -416,10 +439,65 @@ model ImportJob {
   createdById String?      @db.Uuid
   createdAt   DateTime     @default(now())
   completedAt DateTime?
+  /// SHA-256 of the previewed file: the commit must send the same file
+  contentHash String?
 
   createdBy User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
 
+  @@index([createdAt])
   @@map("import_jobs")
+}
+
+// ───────────────────────── Admin & feedback ─────────────────────────
+
+/// Who changed what in the admin site. Kept when the admin's account is deleted.
+model AuditLog {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  actorId    String?  @db.Uuid
+  /// e.g. "word.update", "user.disable", "import.commit"
+  action     String
+  /// e.g. "word", "user", "topic", "feedback", "import"
+  targetType String
+  targetId   String?
+  /// Readable name of the target at the time (a headword, an email…)
+  targetName String?
+  /// Changed fields as { field: [before, after] }, or other details
+  data       Json?
+  createdAt  DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([targetType, targetId])
+  @@map("audit_logs")
+}
+
+/// Feedback from a learner, or a report on one word. The admin's reply is shown to the learner in the app.
+model Feedback {
+  id          String         @id @default(uuid(7)) @db.Uuid
+  userId      String?        @db.Uuid
+  type        FeedbackType
+  wordId      String?        @db.Uuid
+  message     String
+  /// The page the learner was on (path only)
+  pagePath    String?
+  status      FeedbackStatus @default(OPEN)
+  reply       String?
+  repliedAt   DateTime?
+  repliedById String?        @db.Uuid
+  /// When the learner opened the reply (null = unread)
+  replySeenAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  user      User? @relation("FeedbackAuthor", fields: [userId], references: [id], onDelete: SetNull)
+  repliedBy User? @relation("FeedbackReplier", fields: [repliedById], references: [id], onDelete: SetNull)
+  word      Word? @relation(fields: [wordId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
+  @@index([wordId])
+  @@map("feedback")
 }
 
 /// Fixed-window counters for rate limiting (login, register, emails sent).

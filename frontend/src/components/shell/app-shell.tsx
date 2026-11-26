@@ -1,7 +1,9 @@
-import { Settings } from 'lucide-react';
+import { Inbox, Settings, ShieldCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { getTranslations } from 'next-intl/server';
 import { type ReactNode, Suspense } from 'react';
 import { Avatar } from '@/components/avatar';
+import { FeedbackDialog } from '@/components/feedback/feedback-dialog';
 import { Logo } from '@/components/logo';
 import { Link } from '@/i18n/navigation';
 import { getDueCount, getViewer } from '@/lib/server-api';
@@ -41,6 +43,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Suspense fallback={<div className="h-14" />}>
             <ViewerRow />
           </Suspense>
+          <Suspense fallback={null}>
+            <ViewerLinks />
+          </Suspense>
           <Link
             href="/settings"
             className="flex min-h-11 items-center gap-3 rounded-2xl px-3 text-[15px] font-bold text-muted no-underline hover:bg-surface hover:text-ink"
@@ -69,7 +74,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-canvas pb-[env(safe-area-inset-bottom)] lg:hidden"
         >
           <Suspense fallback={<div className="h-16" />}>
-            <BottomLinks badges={{ flashcards: dueBadge }} more={<MoreSheet />} />
+            <BottomLinks
+              badges={{ flashcards: dueBadge }}
+              more={
+                <Suspense fallback={<MoreSheet />}>
+                  <ViewerMoreSheet />
+                </Suspense>
+              }
+            />
           </Suspense>
         </nav>
       </div>
@@ -101,6 +113,36 @@ async function ViewerRow() {
       </span>
     </Link>
   );
+}
+
+const sideRow =
+  'flex min-h-11 items-center gap-3 rounded-2xl px-3 text-left text-[15px] font-bold text-muted no-underline hover:bg-surface hover:text-ink';
+
+/** Feedback (send, and read the replies) and, for admins, the admin site. */
+async function ViewerLinks() {
+  const [viewer, t] = await Promise.all([getViewer(), getTranslations('Nav')]);
+  if (!viewer) return null;
+  return (
+    <>
+      <FeedbackDialog triggerClassName={sideRow} />
+      <Link href="/feedback" className={sideRow}>
+        <Inbox size={20} strokeWidth={2} aria-hidden />
+        <span className="flex-1">{t('feedback')}</span>
+        {viewer.unreadReplies > 0 && <span className="pill pill-accent">{viewer.unreadReplies}</span>}
+      </Link>
+      {viewer.role === 'ADMIN' && (
+        <Link href="/admin" className={sideRow}>
+          <ShieldCheck size={20} strokeWidth={2} aria-hidden />
+          {t('admin')}
+        </Link>
+      )}
+    </>
+  );
+}
+
+async function ViewerMoreSheet() {
+  const viewer = await getViewer();
+  return <MoreSheet isAdmin={viewer?.role === 'ADMIN'} unreadReplies={viewer?.unreadReplies ?? 0} />;
 }
 
 async function ViewerAvatarLink() {

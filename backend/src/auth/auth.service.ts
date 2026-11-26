@@ -15,6 +15,11 @@ export type AuthUser = { id: string; email: string; name: string; role: 'USER' |
 
 const AUTH_USER_SELECT = { id: true, email: true, name: true, role: true, timezone: true } as const;
 
+/** 403 for an account an admin has disabled (only said after the password or Google proved who it is). */
+function assertEnabled(user: { disabledAt: Date | null }) {
+  if (user.disabledAt) throw new ForbiddenException('This account has been disabled');
+}
+
 /** Verified when the email is unknown, so a failed sign-in takes as long as a wrong password. */
 let dummyHash: Promise<string> | undefined;
 const getDummyHash = () => (dummyHash ??= hash('not-a-real-password'));
@@ -46,13 +51,14 @@ export class AuthService {
     const email = emailInput.trim().toLowerCase();
     const user = await this.prisma.user.findUnique({
       where: { email },
-      select: { ...AUTH_USER_SELECT, passwordHash: true },
+      select: { ...AUTH_USER_SELECT, passwordHash: true, disabledAt: true },
     });
     const ok = await verify(user?.passwordHash ?? (await getDummyHash()), password).catch(() => false);
     if (!user || !user.passwordHash || !ok) {
       throw new UnauthorizedException('Wrong email or password');
     }
-    const { passwordHash: _omit, ...authUser } = user;
+    assertEnabled(user);
+    const { passwordHash: _omit, disabledAt: _disabled, ...authUser } = user;
     return authUser;
   }
 
@@ -71,14 +77,22 @@ export class AuthService {
   async signInWithGoogle(profile: GoogleProfile, locale: 'vi' | 'en'): Promise<AuthUser> {
     if (!profile.emailVerified) throw new UnauthorizedException('Google email is not verified');
 
-    const linked = await this.prisma.user.findUnique({ where: { googleId: profile.sub }, select: AUTH_USER_SELECT });
-    if (linked) return linked;
+    const linked = await this.prisma.user.findUnique({
+      where: { googleId: profile.sub },
+      select: { ...AUTH_USER_SELECT, disabledAt: true },
+    });
+    if (linked) {
+      assertEnabled(linked);
+      const { disabledAt: _disabled, ...authUser } = linked;
+      return authUser;
+    }
 
     const existing = await this.prisma.user.findUnique({
       where: { email: profile.email },
-      select: { ...AUTH_USER_SELECT, emailVerifiedAt: true, avatarUrl: true, googleId: true },
+      select: { ...AUTH_USER_SELECT, emailVerifiedAt: true, avatarUrl: true, googleId: true, disabledAt: true },
     });
     if (existing) {
+      assertEnabled(existing);
       if (existing.googleId) {
         // The email belongs to an account linked to a different Google account.
         throw new ConflictException('This email is linked to another Google account');
@@ -166,11 +180,13 @@ export class AuthService {
         expiresAt: true,
         lastUsedAt: true,
         revokedAt: true,
-        user: { select: AUTH_USER_SELECT },
+        user: { select: { ...AUTH_USER_SELECT, disabledAt: true } },
       },
     });
     const now = Date.now();
     if (!session || session.revokedAt || session.expiresAt.getTime() <= now) return null;
+    // Disabling also revokes the sessions; this covers one created in the same instant.
+    if (session.user.disabledAt) return null;
     const hardLimit = session.createdAt.getTime() + SESSION_MAX_AGE_MS;
     if (hardLimit <= now) return null;
 
@@ -181,7 +197,8 @@ export class AuthService {
         data: { lastUsedAt: new Date(now), expiresAt: new Date(Math.min(now + SESSION_TTL_MS, hardLimit)) },
       });
     }
-    return { user: session.user, touched };
+    const { disabledAt: _disabled, ...user } = session.user;
+    return { user, touched };
   }
 
   async revokeSession(token: string) {

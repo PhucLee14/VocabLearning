@@ -199,7 +199,7 @@ export class AuthController {
     } catch (err) {
       const status = (err as { status?: number }).status;
       this.logger.warn(`Google sign-in failed: ${err instanceof Error ? err.message : String(err)}`);
-      return fail(status === 409 ? 'google_conflict' : 'google_failed');
+      return fail(status === 409 ? 'google_conflict' : status === 403 ? 'google_disabled' : 'google_failed');
     }
   }
 }

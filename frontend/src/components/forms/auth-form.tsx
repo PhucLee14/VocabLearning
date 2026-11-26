@@ -13,6 +13,7 @@ const GOOGLE_ERRORS = [
   'google_unverified',
   'google_unavailable',
   'google_conflict',
+  'google_disabled',
 ] as const;
 
 /** Only same-site paths, so ?next= cannot send the user to another site. */
@@ -56,6 +57,8 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
       setError(
         status === 401
           ? `${t('errorCredentials')} ${t('googleHint')}`
+          : status === 403
+            ? t('errorDisabled')
           : status === 409
             ? t('errorExists')
             : status === 400

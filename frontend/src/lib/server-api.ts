@@ -56,6 +56,16 @@ export async function userGet<T>(path: string, nextPath?: string): Promise<T> {
   return (await res.json()) as T;
 }
 
+/** Like userGet, but a missing record (404, or 400 for a malformed id) gives null, for notFound(). */
+export async function userGetOrNull<T>(path: string, nextPath?: string): Promise<T | null> {
+  try {
+    return await userGet<T>(path, nextPath);
+  } catch (error) {
+    if (error instanceof ApiError && (error.status === 404 || error.status === 400)) return null;
+    throw error;
+  }
+}
+
 /** GET that also works signed out: the backend personalises it when the session is valid. 404 → null. */
 export async function optionalUserGet<T>(path: string): Promise<T | null> {
   const res = await authedFetch(path);

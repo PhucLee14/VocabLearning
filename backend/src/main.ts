@@ -2,6 +2,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
+import { json, type NextFunction, type Request, type Response } from 'express';
 import { AppModule } from './app.module.js';
 import { httpSecurity } from './common/http-security.js';
 import { PrismaExceptionFilter } from './common/prisma-exception.filter.js';
@@ -26,6 +27,17 @@ async function bootstrap() {
 
   // Security headers + CSRF checks on state-changing requests (src/common/http-security.ts).
   app.use(httpSecurity(origins));
+  // The admin import sends a whole CSV/JSON file (up to ~5,000 rows) as JSON.
+  // Only that route gets a 4 MB limit (Vercel's own cap is 4.5 MB); every
+  // other route keeps the default parser's 100 KB, which Nest registers later
+  // and which skips a body that is already parsed.
+  // The wrapper's name matters: Nest skips its own parser when a middleware
+  // named "jsonParser" (express.json's name) is already installed, and every
+  // other route would then get no body at all.
+  const importJson = json({ limit: '4mb' });
+  app.use('/api/admin/import', function adminImportBody(req: Request, res: Response, next: NextFunction) {
+    importJson(req, res, next);
+  });
   // Reads the session cookie (src/auth/session-cookie.ts).
   app.use(cookieParser());
   app.enableCors({ origin: origins, credentials: true });

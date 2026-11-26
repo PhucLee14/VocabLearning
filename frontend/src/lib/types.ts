@@ -180,6 +180,8 @@ export interface Profile {
   /** How the account can sign in. */
   hasPassword: boolean;
   hasGoogle: boolean;
+  /** Replies to the user's feedback they haven't opened yet. */
+  unreadReplies: number;
 }
 
 export interface Settings {

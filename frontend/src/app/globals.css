@@ -451,10 +451,16 @@
     border-color: var(--accent);
   }
   .chip[aria-pressed="true"],
-  .chip[aria-current="page"] {
+  .chip[aria-current="page"],
+  .chip:has(> input:checked) {
     border-color: var(--accent);
     background: var(--accent-soft);
     color: var(--accent-ink);
+  }
+  /* A <label class="chip"> around a visually hidden radio or checkbox. */
+  .chip:has(> input:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 }
 

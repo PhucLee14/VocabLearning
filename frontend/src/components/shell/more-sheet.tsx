@@ -1,6 +1,6 @@
 'use client';
 
-import { ChartColumn, LayoutGrid, Settings, UserRound, X } from 'lucide-react';
+import { ChartColumn, Inbox, LayoutGrid, Settings, ShieldCheck, UserRound, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import { Link, usePathname } from '@/i18n/navigation';
@@ -11,11 +11,15 @@ const LINKS = [
   { key: 'topics', href: '/topics', icon: LayoutGrid },
   { key: 'progress', href: '/progress', icon: ChartColumn },
   { key: 'profile', href: '/profile', icon: UserRound },
+  { key: 'feedback', href: '/feedback', icon: Inbox },
   { key: 'settings', href: '/settings', icon: Settings },
 ] as const;
 
-/** "More" on the phone's bottom bar: a sheet with the other screens and sign out (theme and language are in Settings). */
-export function MoreSheet() {
+/**
+ * "More" on the phone's bottom bar: a sheet with the other screens and sign out (theme and language are in Settings).
+ * Sending feedback starts on the My feedback page: a dialog opened from inside this sheet would close with it.
+ */
+export function MoreSheet({ isAdmin = false, unreadReplies = 0 }: { isAdmin?: boolean; unreadReplies?: number }) {
   const t = useTranslations('Nav');
   const dialog = useRef<HTMLDialogElement>(null);
   const pathname = usePathname();
@@ -64,10 +68,19 @@ export function MoreSheet() {
               <li key={key}>
                 <Link href={href} className={row} onClick={() => dialog.current?.close()}>
                   <Icon size={20} strokeWidth={2} aria-hidden className="text-muted" />
-                  {t(key)}
+                  <span className="flex-1">{t(key)}</span>
+                  {key === 'feedback' && unreadReplies > 0 && <span className="pill pill-accent">{unreadReplies}</span>}
                 </Link>
               </li>
             ))}
+            {isAdmin && (
+              <li>
+                <Link href="/admin" className={row} onClick={() => dialog.current?.close()}>
+                  <ShieldCheck size={20} strokeWidth={2} aria-hidden className="text-muted" />
+                  {t('admin')}
+                </Link>
+              </li>
+            )}
             <li>
               <SignOutButton className={`${row} text-left`} />
             </li>

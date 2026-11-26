@@ -93,6 +93,13 @@ Multi-user English vocabulary learning web app, named **Godee** (renamed from "V
     - `[locale]/not-found.tsx` is the 404 page, in the visitor's language.
     - `[locale]/[...rest]/page.tsx` calls `notFound()` for unknown addresses, so they reach our page and not Next's English one.
     - A `notFound()` called after streaming has started (word or topic pages, PPR) still answers 200, with `noindex`. Next does that, not us.
+- **Admin site and feedback** (PLAN.md Phase 3a, built 2026-11-25):
+  - Backend `src/admin/`: every route is `@UseGuards(SessionGuard, AdminGuard)` (401, then 403). Every change writes an `audit_logs` row through `AuditService.record` (pass the transaction client to write it with the change). Admins can't change their own role or disable themselves. The first admin is made with `npm run admin:role -- <email>` (`scripts/admin-role.ts`).
+  - Disabled accounts (`users.disabledAt`): sign-in answers 403 (`errorDisabled`; Google → `?error=google_disabled`), `resolveSession` treats their sessions as gone, and disabling revokes them.
+  - Word import: parsing, validation and writing live in `src/words/import/` (`import-format.ts`, `csv.ts`, `write-words.ts`), shared by `npm run words:import` and the admin import (`scripts/words/lib/*` only re-export them). The admin import is preview → commit; the commit sends the same file again and must match the preview's SHA-256.
+  - Body size: `/api/admin/import` alone gets a 4 MB JSON limit in `main.ts`. Its middleware must **not** be named `jsonParser` (express.json's own name): Nest then skips its global JSON parser and every other route receives an empty body (caught 2026-11-25 before it shipped).
+  - Feedback (`src/feedback/`): learners send it (`POST /feedback`, 10/hour, 30/day) or report a word (`WORD_*` types need `wordSlug`); the admin's reply shows on `/[locale]/feedback`; `/me` returns `unreadReplies` for the menu count. The optional "you have a reply" email holds no free text (fixed copy + link), verified addresses only, at most `REPLY_MAILS_PER_DAY` = 100 a day site-wide.
+  - Frontend: `src/app/[locale]/admin/` has its own layout (not the app shell, `noindex`); `AdminGate` shows the 404 to non-admins. The menu shows "Admin" only to admins. The flashcard keyboard handler ignores keys inside a `<dialog>` (the report dialog).
 - **Errors**: `PrismaExceptionFilter` maps P2002 → 409 and P2025 → 404. `PATCH` DTOs use `@IsOptionalNotNull()` (`common/validation.ts`) for non-nullable fields so `null` is a 400, not a 500. `POST /study/review` answers 409 when the card was rated concurrently (the client ignores it).
 - **Email**: `MailerService` (`backend/src/mail/`, global module), Nodemailer over SMTP (`SMTP_*`, `MAIL_FROM`; Gmail App Password today). Without `SMTP_HOST`, outside production mail is only logged (handy for reading codes and links locally).
   - Verification and reset links (`auth/email-links.ts`, `auth/account-email.service.ts`): `/<locale>/verify-email#token=…` and `/<locale>/reset-password#token=…`. The token is in the **fragment** (never reaches a server); the page reads it and POSTs it. Verification needs a click (no auto-verify on load: mail scanners). `forgot-password` always answers 204. A reset verifies the email and signs out every session.
@@ -113,6 +120,7 @@ Multi-user English vocabulary learning web app, named **Godee** (renamed from "V
 Backend:
 - `npm run start:dev`, `npm test`, `npm run test:e2e`, `npm run lint`
 - Database: `npm run db:migrate -- --name x`, `npm run db:deploy`, `npm run db:seed`, `npm run db:studio`
+- Admin role: `npm run admin:role -- <email>` (or `--revoke`)
 - Words: `npm run words:cefrj` (A1–C2 lists from CEFR-J + Octanove into `scripts/words/out/`, gitignored), `npm run words:enrich -- <list.csv|json> [--concurrency 4]` (free sources, cached in `scripts/words/.cache`), then `npm run words:import -- <file> --dry-run` / without `--dry-run`. Audio links on `api.dictionaryapi.dev` are blocked (403) and dropped on import (`BLOCKED_AUDIO_HOSTS`); `npm run words:clear-audio` removes them from the DB. Sources, licences and attribution: `docs/DATA_SOURCES.md`. Never call these external APIs from request handlers. Cambridge Dictionary content must not be scraped (licensed API only).
 
 Frontend:
